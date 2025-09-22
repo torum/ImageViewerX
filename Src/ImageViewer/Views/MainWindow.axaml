@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ImageViewer.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:ImageViewer.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="ImageViewer.Views.MainWindow"
+        Title="ImageViewer"
+		Background="Transparent"
+		ExtendClientAreaToDecorationsHint="True"
+		ExtendClientAreaChromeHints="PreferSystemChrome"
+	    TransparencyBackgroundFallback="Transparent"
+		TransparencyLevelHint="None"
+		WindowStartupLocation="CenterScreen">
+	<!--
+	    TransparencyBackgroundFallback="Transparent"
+		TransparencyLevelHint="Transparent"
+		ExtendClientAreaToDecorationsHint="True"
+		ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaTitleBarHeightHint="32"
+		SystemDecorations="BorderOnly"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+	
+	-->
+	<!-- 
+		TransparencyLevelHint="AcrylicBlur" 
+		TransparencyLevelHint="Mica" -->
+
+	<FlyoutBase.AttachedFlyout>
+		<Flyout Placement="Pointer">
+			<TextBlock Text="This flyout is attached to the border." />
+		</Flyout>
+	</FlyoutBase.AttachedFlyout>
+
+	<Grid Grid.Row="1" IsHitTestVisible="False">
+		<!--
+		<TransitioningContentControl x:Name="ContentFrame" Margin="0">
+			<TransitioningContentControl.PageTransition>
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:01.120" />
+					<PageSlide Duration="0:00:01.120" Orientation="Vertical" />
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
+		-->
+		<ContentControl x:Name="ContentFrame"></ContentControl>
+	</Grid>
+	<!--
+		<views:MainView />
+	-->
+</Window>

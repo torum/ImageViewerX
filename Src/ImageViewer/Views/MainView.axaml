@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ImageViewer.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ImageViewer.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+	<Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+		<TransitioningContentControl Content="{Binding DiplayImage, Mode=OneWay}"  HorizontalAlignment="Center" VerticalAlignment="Center">
+			<TransitioningContentControl.ContentTemplate>
+				<DataTemplate DataType="Bitmap">
+					<Image Margin="0" Source="{Binding}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+				</DataTemplate>
+			</TransitioningContentControl.ContentTemplate>
+			<TransitioningContentControl.PageTransition>
+				<!-- <CrossFade Duration="0:00:02.900" /> -->
+				<CompositePageTransition>
+					<CrossFade Duration="0:00:02.820" />
+					<!-- 
+					<PageSlide Duration="0:00:0.320" Orientation="Vertical" /> -->
+					<!-- Horizontal -->
+				</CompositePageTransition>
+			</TransitioningContentControl.PageTransition>
+		</TransitioningContentControl>
+		<TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+	</Grid>
+	
+</UserControl>
