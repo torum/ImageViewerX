@@ -10,7 +10,7 @@
 		Background="Transparent"
 		ExtendClientAreaToDecorationsHint="True"
 		ExtendClientAreaChromeHints="PreferSystemChrome"
-	    TransparencyBackgroundFallback="Transparent"
+	    TransparencyBackgroundFallback="#131313"
 		TransparencyLevelHint="None"
 		WindowStartupLocation="CenterScreen">
 	<!--
@@ -22,7 +22,6 @@
 		SystemDecorations="BorderOnly"
         BorderBrush="Transparent"
         BorderThickness="0"
-	
 	-->
 	<!-- 
 		TransparencyLevelHint="AcrylicBlur" 
@@ -30,24 +29,13 @@
 
 	<FlyoutBase.AttachedFlyout>
 		<Flyout Placement="Pointer">
-			<TextBlock Text="This flyout is attached to the border." />
+			<TextBlock Text="This flyout is attached to the Window." />
 		</Flyout>
 	</FlyoutBase.AttachedFlyout>
 
-	<Grid Grid.Row="1" IsHitTestVisible="False">
-		<!--
-		<TransitioningContentControl x:Name="ContentFrame" Margin="0">
-			<TransitioningContentControl.PageTransition>
-				<CompositePageTransition>
-					<CrossFade Duration="0:00:01.120" />
-					<PageSlide Duration="0:00:01.120" Orientation="Vertical" />
-				</CompositePageTransition>
-			</TransitioningContentControl.PageTransition>
-		</TransitioningContentControl>
-		-->
+	<Grid IsHitTestVisible="False">
+		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
 		<ContentControl x:Name="ContentFrame"></ContentControl>
 	</Grid>
-	<!--
-		<views:MainView />
-	-->
+
 </Window>
