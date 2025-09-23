@@ -37,7 +37,16 @@ public partial class MainViewModel : ObservableObject
 
         Dispatcher.UIThread.Post(() =>
         {
-            var filePath = "C:\\Users\\torum\\Pictures\\";
+            var filePath = "C:\\Users\\torum\\Pictures\\sample-1.webp";
+            Bitmap? bitmap = new(filePath);
+            DiplayImage = bitmap;
+        });
+        /*
+        await Task.Delay(5000);
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            var filePath = "C:\\Users\\torum\\Desktop\\sample-1.webp";
             Bitmap? bitmap = new(filePath);
             DiplayImage = bitmap;
         });
@@ -46,18 +55,10 @@ public partial class MainViewModel : ObservableObject
 
         Dispatcher.UIThread.Post(() =>
         {
-            var filePath = "C:\\Users\\torum\\Desktop\\";
+            var filePath = "C:\\Users\\torum\\Desktop\\Slideshow3\\sample-1.webp";
             Bitmap? bitmap = new(filePath);
             DiplayImage = bitmap;
         });
-
-        await Task.Delay(5000);
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            var filePath = "C:\\Users\\torum\\Desktop\\Slideshow3\\";
-            Bitmap? bitmap = new(filePath);
-            DiplayImage = bitmap;
-        });
+        */
     }
 }
