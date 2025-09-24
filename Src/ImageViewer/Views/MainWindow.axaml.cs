@@ -7,9 +7,12 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -19,37 +22,30 @@ namespace ImageViewer.Views;
 
 public partial class MainWindow : Window
 {
+    // Save "None" from xaml(Cursor="None").
+    private readonly Cursor? _cursorNone;
+
     public MainWindow()
     {
+        this.DataContext = App.GetService<MainViewModel>();
+
         InitializeComponent();
 
-        this.ContentFrame.Content = (new MainView() as UserControl);
-
-        this.Loaded += OnLoaded;
-
-        this.PointerPressed += Window_PointerPressed;
-
-        this.DoubleTapped += (_, _) =>
+        if (this.Cursor is null)
         {
-            //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
+            Debug.WriteLine("null");
+        }
+        else
+        {
+            Debug.WriteLine($"Cursor: {this.Cursor}");  
+        }
 
-            if (WindowState == WindowState.FullScreen)
-            {
-                WindowState = WindowState.Normal;
-                ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
-            }
-            else if (WindowState == WindowState.Normal)
-            {
-                // hack for CaptionButtons not dissapearing fast enough problem.
-                ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
-                Dispatcher.UIThread.Post(async() =>
-                {
-                    await Task.Delay(20);
-                    //await Task.Yield();
-                    WindowState = WindowState.FullScreen;
-                });
-            }
-        };
+        // Save "None" from xaml(Cursor="None").
+        _cursorNone = this.Cursor;
+        // Set default cursor.
+        this.Cursor = Cursor.Default;
+
+        this.ContentFrame.Content = (new MainView() as UserControl);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -85,11 +81,57 @@ public partial class MainWindow : Window
         {
             this.Background = new SolidColorBrush(Color.Parse("#131313"));
         }
+
+
+        this.PropertyChanged += this.OnWindow_PropertyChanged;
+
     }
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
+    /*
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
-        //Task.Run(Test);
+        if(change.Property.Name == nameof(WindowState))
+        {
+            Debug.WriteLine($"WindowState changed from {change.OldValue} to {change.NewValue}");
+        }
+        base.OnPropertyChanged(change);
+    }
+
+    */
+    private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (sender is Window)
+        {
+            //var oldState = (WindowState)e.OldValue;
+            //var newState = (WindowState)e.NewValue;
+
+            if (e.Property.Name == nameof(WindowState))
+            {
+                if (this.DataContext is not  MainViewModel vm)
+                {
+                    return;
+                }
+
+                if (e.NewValue is WindowState.FullScreen)
+                {
+                    //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
+                    vm.IsFullscreen = true;
+                }
+                else if (e.NewValue is WindowState.Normal)
+                {
+                    vm.IsFullscreen = false;
+                }
+                else if (e.NewValue is WindowState.Minimized)
+                {
+                    vm.IsFullscreen = false;
+                }
+                else
+                {
+                    vm.IsFullscreen = false;
+                }
+            }
+        }
     }
 
     private void Window_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -116,6 +158,58 @@ public partial class MainWindow : Window
 
                 // Show the flyout using the 'Placement="Pointer"' property.
                 flyout?.ShowAt(target);
+            }
+        }
+    }
+
+    private void Window_DragOver(object sender, DragEventArgs e)
+    {
+
+        // Only allow copy effect for file drops
+        e.DragEffects = e.Data.Contains(DataFormats.Files)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+    }
+
+    private void Window_Drop(object sender, DragEventArgs e)
+    {
+        // Check if the dropped data contains file paths
+        if (e.Data.Contains(DataFormats.Files))
+        {
+            var fileNames = e.Data.GetFiles()?.ToList();
+            if (fileNames is not null && fileNames.Count != 0)
+            {
+                var droppedFiles = new List<string>();
+
+                foreach (var item in fileNames)
+                {
+                    if (File.Exists(item.Path.LocalPath))
+                    {
+                        // Add single files
+                        droppedFiles.Add(item.Path.LocalPath);
+                    }
+                    else if (Directory.Exists(item.Path.LocalPath))
+                    {
+                        // Recursively get all files from a dropped folder
+                        var filesInFolder = Directory.GetFiles(item.Path.LocalPath, "*", SearchOption.AllDirectories);
+                        droppedFiles.AddRange(filesInFolder);
+                    }
+                    else 
+                    {
+                        Debug.WriteLine("else: " + item.Path.LocalPath);
+                    }
+                }
+                
+                /*
+                foreach (var file in droppedFiles)
+                {
+                    //Debug.WriteLine(file);
+                }
+                */
+                if (this.DataContext is MainViewModel vm)
+                {
+                    vm.DroppedFiles(droppedFiles);
+                }
             }
         }
     }
@@ -196,6 +290,153 @@ public partial class MainWindow : Window
                 NativeMemory.Free(accentPtr);
             }
         }
+    }
+
+    private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
+
+        if (WindowState == WindowState.FullScreen)
+        {
+            SetWindowStateNormal();
+        }
+        else if (WindowState == WindowState.Normal)
+        {
+            SetWindowStateFullScreen();
+        }
+    }
+
+    private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        //Task.Run(Test);
+    }
+
+    private void SetWindowStateFullScreen()
+    {
+        // set "None"
+        this.Cursor = _cursorNone;
+
+        // hack for CaptionButtons not dissapearing fast enough problem.
+        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
+        Dispatcher.UIThread.Post(async () =>
+        {
+            await Task.Delay(20);
+            //await Task.Yield();
+            WindowState = WindowState.FullScreen;
+        });
+    }
+
+    private void SetWindowStateNormal()
+    {
+        this.Cursor = Cursor.Default;
+
+        WindowState = WindowState.Normal;
+        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+    }
+
+    private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            if (WindowState == WindowState.FullScreen)
+            {
+                SetWindowStateNormal();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Space)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                vm.SpaceKeyPressed();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Right)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                vm.NextKeyPressed();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Left)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                vm.PrevKeyPressed();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.F)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                if (WindowState == WindowState.FullScreen)
+                {
+                    SetWindowStateNormal();
+                }
+                else if (WindowState == WindowState.Normal)
+                {
+                    SetWindowStateFullScreen();
+                }
+
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void Window_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Right)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                //vm.NextKeyPressed();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.Left)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                //vm.NextKeyPressed();
+
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Key.F)
+        {
+            if (this.DataContext is MainViewModel vm)
+            {
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void Window_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
+    {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        if (e.Delta.Y > 0) // Scroll up
+        {
+            vm.PrevKeyPressed();
+        }
+        else if (e.Delta.Y < 0) // Scroll down
+        {
+            //
+            vm.NextKeyPressed();
+        }
+
+        e.Handled = true;
     }
 
     // TryRegisterWindowsMenu() for sys menu (alt+space)
