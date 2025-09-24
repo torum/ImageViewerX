@@ -12,7 +12,17 @@
 		ExtendClientAreaChromeHints="PreferSystemChrome"
 	    TransparencyBackgroundFallback="#131313"
 		TransparencyLevelHint="None"
-		WindowStartupLocation="CenterScreen">
+		WindowStartupLocation="CenterScreen"
+				DragDrop.AllowDrop="True"
+            DragDrop.Drop="Window_Drop"
+            DragDrop.DragOver="Window_DragOver"
+		DoubleTapped="Window_DoubleTapped"
+		PointerWheelChanged="Window_PointerWheelChanged"
+		PointerPressed="Window_PointerPressed"
+		Loaded="Window_Loaded"
+		KeyDown="Window_KeyDown"
+		KeyUp="Window_KeyUp"
+		Cursor="None">
 	<!--
 	    TransparencyBackgroundFallback="Transparent"
 		TransparencyLevelHint="Transparent"
@@ -33,8 +43,10 @@
 		</Flyout>
 	</FlyoutBase.AttachedFlyout>
 
-	<Grid IsHitTestVisible="False">
-		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
+	<Grid IsHitTestVisible="False"
+		            >
+		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"
+				></Border>
 		<ContentControl x:Name="ContentFrame"></ContentControl>
 	</Grid>
 
