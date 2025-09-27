@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ImageViewer.ViewModels;
 using System;
@@ -22,28 +23,11 @@ namespace ImageViewer.Views;
 
 public partial class MainWindow : Window
 {
-    // Save "None" from xaml(Cursor="None").
-    private readonly Cursor? _cursorNone;
-
     public MainWindow()
     {
         this.DataContext = App.GetService<MainViewModel>();
 
         InitializeComponent();
-
-        if (this.Cursor is null)
-        {
-            Debug.WriteLine("null");
-        }
-        else
-        {
-            Debug.WriteLine($"Cursor: {this.Cursor}");  
-        }
-
-        // Save "None" from xaml(Cursor="None").
-        _cursorNone = this.Cursor;
-        // Set default cursor.
-        this.Cursor = Cursor.Default;
 
         this.ContentFrame.Content = (new MainView() as UserControl);
 
@@ -82,23 +66,9 @@ public partial class MainWindow : Window
             this.Background = new SolidColorBrush(Color.Parse("#131313"));
         }
 
-
         this.PropertyChanged += this.OnWindow_PropertyChanged;
-
     }
 
-    /*
-
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-    {
-        if(change.Property.Name == nameof(WindowState))
-        {
-            Debug.WriteLine($"WindowState changed from {change.OldValue} to {change.NewValue}");
-        }
-        base.OnPropertyChanged(change);
-    }
-
-    */
     private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         if (sender is Window)
@@ -173,14 +143,64 @@ public partial class MainWindow : Window
 
     private void Window_Drop(object sender, DragEventArgs e)
     {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        if (vm.IsWorking)
+        {
+            // Already processing. 
+            return;
+        }
+
         // Check if the dropped data contains file paths
         if (e.Data.Contains(DataFormats.Files))
         {
             var fileNames = e.Data.GetFiles()?.ToList();
             if (fileNames is not null && fileNames.Count != 0)
             {
-                var droppedFiles = new List<string>();
+                // Fire and forget.
+                ProcessFiles(fileNames);
+                //ProcessFiles(fileNames.Select(x => x.Path.LocalPath).ToList);
+            }
+        }
+    }
 
+    private void ProcessFiles(List<IStorageItem> fileNames)//List<Avalonia.Platform.Storage.IStorageItem>
+    {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        // Don't wait. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
+        // Don't _ =, nor await = . at all. 
+        Task.Run(() =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                vm.IsWorking = true;
+                //await Task.Yield();
+
+            });
+
+            var validExt = vm.ValidExtensions;
+
+            try
+            {
+                var droppedFiles = new List<string>();
+                var isSingleFileDropped = false;
+
+                if (fileNames.Count == 1)
+                {
+                    if (File.Exists(fileNames[0].Path.LocalPath))
+                    {
+                        isSingleFileDropped = true;
+                    }
+                }
+
+                // Get all files recursively.
                 foreach (var item in fileNames)
                 {
                     if (File.Exists(item.Path.LocalPath))
@@ -194,24 +214,75 @@ public partial class MainWindow : Window
                         var filesInFolder = Directory.GetFiles(item.Path.LocalPath, "*", SearchOption.AllDirectories);
                         droppedFiles.AddRange(filesInFolder);
                     }
-                    else 
+                    else
                     {
                         Debug.WriteLine("else: " + item.Path.LocalPath);
                     }
                 }
-                
-                /*
+
+                // Single file dropped, get all siblings.
+                if ((droppedFiles.Count == 1) && isSingleFileDropped)
+                {
+                    if (File.Exists(droppedFiles[0]))
+                    {
+                        var originalFile = droppedFiles[0];
+
+                        // Get parent dir.
+                        string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
+                        if (parentFolderPath is not null)
+                        {
+                            if (Directory.Exists(parentFolderPath))
+                            {
+                                // NON-Recursively get all files from the folder
+                                var filesInFolder = Directory.GetFiles(parentFolderPath, "*", SearchOption.TopDirectoryOnly);
+                                droppedFiles.AddRange(filesInFolder);
+
+                                if (droppedFiles.Count > 1)
+                                {
+                                    // Sort to move the first instance of 'originalFile' to the front, followed by other fruits.
+                                    // Using `Distinct()` will remove the remaining duplicates.
+                                    droppedFiles = droppedFiles.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var droppedImages = new List<string>();
+
                 foreach (var file in droppedFiles)
                 {
-                    //Debug.WriteLine(file);
+                    if (!MainViewModel.HasImageExtension(file, validExt))
+                    {
+                        continue;
+                    }
+
+                    // Avoid MacOS's garbage. Use char overload for faster comp if possible.
+                    if ((file.StartsWith('.')) || (file.StartsWith("._")))
+                    {
+                        continue;
+                    }
+
+                    droppedImages.Add(file);
                 }
-                */
-                if (this.DataContext is MainViewModel vm)
+                Dispatcher.UIThread.Post(() =>
                 {
-                    vm.DroppedFiles(droppedFiles);
-                }
+                    vm.DroppedFiles(droppedImages);
+                });
             }
-        }
+            catch
+            {
+                // TODO: log error and show error message.
+            }
+            finally
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    vm.IsWorking = false;
+                    //await Task.Yield();
+                });
+            }
+        });
     }
 
     // Marshal.AllocHGlobal way.
@@ -313,16 +384,16 @@ public partial class MainWindow : Window
 
     private void SetWindowStateFullScreen()
     {
-        // set "None"
-        this.Cursor = _cursorNone;
-
         // hack for CaptionButtons not dissapearing fast enough problem.
         ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
         Dispatcher.UIThread.Post(async () =>
         {
             await Task.Delay(20);
             //await Task.Yield();
-            WindowState = WindowState.FullScreen;
+
+            this.WindowState = WindowState.FullScreen;
+
+            this.Cursor = new Cursor(StandardCursorType.None);
         });
     }
 
@@ -330,8 +401,8 @@ public partial class MainWindow : Window
     {
         this.Cursor = Cursor.Default;
 
-        WindowState = WindowState.Normal;
-        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+        this.WindowState = WindowState.Normal;
+        this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
     }
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
