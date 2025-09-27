@@ -6,6 +6,8 @@
         xmlns:views="clr-namespace:ImageViewer.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="ImageViewer.Views.MainWindow"
+		x:DataType="vm:MainViewModel"
+        x:CompileBindings="True"
         Title="ImageViewer"
 		Background="Transparent"
 		ExtendClientAreaToDecorationsHint="True"
@@ -21,8 +23,7 @@
 		PointerPressed="Window_PointerPressed"
 		Loaded="Window_Loaded"
 		KeyDown="Window_KeyDown"
-		KeyUp="Window_KeyUp"
-		Cursor="None">
+		KeyUp="Window_KeyUp">
 	<!--
 	    TransparencyBackgroundFallback="Transparent"
 		TransparencyLevelHint="Transparent"
@@ -36,7 +37,15 @@
 	<!-- 
 		TransparencyLevelHint="AcrylicBlur" 
 		TransparencyLevelHint="Mica" -->
-
+	<Interaction.Behaviors>
+		<DataTriggerBehavior Binding="{Binding IsWorking}" ComparisonCondition="Equal" Value="True">
+			<ChangePropertyAction PropertyName="Cursor" Value="AppStarting" />
+		</DataTriggerBehavior>
+		<DataTriggerBehavior Binding="{Binding IsWorking}" ComparisonCondition="Equal" Value="False">
+			<ChangePropertyAction PropertyName="Cursor" Value="Arrow" />
+		</DataTriggerBehavior>
+	</Interaction.Behaviors>
+	
 	<FlyoutBase.AttachedFlyout>
 		<Flyout Placement="Pointer">
 			<TextBlock Text="This flyout is attached to the Window." />
@@ -45,8 +54,7 @@
 
 	<Grid IsHitTestVisible="False"
 		            >
-		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"
-				></Border>
+		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
 		<ContentControl x:Name="ContentFrame"></ContentControl>
 	</Grid>
 

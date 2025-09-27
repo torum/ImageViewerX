@@ -18,7 +18,7 @@ namespace ImageViewer.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    Queue<int> _tasks = new Queue<int>();
+    //readonly Queue<int> _tasks = new();
 
     private readonly DispatcherTimer _timer;
 
@@ -27,16 +27,37 @@ public partial class MainViewModel : ObservableObject
     //private List<string> _shuffledQueue = [];
     //private List<string> _sortedQueue = [];
 
-    private int _effectDuration = 1000;
-    private readonly Lock _lock = new();
+    private int _crossfadeWaitDuration = 1000;//1000;
+    private bool _isUseDummyNoOverrappingCrossfade = true;
+
+    //private readonly System.Threading.Lock _lock = new();
+    //private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private int QueueIndex = 0;
     private int _currentIndex = -1;
-    private bool _isBusy = false;
+    //private bool _isBusy = false;
 
-    private bool _isRandomize = false;
+    private bool _isWorking;
+    public bool IsWorking
+    {
+        get
+        {
+            return _isWorking;
+        }
+        set
+        {
+            if (_isWorking == value)
+                return;
 
-    private readonly string[] _validExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            _isWorking = value;
+            OnPropertyChanged(nameof(IsWorking));
+        }
+    }
+
+    private bool _isShuffle = false;
+
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+    public string[] ValidExtensions => _validExtensions;
 
     private bool _isFullscreen = false;
     public bool IsFullscreen
@@ -108,6 +129,31 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    public MainViewModel()
+    {
+        //Task.Run(Test);
+
+        var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
+        using var stream = AssetLoader.Open(uri);
+
+        _diplayImageDummy = new Bitmap(stream);
+
+
+        //Start();
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(6)
+        };
+        _timer.Tick += OnTimerTick;
+
+        // Start the timer
+        //_timer.Start();
+
+        
+    }
+
+    #region == Public Methods ==
+
     public async void DroppedFiles(List<string> files)
     {
         if (files == null)
@@ -125,7 +171,7 @@ public partial class MainViewModel : ObservableObject
 
         if (_queue.Count > 0)
         {
-            if (_isRandomize)
+            if (_isShuffle)
             {
                 List<string> shuffledQueue = _originalQueue;
                 shuffledQueue.Shuffle();
@@ -147,7 +193,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (_queue.Count > 0)
             {
-                await Show(_effectDuration);
+                await Show(_crossfadeWaitDuration);
             }
         }
     }
@@ -162,9 +208,11 @@ public partial class MainViewModel : ObservableObject
         if (_queue.Count <= 0) return;
 
         //QueueIndex++;
-        if ((QueueIndex +1) > (_queue.Count - 1)) return;
+        if ((QueueIndex) > (_queue.Count - 1)) return;
 
-        await Show(_effectDuration);
+        /////////
+        _isUseDummyNoOverrappingCrossfade = false;
+        await Show(_crossfadeWaitDuration);
     }
 
     public async void PrevKeyPressed()
@@ -180,35 +228,16 @@ public partial class MainViewModel : ObservableObject
         if ((QueueIndex - 2) > -1)
         {
             //QueueIndex -= 2;
-            inx = QueueIndex -2;
+            inx = QueueIndex - 2;
         }
 
         QueueIndex = inx;
-        await Show(_effectDuration);
+        await Show(_crossfadeWaitDuration);
     }
 
-    public MainViewModel()
-    {
-        //Task.Run(Test);
+    #endregion
 
-        _isRandomize = true;
-
-        var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
-        using var stream = AssetLoader.Open(uri);
-
-        _diplayImageDummy = new Bitmap(stream);
-
-
-        //Start();
-        _timer = new DispatcherTimer();
-        _timer.Interval = TimeSpan.FromSeconds(6);
-        _timer.Tick += OnTimerTick;
-
-        // Start the timer
-        //_timer.Start();
-
-        
-    }
+    #region == Private Methods ==
 
     private async void OnTimerTick(object? sender, EventArgs e)
     {
@@ -216,10 +245,10 @@ public partial class MainViewModel : ObservableObject
         if (_queue.Count <= 0) return;
         if (QueueIndex > (_queue.Count - 1)) return;
 
-        await Show(_effectDuration);
+        await Show(_crossfadeWaitDuration);
     }
 
-    private async Task Show(int wait)
+    private async Task Show(int crossfadeWaitDuration)
     {
         if (_queue.Count <= 0) return;
         if (QueueIndex > (_queue.Count - 1)) return;
@@ -229,17 +258,39 @@ public partial class MainViewModel : ObservableObject
             _timer.Stop();
         }
 
+
+        /*
+        _tasks.Enqueue(QueueIndex++);
+
+        //lock(_lock)
+        //using (_lock.EnterScope())
+        await _semaphore.WaitAsync();
+        try
+        {
+            //_tasks.Enqueue(QueueIndex+1);
+
+            //await Task.Delay(100);
+        }
+        finally
+        {
+            _semaphore.Release(); 
+        }
+
+        await ShowImage(wait);
+        */
+
         var filePath = _queue[QueueIndex];
 
+        // just in case, double check.
         if (HasImageExtension(filePath, _validExtensions) == false)
         {
             QueueIndex++;
-            await Show(wait);
+            await Show(crossfadeWaitDuration);
             return;
         }
 
         //Task.Run(() => ShowImage(filePath));
-        if (await ShowImage(filePath, wait))
+        if (await ShowImage(filePath, crossfadeWaitDuration, _isUseDummyNoOverrappingCrossfade))
         {
             if (_isFullscreen)
             {
@@ -250,38 +301,50 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> ShowImage(string filePath, int wait)
+    private async Task<bool> ShowImage(string filePath, int crossfadeWaitDuration, bool useDummyNoOverrappingCrossfade)
     {
+        int idx = QueueIndex;
 
-        if (_currentIndex == QueueIndex)
+        if (_currentIndex == idx)
         {
-            Debug.WriteLine($"{QueueIndex} dupe skipping");
+            Debug.WriteLine($"{idx} dupe skipping");
             QueueIndex++;
             return true;
         }
 
-        _currentIndex = QueueIndex;
+        _currentIndex = idx;
 
-        Debug.WriteLine($"{QueueIndex} Enter critical section.");
+        Debug.WriteLine($"{idx} Enter critical section.");
+
 
         Bitmap? bitmap = new(filePath);
 
-        DiplayImage1 = _diplayImageDummy;
-        await Task.Delay(wait).ConfigureAwait(true);
+        if (useDummyNoOverrappingCrossfade)
+        {
+            DiplayImage1 = _diplayImageDummy;
+            await Task.Delay(crossfadeWaitDuration).ConfigureAwait(true);
+        }
         DiplayImage1 = bitmap;
 
-        QueueIndex++;
+        //QueueIndex++;
+        QueueIndex = idx+1;
+        Debug.WriteLine($"{idx} Exit critical section.");
+
+        if (_isFullscreen)
+        {
+            _timer.Start();
+        }
 
         return true;
     }
 
-    private static bool HasImageExtension(string fileName, string[] extensions)
+    public static bool HasImageExtension(string fileName, string[] extensions)
     {
-        string extension = System.IO.Path.GetExtension(fileName).ToLower();
+        string extension = System.IO.Path.GetExtension(fileName);
 
         foreach (string validExt in extensions)
         {
-            if (extension == validExt)
+            if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -333,11 +396,13 @@ public partial class MainViewModel : ObservableObject
         }
 
     }
+
+    #endregion
 }
 
 public static class ListExtensions
 {
-    private static readonly Random rng = new Random();
+    private static readonly Random rng = new();
 
     public static void Shuffle<T>(this IList<T> list)
     {
@@ -347,9 +412,7 @@ public static class ListExtensions
             n--;
             int k = rng.Next(n + 1);
             // Swap the elements
-            T value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+            (list[n], list[k]) = (list[k], list[n]);
         }
     }
 }
