@@ -1,15 +1,21 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using ImageViewer.Models;
+using ImageViewer.Views;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -18,82 +24,151 @@ namespace ImageViewer.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    //readonly Queue<int> _tasks = new();
+    #region == Private ==
 
-    private readonly DispatcherTimer _timer;
-
-    private List<string> _queue = [];
-    private List<string> _originalQueue = [];
+    //private List<string> _queue = [];
+    //private List<string> _originalQueue = [];
     //private List<string> _shuffledQueue = [];
     //private List<string> _sortedQueue = [];
-
-    private int _crossfadeWaitDuration = 1000;//1000;
+    private int _queueIndex = 0;
+    private string _currentFile = string.Empty;
+    private readonly DispatcherTimer _timer;
+    private readonly System.Threading.Lock _lock = new();
+    private readonly int _crossfadeWaitDuration = 1000;//1000;
     private bool _isUseDummyNoOverrappingCrossfade = true;
-
-    //private readonly System.Threading.Lock _lock = new();
     //private readonly SemaphoreSlim _semaphore = new(1, 1);
-
-    private int QueueIndex = 0;
-    private int _currentIndex = -1;
+    //readonly Queue<int> _tasks = new();
+    private readonly Bitmap? _diplayImageDummy;
     //private bool _isBusy = false;
+    private List<ImageInfo> _originalQueue = [];
+    #endregion
 
-    private bool _isWorking;
-    public bool IsWorking
+    #region == Internal/Bind Properties ==
+
+    private ObservableCollection<ImageInfo> _queue = [];
+    public ObservableCollection<ImageInfo> Queue
     {
         get
         {
-            return _isWorking;
+            return _queue;
         }
         set
         {
-            if (_isWorking == value)
+            if (_queue == value)
                 return;
 
-            _isWorking = value;
-            OnPropertyChanged(nameof(IsWorking));
+            _queue = value;
+            OnPropertyChanged(nameof(Queue));
         }
     }
 
-    private bool _isShuffle = false;
-
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-    public string[] ValidExtensions => _validExtensions;
-
-    private bool _isFullscreen = false;
-    public bool IsFullscreen
+    private ImageInfo? _selectedQueueImage;
+    public ImageInfo? SelectedQueueImage
     {
-        get => _isFullscreen;
+        get
+        {
+            return _selectedQueueImage;
+        }
         set
         {
-            if (_isFullscreen == value)
+            if (_selectedQueueImage == value)
                 return;
 
-            _isFullscreen = value;
-            OnPropertyChanged(nameof(IsFullscreen));
-
-            if (_isFullscreen)
-            {
-                if (!_timer.IsEnabled)
-                {
-                    if (_queue.Count > 0)
-                    {
-                        _timer.Start();
-                        //await Show(_effectDuration);
-                    }
-                }
-            }
-            else 
-            {
-                if (_timer.IsEnabled)
-                {
-                    _timer.Stop();
-                }
-            }
-
+            _selectedQueueImage = value;
+            OnPropertyChanged(nameof(SelectedQueueImage));
         }
     }
 
-    private Bitmap? _diplayImageDummy;
+    private IEnumerable<object>? _visibleItemsImageInfo;
+    public IEnumerable<object>? VisibleItemsImageInfo
+    {
+        get => _visibleItemsImageInfo;
+        set
+        {
+            _visibleItemsImageInfo = value;
+
+            if (_visibleItemsImageInfo is null)
+            {
+                return;
+            }
+            _ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
+            //GetPictures(_visibleItemsImageInfo);
+        }
+    }
+
+    private void GetPictures(IEnumerable<object>? imageInfoItems)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (imageInfoItems is null)
+            {
+                Debug.WriteLine("imageInfoItems is null");
+                return;
+            }
+
+            if (Queue.Count < 1)
+            {
+                Debug.WriteLine("Queue.Count < 1");
+                return;
+            }
+
+            foreach (var item in imageInfoItems)
+            {
+                if (item is not ImageInfo img)
+                {
+                    Debug.WriteLine("item is not ImageInfo");
+                    continue;
+                }
+
+                if (img is null)
+                {
+                    Debug.WriteLine("img is null");
+                    continue;
+                }
+
+                if (img.IsAcquired)
+                {
+                    //Debug.WriteLine("img.IsAcquired");
+                    continue;
+                }
+
+                if (img.IsLoading)
+                {
+                    Debug.WriteLine("img.IsLoading");
+                    continue;
+                }
+                img.IsLoading = true;
+
+                if (File.Exists(img.ImageFilePath))
+                {
+                    img.IsLoading = true;
+
+                    Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+
+                    try
+                    {
+                        Bitmap? bitmap = new(img.ImageFilePath);
+                        img.ImageSource = bitmap;
+                        img.IsAcquired = true;
+                        img.IsLoading = false;
+                    }
+                    catch (Exception e)
+                    {
+                        img.IsLoading = false;
+                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
+                        continue;
+                    }
+                    finally
+                    {
+                        img.IsLoading = false;
+                    }
+
+                    //await Task.Delay(5);
+                    //await Task.Yield();
+                }
+            }
+        });
+    }
 
     private Bitmap? _diplayImage1;
     public Bitmap? DiplayImage1
@@ -112,79 +187,295 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private Bitmap? _diplayImage2;
-    public Bitmap? DiplayImage2
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+    public string[] ValidExtensions => _validExtensions;
+
+    private bool _isFullscreen = false;
+    public bool IsFullscreen
     {
-        get
-        {
-            return _diplayImage2;
-        }
+        get => _isFullscreen;
         set
         {
-            if (_diplayImage2 == value)
+            if (_isFullscreen == value)
                 return;
 
-            _diplayImage2 = value;
-            OnPropertyChanged(nameof(DiplayImage2));
+            _isFullscreen = value;
+            OnPropertyChanged(nameof(IsFullscreen));
         }
     }
 
+    // When busy, it's busy processing file in the background thread.
+    private bool _isWorking;
+    public bool IsWorking
+    {
+        get
+        {
+            return _isWorking;
+        }
+        set
+        {
+            if (_isWorking == value)
+                return;
+
+            _isWorking = value;
+            OnPropertyChanged(nameof(IsWorking));
+        }
+    }
+
+    private bool _isSaveLog;
+    public bool IsSaveLog
+    {
+        get { return _isSaveLog; }
+        set
+        {
+            if (_isSaveLog == value)
+                return;
+
+            _isSaveLog = value;
+
+            OnPropertyChanged(nameof(IsSaveLog));
+        }
+    }
+
+    #endregion
+
+    #region == Properties User Opts ==
+
+    private int _slideshowTimerInterval = 4;
+    public int SlideshowTimerInterval
+    {
+        get
+        {
+            return _slideshowTimerInterval;
+        }
+        set
+        {
+            if (_slideshowTimerInterval == value)
+                return;
+
+            _slideshowTimerInterval = value;
+            OnPropertyChanged(nameof(SlideshowTimerInterval));
+        }
+    }
+
+    private bool _isShuffleOn = false;
+    public bool IsShuffleOn
+    {
+        get
+        {
+            return _isShuffleOn;
+        }
+        set
+        {
+            if (_isShuffleOn == value)
+                return;
+
+            _isShuffleOn = value;
+            OnPropertyChanged(nameof(IsShuffleOn));
+            OnPropertyChanged(nameof(DataShuffleIcon));
+
+            if (_queue.Count > 0)
+            {
+                if (_isShuffleOn)
+                {
+                    _queue = new ObservableCollection<ImageInfo>(_originalQueue);
+                    _queue.Shuffle();
+                }
+                else
+                {
+                    _queue = new ObservableCollection<ImageInfo>(_originalQueue);
+                }
+                OnPropertyChanged(nameof(Queue));
+            }
+        }
+    }
+
+    private bool _isRepeatOn = false;
+    public bool IsRepeatOn
+    {
+        get
+        {
+            return _isRepeatOn;
+        }
+        set
+        {
+            if (_isRepeatOn == value)
+                return;
+
+            _isRepeatOn = value;
+            OnPropertyChanged(nameof(IsRepeatOn));
+            OnPropertyChanged(nameof(DataRepeatIcon));
+        }
+    }
+
+    private bool _isStayOnTop = false;
+    public bool IsStayOnTop
+    {
+        get
+        {
+            return _isStayOnTop;
+        }
+        set
+        {
+            if (_isStayOnTop == value)
+                return;
+
+            _isStayOnTop = value;
+            OnPropertyChanged(nameof(IsStayOnTop));
+            OnPropertyChanged(nameof(DataStayOnTopIcon));
+        }
+    }
+
+    private bool _isSlideshowOn = false;
+    public bool IsSlideshowOn
+    {
+        get
+        {
+            return _isSlideshowOn;
+        }
+        set
+        {
+            if (_isSlideshowOn == value)
+                return;
+
+            _isSlideshowOn = value;
+            OnPropertyChanged(nameof(IsSlideshowOn));
+            OnPropertyChanged(nameof(DataPlayPauseIcon));
+        }
+    }
+
+    //private string _playpause = "M10 6.5C10 5.67157 10.6716 5 11.5 5H12.5C13.3284 5 14 5.67157 14 6.5V13.5C14 14.3284 13.3284 15 12.5 15H11.5C10.6716 15 10 14.3284 10 13.5V6.5ZM11.5 6C11.2239 6 11 6.22386 11 6.5V13.5C11 13.7761 11.2239 14 11.5 14H12.5C12.7761 14 13 13.7761 13 13.5V6.5C13 6.22386 12.7761 6 12.5 6H11.5ZM15 6.5C15 5.67157 15.6716 5 16.5 5H17.5C18.3284 5 19 5.67157 19 6.5V13.5C19 14.3284 18.3284 15 17.5 15H16.5C15.6716 15 15 14.3284 15 13.5V6.5ZM16.5 6C16.2239 6 16 6.22386 16 6.5V13.5C16 13.7761 16.2239 14 16.5 14H17.5C17.7761 14 18 13.7761 18 13.5V6.5C18 6.22386 17.7761 6 17.5 6H16.5ZM3 6.50203C3 6.3042 3.21889 6.18475 3.38527 6.29179L8.88147 9.8279C9.03533 9.92689 9.03423 10.1522 8.87943 10.2497L3.38323 13.7111C3.21675 13.8159 3 13.6963 3 13.4995V6.50203ZM3.92633 5.45081C3.09446 4.9156 2 5.51287 2 6.50203V13.4995C2 14.4832 3.08373 15.0815 3.91613 14.5572L9.41233 11.0959C10.1864 10.6084 10.1918 9.48187 9.42253 8.98692L3.92633 5.45081Z";
+    private readonly string _play = "M5.74514 3.06445C5.41183 2.87696 5 3.11781 5 3.50023V12.5005C5 12.8829 5.41182 13.1238 5.74512 12.9363L13.7454 8.43631C14.0852 8.24517 14.0852 7.75589 13.7454 7.56474L5.74514 3.06445ZM4 3.50023C4 2.35298 5.2355 1.63041 6.23541 2.19288L14.2357 6.69317C15.2551 7.26664 15.2551 8.73446 14.2356 9.3079L6.23537 13.8079C5.23546 14.3703 4 13.6477 4 12.5005V3.50023Z";
+    private readonly string _pause = "M3.75 2C2.7835 2 2 2.7835 2 3.75V12.25C2 13.2165 2.7835 14 3.75 14H5.25C6.2165 14 7 13.2165 7 12.25V3.75C7 2.7835 6.2165 2 5.25 2H3.75ZM3 3.75C3 3.33579 3.33579 3 3.75 3H5.25C5.66421 3 6 3.33579 6 3.75V12.25C6 12.6642 5.66421 13 5.25 13H3.75C3.33579 13 3 12.6642 3 12.25V3.75ZM10.75 2C9.7835 2 9 2.7835 9 3.75V12.25C9 13.2165 9.7835 14 10.75 14H12.25C13.2165 14 14 13.2165 14 12.25V3.75C14 2.7835 13.2165 2 12.25 2H10.75ZM10 3.75C10 3.33579 10.3358 3 10.75 3H12.25C12.6642 3 13 3.33579 13 3.75V12.25C13 12.6642 12.6642 13 12.25 13H10.75C10.3358 13 10 12.6642 10 12.25V3.75Z";
+    public string DataPlayPauseIcon
+    {
+        get
+        {
+            if (IsSlideshowOn)
+            {
+                return _pause;
+            }
+            else
+            {
+                return _play;
+            }
+        }
+    }
+
+    private readonly string _shuffleOn = "M12.3536 3.64645C12.1583 3.45118 11.8417 3.45118 11.6464 3.64645C11.4512 3.84171 11.4512 4.15829 11.6464 4.35355L12.2961 5.00321C9.97191 5.0767 8.51587 6.40057 7.20029 7.59672L7.16366 7.63003C5.77688 8.89074 4.53421 10 2.5 10C2.22386 10 2 10.2239 2 10.5C2 10.7761 2.22386 11 2.5 11C4.94373 11 6.44607 9.63403 7.79971 8.40327L7.83634 8.36997C9.17448 7.15347 10.3784 6.078 12.2888 6.00405L11.6464 6.64645C11.4512 6.84171 11.4512 7.15829 11.6464 7.35355C11.8417 7.54882 12.1583 7.54882 12.3536 7.35355L13.8536 5.85355C14.0488 5.65829 14.0488 5.34171 13.8536 5.14645L12.3536 3.64645ZM2.5 5C4.32898 5 5.63063 5.76516 6.73729 6.66612L6.49099 6.89009C6.31609 7.04909 6.14783 7.20111 5.98421 7.34542C4.99915 6.56432 3.95092 6 2.5 6C2.22386 6 2 5.77614 2 5.5C2 5.22386 2.22386 5 2.5 5ZM12.2961 10.9968C10.5735 10.9423 9.3278 10.201 8.26272 9.33388L8.50901 9.10991C8.68391 8.95091 8.85217 8.79889 9.01579 8.65458C9.95241 9.39727 10.9461 9.94398 12.2888 9.99595L11.6464 9.35355C11.4512 9.15829 11.4512 8.84171 11.6464 8.64645C11.7437 8.5492 11.871 8.50038 11.9985 8.5C12.127 8.49962 12.2555 8.54843 12.3536 8.64645L13.8536 10.1464C14.0488 10.3417 14.0488 10.6583 13.8536 10.8536L12.3536 12.3536C12.1583 12.5488 11.8417 12.5488 11.6464 12.3536C11.4512 12.1583 11.4512 11.8417 11.6464 11.6464L12.2961 10.9968Z";
+    private readonly string _shuffleOff = "M11.647 12.3541L14.1464 14.8536C14.3417 15.0488 14.6583 15.0488 14.8536 14.8536C15.0488 14.6583 15.0488 14.3417 14.8536 14.1464L1.85355 1.14645C1.65829 0.951184 1.34171 0.951184 1.14645 1.14645C0.951184 1.34171 0.951184 1.65829 1.14645 1.85355L4.7145 5.42161C4.06578 5.16073 3.33827 5 2.5 5C2.22386 5 2 5.22386 2 5.5C2 5.77614 2.22386 6 2.5 6C3.95092 6 4.99915 6.56432 5.98421 7.34542C6.09688 7.24605 6.21175 7.14302 6.32947 7.03658L7.03751 7.74461C5.70056 8.95719 4.47234 10 2.5 10C2.22386 10 2 10.2239 2 10.5C2 10.7761 2.22386 11 2.5 11C4.91114 11 6.40583 9.67022 7.74547 8.45258L8.45339 9.16049L8.26272 9.33388C8.64016 9.64117 9.04028 9.93265 9.47627 10.1834L11.6459 12.353C11.6461 12.3532 11.6468 12.3539 11.647 12.3541C11.6468 12.3539 11.6472 12.3543 11.647 12.3541ZM12.1071 9.98576L13.4142 11.2929L13.8536 10.8536C14.0488 10.6583 14.0488 10.3417 13.8536 10.1464L12.3536 8.64645C12.2555 8.54843 12.127 8.49962 11.9985 8.5C11.871 8.50038 11.7437 8.5492 11.6464 8.64645C11.4512 8.84171 11.4512 9.15829 11.6464 9.35355L12.2888 9.99595C12.2275 9.99358 12.167 9.99017 12.1071 9.98576ZM8.55597 6.43464L9.27081 7.14947C10.1345 6.50814 11.0672 6.05134 12.2888 6.00405L11.6464 6.64645C11.4512 6.84171 11.4512 7.15829 11.6464 7.35355C11.8417 7.54881 12.1583 7.54881 12.3536 7.35355L13.8536 5.85355C14.0488 5.65829 14.0488 5.34171 13.8536 5.14645L12.3536 3.64645C12.1583 3.45118 11.8417 3.45118 11.6464 3.64645C11.4512 3.84171 11.4512 4.15829 11.6464 4.35355L12.2961 5.00321C10.7291 5.05276 9.55673 5.67068 8.55597 6.43464Z";
+    public string DataShuffleIcon
+    {
+        get
+        {
+            if (IsShuffleOn)
+            {
+                return _shuffleOff;
+            }
+            else
+            {
+                return _shuffleOn;
+            }
+        }
+    }
+
+
+    private readonly string _repeatOn = "M12.8935 5.23788C13.579 5.95588 14 6.92865 14 7.99975C14 10.1419 12.316 11.8908 10.1996 11.9949L10 11.9997L6.707 11.999L7.85525 13.1479C8.02882 13.3215 8.0481 13.5909 7.91311 13.7858L7.85525 13.855C7.68169 14.0286 7.41226 14.0479 7.21739 13.9129L7.14815 13.855L5.14645 11.8533C4.97288 11.6797 4.9536 11.4103 5.08859 11.2154L5.14645 11.1462L7.14815 9.14449C7.34341 8.94923 7.65999 8.94923 7.85525 9.14449C8.02882 9.31806 8.0481 9.58748 7.91311 9.78235L7.85525 9.8516L6.707 10.999L10 10.9997C11.5977 10.9997 12.9037 9.75083 12.9949 8.17602L13 7.99975C13 7.17778 12.6694 6.43303 12.134 5.89117C12.0522 5.80305 12 5.68194 12 5.54865C12 5.2725 12.2239 5.04865 12.5 5.04865C12.6227 5.04865 12.7351 5.09287 12.8221 5.16624L12.8935 5.23788ZM8.78431 2.08664L8.85355 2.14449L10.8553 4.14619L10.9131 4.21544C11.0312 4.38595 11.0312 4.61354 10.9131 4.78405L10.8553 4.8533L8.85355 6.855L8.78431 6.91286C8.6138 7.03098 8.3862 7.03098 8.21569 6.91286L8.14645 6.855L8.08859 6.78575C7.97047 6.61524 7.97047 6.38765 8.08859 6.21714L8.14645 6.14789L9.294 4.99905L6 4.99975C4.40232 4.99975 3.09634 6.24867 3.00509 7.82347L3 7.99975C3 8.8193 3.32863 9.56209 3.8613 10.1035C3.94745 10.1919 4 10.3134 4 10.4472C4 10.7234 3.77614 10.9472 3.5 10.9472C3.36244 10.9472 3.23785 10.8917 3.14745 10.8018C2.4379 10.0823 2 9.09215 2 7.99975C2 5.85755 3.68397 4.10867 5.80036 4.00464L6 3.99975L9.294 3.99905L8.14645 2.8516L8.08859 2.78235C7.9536 2.58748 7.97288 2.31806 8.14645 2.14449C8.32001 1.97093 8.58944 1.95164 8.78431 2.08664Z";
+    private readonly string _repeatOff = "M2.78431 2.08834L2.85355 2.14619L13.8536 13.1462C14.0488 13.3415 14.0488 13.658 13.8536 13.8533C13.68 14.0269 13.4106 14.0462 13.2157 13.9112L13.1464 13.8533L11.1305 11.8378C10.8437 11.9221 10.5435 11.9752 10.2339 11.993L10 11.9997L6.707 11.999L7.85525 13.1479C8.02882 13.3215 8.0481 13.5909 7.91311 13.7858L7.85525 13.855C7.68169 14.0286 7.41226 14.0479 7.21739 13.9129L7.14815 13.855L5.14645 11.8533C4.97288 11.6797 4.9536 11.4103 5.08859 11.2154L5.14645 11.1462L7.14815 9.14449C7.34341 8.94923 7.65999 8.94923 7.85525 9.14449C8.02882 9.31806 8.0481 9.58748 7.91311 9.78235L7.85525 9.8516L6.707 10.999L10 10.9997C10.0941 10.9997 10.1871 10.9954 10.279 10.9869L4.62614 5.33211C3.66034 5.83052 3 6.83802 3 7.99975C3 8.8193 3.32863 9.56209 3.8613 10.1035C3.94745 10.1919 4 10.3134 4 10.4472C4 10.7234 3.77614 10.9472 3.5 10.9472C3.36244 10.9472 3.23785 10.8917 3.14745 10.8018C2.4379 10.0823 2 9.09215 2 7.99975C2 6.56381 2.75664 5.30459 3.89297 4.59904L2.14645 2.8533C1.95118 2.65804 1.95118 2.34146 2.14645 2.14619C2.32001 1.97263 2.58944 1.95334 2.78431 2.08834ZM12.5 5.04865C12.6227 5.04865 12.7351 5.09287 12.8221 5.16624L12.8935 5.23788C13.579 5.95588 14 6.92865 14 7.99975C14 9.07744 13.5738 10.0556 12.8808 10.7748L12.174 10.0671C12.6858 9.52898 13 8.80105 13 7.99975C13 7.17778 12.6694 6.43303 12.134 5.89117C12.0522 5.80305 12 5.68194 12 5.54865C12 5.2725 12.2239 5.04865 12.5 5.04865ZM8.14645 2.14449C8.32001 1.97093 8.58944 1.95164 8.78431 2.08664L8.85355 2.14449L10.8553 4.14619L10.9131 4.21544C11.0312 4.38595 11.0312 4.61354 10.9131 4.78405L10.8553 4.8533L8.907 6.80005L8.2 6.09305L9.294 4.99905H7.105L6.105 3.99905H9.294L8.14645 2.8516L8.08859 2.78235C7.9536 2.58748 7.97288 2.31806 8.14645 2.14449Z";
+    public string DataRepeatIcon
+    {
+        get
+        {
+            if (IsRepeatOn)
+            {
+                return _repeatOff;
+            }
+            else
+            {
+                return _repeatOn;
+            }
+        }
+    }
+
+    //private string _checked = "M13.8639 3.65511C14.0533 3.85606 14.0439 4.17251 13.8429 4.36191L5.91309 11.8358C5.67573 12.0595 5.30311 12.0526 5.07417 11.8203L2.39384 9.09995C2.20003 8.90325 2.20237 8.58667 2.39907 8.39286C2.59578 8.19905 2.91235 8.2014 3.10616 8.3981L5.51192 10.8398L13.1571 3.63419C13.358 3.44479 13.6745 3.45416 13.8639 3.65511Z";
+    private readonly string _stayOnTopOn = "M10.0589 2.44535C9.34701 1.73087 8.14697 1.90854 7.67261 2.79864L5.6526 6.58902L2.8419 7.52592C2.6775 7.58072 2.5532 7.71673 2.51339 7.88539C2.47357 8.05404 2.52392 8.23128 2.64646 8.35382L4.79291 10.5003L2.14645 13.1467L2 14.0003L2.85356 13.8538L5.50002 11.2074L7.64646 13.3538C7.76899 13.4764 7.94623 13.5267 8.11489 13.4869C8.28354 13.4471 8.41955 13.3228 8.47435 13.1584L9.41143 10.3472L13.1897 8.32448C14.0759 7.85006 14.2538 6.65535 13.5443 5.9433L10.0589 2.44535ZM8.55511 3.26895C8.71323 2.97225 9.11324 2.91303 9.35055 3.15119L12.836 6.64914C13.0725 6.88648 13.0131 7.28472 12.7178 7.44286L8.76403 9.55946C8.65137 9.61977 8.56608 9.72092 8.52567 9.84215L7.7815 12.0746L3.92562 8.21877L6.15812 7.47461C6.27966 7.43409 6.38101 7.34848 6.44126 7.23542L8.55511 3.26895Z";
+    private readonly string _stayOnTopOff = "M9.56016 10.2673L14.1464 14.8536C14.3417 15.0488 14.6583 15.0488 14.8536 14.8536C15.0488 14.6583 15.0488 14.3417 14.8536 14.1464L1.85355 1.14645C1.65829 0.951184 1.34171 0.951184 1.14645 1.14645C0.951184 1.34171 0.951184 1.65829 1.14645 1.85355L5.73223 6.43934L5.6526 6.58876L2.8419 7.52566C2.6775 7.58046 2.5532 7.71648 2.51339 7.88513C2.47357 8.05378 2.52392 8.23102 2.64646 8.35356L4.79291 10.5L2.14645 13.1465L2 14L2.85356 13.8536L5.50002 11.2071L7.64646 13.3536C7.76899 13.4761 7.94623 13.5264 8.11489 13.4866C8.28354 13.4468 8.41955 13.3225 8.47435 13.1581L9.41143 10.3469L9.56016 10.2673ZM8.82138 9.52849L8.76403 9.5592C8.65137 9.61951 8.56608 9.72066 8.52567 9.84189L7.7815 12.0744L3.92562 8.21851L6.15812 7.47435C6.27966 7.43383 6.38101 7.34822 6.44126 7.23516L6.47143 7.17854L8.82138 9.52849ZM12.7178 7.4426L10.6636 8.54227L11.4024 9.28105L13.1897 8.32422C14.0759 7.84981 14.2538 6.65509 13.5443 5.94304L10.0589 2.44509C9.34701 1.73062 8.14697 1.90828 7.67261 2.79838L6.71556 4.59421L7.45476 5.33341L8.55511 3.26869C8.71323 2.97199 9.11324 2.91277 9.35055 3.15093L12.836 6.64888C13.0725 6.88623 13.0131 7.28446 12.7178 7.4426Z";
+    public string DataStayOnTopIcon
+    {
+        get
+        {
+            if (IsStayOnTop)
+            {
+                return _stayOnTopOff;
+            }
+            else
+            {
+                return _stayOnTopOn;
+            }
+        }
+    }
+
+    #endregion
+
+    public event EventHandler<int>? QueueHasBeenChanged;
+
     public MainViewModel()
     {
-        //Task.Run(Test);
-
+        // Load dummyimage
         var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
         using var stream = AssetLoader.Open(uri);
-
         _diplayImageDummy = new Bitmap(stream);
 
-
-        //Start();
+        // Init Timer.
         _timer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(6)
+            Interval = TimeSpan.FromSeconds(_slideshowTimerInterval)
         };
         _timer.Tick += OnTimerTick;
 
-        // Start the timer
-        //_timer.Start();
+#if DEBUG
+        IsSaveLog = true;
 
-        
+#else
+        IsSaveLog = false;
+        IsEnableDebugWindow = false;
+#endif
     }
 
     #region == Public Methods ==
 
-    public async void DroppedFiles(List<string> files)
+    public async void DroppedFiles(ObservableCollection<ImageInfo> images)
     {
-        if (files == null)
+        if (images == null)
         {
             return;
         }
 
         _timer.Stop();
 
-        _queue = files;
-        _originalQueue = files;
+        _queue = images;
+        _originalQueue = [.. images];
 
-
-        QueueIndex = 0;
+        _queueIndex = 0;
 
         if (_queue.Count > 0)
         {
-            if (_isShuffle)
+            if (_isShuffleOn)
             {
-                List<string> shuffledQueue = _originalQueue;
-                shuffledQueue.Shuffle();
-                _queue = shuffledQueue;
+                _queue.Shuffle();
             }
 
             // no wait for transitional effect.
             await Show(1);
+
+            OnPropertyChanged(nameof(Queue));
         }
     }
 
-    public async void SpaceKeyPressed()
+    public void SpaceKeyPressed()
     {
+        ToggleSlideshow();
+        /*
         if (_timer.IsEnabled)
         {
             _timer.Stop();
@@ -196,6 +487,7 @@ public partial class MainViewModel : ObservableObject
                 await Show(_crossfadeWaitDuration);
             }
         }
+        */
     }
 
     public async void NextKeyPressed()
@@ -207,8 +499,8 @@ public partial class MainViewModel : ObservableObject
 
         if (_queue.Count <= 0) return;
 
-        //QueueIndex++;
-        if ((QueueIndex) > (_queue.Count - 1)) return;
+        //_queueIndex++;
+        if ((_queueIndex) > (_queue.Count - 1)) return;
 
         /////////
         _isUseDummyNoOverrappingCrossfade = false;
@@ -225,13 +517,24 @@ public partial class MainViewModel : ObservableObject
         if (_queue.Count <= 0) return;
 
         int inx = 0;
-        if ((QueueIndex - 2) > -1)
+        if ((_queueIndex - 2) > -1)
         {
-            //QueueIndex -= 2;
-            inx = QueueIndex - 2;
+            //_queueIndex -= 2;
+            inx = _queueIndex - 2;
         }
 
-        QueueIndex = inx;
+        _queueIndex = inx;
+        await Show(_crossfadeWaitDuration);
+    }
+
+    public async void ListBoxItemSelected(ImageInfo img)
+    {
+        if (img is null)
+        {
+            return;
+        }
+
+        _queueIndex = Queue.IndexOf(img);
         await Show(_crossfadeWaitDuration);
     }
 
@@ -243,7 +546,24 @@ public partial class MainViewModel : ObservableObject
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
         if (_queue.Count <= 0) return;
-        if (QueueIndex > (_queue.Count - 1)) return;
+        if (_queueIndex > (_queue.Count - 1))
+        {
+            if (IsRepeatOn)
+            {
+                // Reset index.
+                _queueIndex = 0;
+            }
+            else
+            {
+                if (IsSlideshowOn)
+                {
+                    // No more to show.
+                    IsSlideshowOn = false;
+                }
+
+                return;
+            }
+        }
 
         await Show(_crossfadeWaitDuration);
     }
@@ -251,23 +571,39 @@ public partial class MainViewModel : ObservableObject
     private async Task Show(int crossfadeWaitDuration)
     {
         if (_queue.Count <= 0) return;
-        if (QueueIndex > (_queue.Count - 1)) return;
+        if (_queueIndex > (_queue.Count - 1)) 
+        {
+            if (IsRepeatOn)
+            {
+                // Reset index.
+                _queueIndex = 0;
+            }
+            else
+            {
+                if (IsSlideshowOn)
+                {
+                    // No more to show.
+                    IsSlideshowOn = false;
+                }
+
+                return;
+            }
+        }
 
         if (_timer.IsEnabled)
         {
             _timer.Stop();
         }
 
-
         /*
-        _tasks.Enqueue(QueueIndex++);
+        _tasks.Enqueue(_queueIndex++);
 
         //lock(_lock)
         //using (_lock.EnterScope())
         await _semaphore.WaitAsync();
         try
         {
-            //_tasks.Enqueue(QueueIndex+1);
+            //_tasks.Enqueue(_queueIndex+1);
 
             //await Task.Delay(100);
         }
@@ -279,58 +615,87 @@ public partial class MainViewModel : ObservableObject
         await ShowImage(wait);
         */
 
-        var filePath = _queue[QueueIndex];
+        var img = _queue[_queueIndex];
+
+        if (string.IsNullOrEmpty(img.ImageFilePath))
+        {
+            return;
+        }
 
         // just in case, double check.
-        if (HasImageExtension(filePath, _validExtensions) == false)
+        if (HasImageExtension(img.ImageFilePath, _validExtensions) == false)
         {
-            QueueIndex++;
+            _queueIndex++;
             await Show(crossfadeWaitDuration);
             return;
         }
 
         //Task.Run(() => ShowImage(filePath));
-        if (await ShowImage(filePath, crossfadeWaitDuration, _isUseDummyNoOverrappingCrossfade))
+        if (await ShowImage(img, crossfadeWaitDuration, _isUseDummyNoOverrappingCrossfade))
         {
-            if (_isFullscreen)
+            if (IsSlideshowOn)
             {
                 _timer.Start();
             }
 
-            //QueueIndex = index;
+            //_queueIndex = index;
+
+            QueueHasBeenChanged?.Invoke(this, _queueIndex-1);
         }
     }
 
-    private async Task<bool> ShowImage(string filePath, int crossfadeWaitDuration, bool useDummyNoOverrappingCrossfade)
+    private async Task<bool> ShowImage(ImageInfo img, int crossfadeWaitDuration, bool useDummyNoOverrappingCrossfade)
     {
-        int idx = QueueIndex;
-
-        if (_currentIndex == idx)
+        if (string.IsNullOrEmpty(img.ImageFilePath))
         {
-            Debug.WriteLine($"{idx} dupe skipping");
-            QueueIndex++;
-            return true;
+            return false;
         }
 
-        _currentIndex = idx;
+        if (!string.IsNullOrEmpty(_currentFile))
+        {
+            if (img.ImageFilePath.Equals(_currentFile))
+            {
+                Debug.WriteLine($"{_queueIndex} dupe skipping");
+                _queueIndex++;
+                return true;
+            }
+        }
+
+        int idx = _queueIndex;
+
+        _currentFile = img.ImageFilePath;
 
         Debug.WriteLine($"{idx} Enter critical section.");
 
+        Bitmap? bitmap;
+        if (img.IsAcquired)
+        {
+            bitmap = img.ImageSource;
+        }
+        else
+        {
+            img.IsLoading = true;
+            Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
+            img.ImageSource = new(img.ImageFilePath);
+            img.IsAcquired = true;
+            img.IsLoading = false;
 
-        Bitmap? bitmap = new(filePath);
+            bitmap = img.ImageSource;
+        }
 
         if (useDummyNoOverrappingCrossfade)
         {
             DiplayImage1 = _diplayImageDummy;
             await Task.Delay(crossfadeWaitDuration).ConfigureAwait(true);
         }
+        //DiplayImage1 = _diplayImageDummy;
         DiplayImage1 = bitmap;
 
-        //QueueIndex++;
-        QueueIndex = idx+1;
+        //_queueIndex++;
+        _queueIndex = idx+1;
         Debug.WriteLine($"{idx} Exit critical section.");
 
-        if (_isFullscreen)
+        if (IsSlideshowOn)
         {
             _timer.Start();
         }
@@ -352,6 +717,7 @@ public partial class MainViewModel : ObservableObject
         return false;
     }
 
+    /*
     private async void Start()
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(6));
@@ -359,9 +725,9 @@ public partial class MainViewModel : ObservableObject
         while (await timer.WaitForNextTickAsync())
         {
             if (_queue.Count <= 0) continue;
-            if (QueueIndex > (_queue.Count - 1)) continue;
+            if (_queueIndex > (_queue.Count - 1)) continue;
 
-            var filePath = _queue[QueueIndex];
+            var filePath = _queue[_queueIndex];
             if (HasImageExtension(filePath, _validExtensions) == false)
             {
                 continue;
@@ -371,10 +737,11 @@ public partial class MainViewModel : ObservableObject
             //DiplayImage = bitmap;
             //ShowImage(filePath);
 
-            QueueIndex++;
+            _queueIndex++;
         }
     }
-
+    */
+    /*
     private async Task Test()
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(6));
@@ -383,18 +750,135 @@ public partial class MainViewModel : ObservableObject
         {
             Debug.WriteLine($"Test {Thread.CurrentThread.Name} : {_queue.Count}");
             if (_queue.Count <= 0) continue;
-            if (QueueIndex > (_queue.Count - 1)) continue;
+            if (_queueIndex > (_queue.Count - 1)) continue;
 
             Dispatcher.UIThread.Post(() =>
             {
-                //var filePath = _queue[QueueIndex];
+                //var filePath = _queue[_queueIndex];
 
                 //Bitmap? bitmap = new(filePath);
                 //DiplayImage = bitmap;
             });
-            QueueIndex++;
+            _queueIndex++;
         }
 
+    }
+    */
+    #endregion
+
+    #region == Commands ==
+
+    [RelayCommand]
+    public void ToggleStayOnTop()
+    {
+        var win = App.GetService<MainWindow>();
+
+        if (IsStayOnTop)
+        {
+            win.Topmost = false;
+        }
+        else
+        {
+            win.Topmost = true;
+        }
+
+        IsStayOnTop = !IsStayOnTop;
+    }
+
+    [RelayCommand]
+    public void ToggleSlideshow()
+    {
+        if (IsSlideshowOn)
+        {
+            Debug.WriteLine("StartSlideshow false");
+            IsSlideshowOn = false;
+
+            if (_timer.IsEnabled)
+            {
+                _timer.Stop();
+            }
+        }
+        else
+        {
+            if (_timer.IsEnabled)
+            {
+                _timer.Stop();
+            }
+
+            if (_queue.Count > 0)
+            {
+                Debug.WriteLine("StartSlideshow true");
+                IsSlideshowOn = true;
+
+                // If at the end, reset index.
+                if (_queueIndex >= (_queue.Count - 1))
+                {
+                    _queueIndex = 0;
+                }
+
+                _timer.Start();
+                //_ = Show(_crossfadeWaitDuration);
+            }
+        }
+
+        OnPropertyChanged(nameof(IsSlideshowOn));
+    }
+
+    [RelayCommand]
+    public void ToggleShuffle()
+    {
+        IsShuffleOn = !IsShuffleOn;
+    }
+
+    [RelayCommand]
+    public void ToggleRepeat()
+    {
+        IsRepeatOn = !IsRepeatOn;
+    }
+
+    [RelayCommand]
+    public void ShowInExplorer()
+    {
+        if (string.IsNullOrEmpty(_currentFile))
+        {
+            return;
+        }
+
+        if (File.Exists(_currentFile))
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                string argument = $"/select,\"{_currentFile}\"";
+                Process.Start("explorer.exe", argument); 
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Process.Start("open", $"-R \"{_currentFile}\"");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var dir = Path.GetDirectoryName(_currentFile);
+                if (dir is not null)
+                {
+                    Process.Start("xdg-open", dir);
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    public void QueueListviewEnterKey(ImageInfo img)
+    {
+        Debug.WriteLine("QueueListviewEnterKey");
+
+        if (img is null)
+        {
+            Debug.WriteLine("QueueListviewEnterKey img is null");
+
+            return;
+        }
+
+        ListBoxItemSelected(img);
     }
 
     #endregion

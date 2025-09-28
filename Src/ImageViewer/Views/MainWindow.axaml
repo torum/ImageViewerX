@@ -4,12 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:ImageViewer.Views"
+             xmlns:helper="clr-namespace:ImageViewer.Helpers"
+             xmlns:mod="clr-namespace:ImageViewer.Models"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="ImageViewer.Views.MainWindow"
 		x:DataType="vm:MainViewModel"
         x:CompileBindings="True"
         Title="ImageViewer"
 		Background="Transparent"
+		Focusable="True"
 		ExtendClientAreaToDecorationsHint="True"
 		ExtendClientAreaChromeHints="PreferSystemChrome"
 	    TransparencyBackgroundFallback="#131313"
@@ -22,8 +25,10 @@
 		PointerWheelChanged="Window_PointerWheelChanged"
 		PointerPressed="Window_PointerPressed"
 		Loaded="Window_Loaded"
+Closing="Window_Closing"
 		KeyDown="Window_KeyDown"
-		KeyUp="Window_KeyUp">
+		KeyUp="Window_KeyUp"
+		Resized="Window_Resized">
 	<!--
 	    TransparencyBackgroundFallback="Transparent"
 		TransparencyLevelHint="Transparent"
@@ -47,15 +52,127 @@
 	</Interaction.Behaviors>
 	
 	<FlyoutBase.AttachedFlyout>
-		<Flyout Placement="Pointer">
-			<TextBlock Text="This flyout is attached to the Window." />
-		</Flyout>
+		<MenuFlyout Placement="Pointer">
+			<MenuItem Header="StayOnTop" Command="{Binding ToggleStayOnTopCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="{Binding DataStayOnTopIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+				</MenuItem.Icon>
+			</MenuItem>
+			<MenuItem Header="StartSlideshow" Command="{Binding ToggleSlideshowCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="{Binding DataPlayPauseIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						<!--
+						<Interaction.Behaviors>
+							<DataTriggerBehavior Binding="{Binding IsSlideshowOn}" ComparisonCondition="Equal" Value="true">
+								<ChangePropertyAction PropertyName="Data" Value="" />
+							</DataTriggerBehavior>
+							<DataTriggerBehavior Binding="{Binding IsSlideshowOn}" ComparisonCondition="Equal" Value="false">
+								<ChangePropertyAction PropertyName="Data" Value="" />
+							</DataTriggerBehavior>
+						</Interaction.Behaviors>
+						-->
+					</PathIcon>
+				</MenuItem.Icon>
+			</MenuItem>
+			<MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="{Binding DataShuffleIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					</PathIcon>
+				</MenuItem.Icon>
+			</MenuItem>
+			<MenuItem Header="Repeat" Command="{Binding ToggleRepeatCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="{Binding DataRepeatIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					</PathIcon>
+				</MenuItem.Icon>
+			</MenuItem>
+			<MenuItem Header="Show in Explorer" Command="{Binding ShowInExplorerCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="M4.49999 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.49999 13H11.5C12.3284 13 12.9999 12.3284 12.9999 11.5V9.26923C12.9999 8.99309 13.2238 8.76923 13.4999 8.76923C13.7761 8.76923 13.9999 8.99309 13.9999 9.26923V11.5C13.9999 12.8807 12.8807 14 11.5 14H4.49999C3.11928 14 2 12.8807 2 11.5V4.5C2 3.11929 3.11928 2 4.49999 2H6.73075C7.00689 2 7.23074 2.22386 7.23074 2.5C7.23074 2.77614 7.00689 3 6.73075 3H4.49999ZM8.76926 2.5C8.76926 2.22386 8.99311 2 9.26925 2H13.5C13.7761 2 14 2.22386 14 2.5V6.73077C14 7.00691 13.7761 7.23077 13.5 7.23077C13.2239 7.23077 13 7.00691 13 6.73077V3.70711L9.6228 7.08433C9.42754 7.27959 9.11096 7.27959 8.9157 7.08433C8.72044 6.88906 8.72044 6.57248 8.9157 6.37722L12.2929 3H9.26925C8.99311 3 8.76926 2.77614 8.76926 2.5Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					</PathIcon>
+				</MenuItem.Icon>
+			</MenuItem>
+		</MenuFlyout>
 	</FlyoutBase.AttachedFlyout>
 
-	<Grid IsHitTestVisible="False"
-		            >
-		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
-		<ContentControl x:Name="ContentFrame"></ContentControl>
-	</Grid>
+	<Grid>
+		<Grid IsHitTestVisible="False">
+			<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
+			<ContentControl x:Name="ContentFrame"></ContentControl>
+		</Grid>
 
+		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
+			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
+			
+			<ListBox x:Name="QueueListBox" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="Single" AutoScrollToSelectedItem="True" Width="132" Background="Transparent">
+				<!--  helper:ListBoxStackPanelBehaviors.VisibleItems="{Binding VisibleItemsImageInfo, Mode=OneWayToSource}" -->
+				<ListBox.KeyBindings>
+					<!--  Enter  -->
+					<KeyBinding Command="{Binding QueueListviewEnterKeyCommand}" Gesture="Enter" CommandParameter="{Binding SelectedQueueImage}" />
+				</ListBox.KeyBindings>
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<VirtualizingStackPanel/>
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+				<ListBox.ItemTemplate>
+					<DataTemplate x:DataType="mod:ImageInfo">
+						<Grid Width="120" Height="120" Margin="0">
+							<Border Margin="0" Width="120" Height="120" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True" CornerRadius="6">
+
+								<Grid>
+									<TransitioningContentControl Content="{Binding ImageSource, Mode=OneWay}" >
+										<TransitioningContentControl.ContentTemplate>
+											<DataTemplate DataType="Bitmap">
+												<Image Margin="0" Source="{Binding}" Stretch="UniformToFill" VerticalAlignment="Center"/>
+											</DataTemplate>
+										</TransitioningContentControl.ContentTemplate>
+									</TransitioningContentControl>
+									<!--
+									<Button Command="{Binding $parent[ListBox].((vm:MainViewModel)DataContext).AlbumsItemInvokedCommand}" Background="Transparent" BorderThickness="0" CommandParameter="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+									</Button>
+-->
+								</Grid>
+							</Border>
+
+							<Grid IsVisible="False">
+								<TextBlock Text="{Binding ImageFilePath}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Theme="{DynamicResource BodyTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" Padding="2" Opacity="0.7">
+								</TextBlock>
+								<!--
+								<StackPanel Margin="4">
+									<TextBlock Text="{Binding Name}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Theme="{DynamicResource BodyTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" Padding="2" Opacity="1">
+										<Interaction.Behaviors>
+											<DataTriggerBehavior Binding="{Binding Name}" ComparisonCondition="Equal" Value="">
+												<ChangePropertyAction PropertyName="Text" Value="Unknown Album" />
+											</DataTriggerBehavior>
+										</Interaction.Behaviors>
+									</TextBlock>
+									<TextBlock Text="{Binding AlbumArtist}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Theme="{DynamicResource BodyTextBlockStyle}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" Padding="2" Opacity="0.7">
+										<Interaction.Behaviors>
+											<DataTriggerBehavior Binding="{Binding AlbumArtist}" ComparisonCondition="Equal" Value="">
+												<ChangePropertyAction PropertyName="Text" Value="Unknown Artist" />
+											</DataTriggerBehavior>
+										</Interaction.Behaviors>
+									</TextBlock>
+								</StackPanel>
+-->
+							</Grid>
+
+						</Grid>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+				<ListBox.Styles>
+					<Style Selector="ListBoxItem" x:DataType="mod:ImageInfo">
+						<Setter Property="Height" Value="132"/>
+						<Setter Property="Width" Value="132"/>
+						<Setter Property="Padding" Value="6,6,6,6"/>
+						<Setter Property="VerticalAlignment" Value="Center"/>
+						<Setter Property="CornerRadius" Value="3"/>
+					</Style>
+				</ListBox.Styles>
+			</ListBox>
+
+		</Grid>
+
+	</Grid>
 </Window>

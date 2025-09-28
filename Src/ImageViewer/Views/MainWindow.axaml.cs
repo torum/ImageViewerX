@@ -1,23 +1,30 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using ImageViewer.Models;
 using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ImageViewer.Views;
 
@@ -27,10 +34,21 @@ public partial class MainWindow : Window
     {
         this.DataContext = App.GetService<MainViewModel>();
 
+        LoadSettings();
+
         InitializeComponent();
+
+        InitBackground();
 
         this.ContentFrame.Content = (new MainView() as UserControl);
 
+        this.PropertyChanged += this.OnWindow_PropertyChanged;
+
+        (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
+    }
+
+    private void InitBackground()
+    {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // There is some issue showing sysmenu in AvaloniaUI.
@@ -65,42 +83,275 @@ public partial class MainWindow : Window
         {
             this.Background = new SolidColorBrush(Color.Parse("#131313"));
         }
+    }
 
-        this.PropertyChanged += this.OnWindow_PropertyChanged;
+    private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        //LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        int windowTop = 0;
+        int windowLeft = 0;
+        double windowHeight = 300;
+        double windowWidth = 300;
+        WindowState windowState = WindowState.Normal;
+
+        if (!File.Exists(App.AppConfigFilePath))
+        {
+            return;
+        }
+        
+        var xdoc = XDocument.Load(App.AppConfigFilePath);
+
+        if (xdoc.Root is null)
+        {
+            Debug.WriteLine("Oops. xdoc.Root is null.");
+            return;
+        }
+
+        #region == Window setting ==
+
+        // Main Window element
+        var mainWindow = xdoc.Root.Element("MainWindow");
+        if (mainWindow is not null)
+        {
+            var hoge = mainWindow.Attribute("top");
+            if (hoge is not null)
+            {
+                if (Int32.TryParse(hoge.Value, out var wY))
+                {
+                    windowTop = wY;
+                }
+            }
+
+            hoge = mainWindow.Attribute("left");
+            if (hoge is not null)
+            {
+                if (Int32.TryParse(hoge.Value, out var wX))
+                {
+                    windowLeft = wX;
+                }
+            }
+            //w.Position = new PixelPoint(wX, wY);
+
+            hoge = mainWindow.Attribute("height");
+            if (hoge is not null)
+            {
+                if (!string.IsNullOrEmpty(hoge.Value))
+                {
+                    windowHeight = double.Parse(hoge.Value);
+                }
+            }
+
+            hoge = mainWindow.Attribute("width");
+            if (hoge is not null)
+            {
+                if (!string.IsNullOrEmpty(hoge.Value))
+                {
+                    windowWidth = double.Parse(hoge.Value);
+                }
+            }
+
+            hoge = mainWindow.Attribute("state");
+            if (hoge is not null)
+            {
+                if (hoge.Value == "Maximized")
+                {
+                    // Since there is no restorebounds in AvaloniaUI.
+                    windowState = WindowState.Normal;
+                }
+                else if (hoge.Value == "Normal")
+                {
+                    windowState = WindowState.Normal;
+                }
+                else if (hoge.Value == "Minimized")
+                {
+                    windowState = WindowState.Normal;
+                }
+            }
+        }
+
+        this.WindowState = windowState;
+
+        if (windowWidth >= 300)
+        {
+            this.Width = windowWidth;
+        }
+        if (windowHeight >= 300)
+        {
+            this.Height = windowHeight;
+        }
+
+        if ((windowLeft >= 0) && (windowTop >= 0))
+        {
+            this.Position = new PixelPoint(windowLeft, windowTop);
+        }
+
+        #endregion
+    }
+
+    private void Window_Closed(object? sender, System.EventArgs e)
+    {
+    }
+
+    private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
+    {
+        SaveSettings();
+    }
+
+    private void SaveSettings()
+    {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        // Config xml file
+        XmlDocument doc = new();
+        XmlDeclaration xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
+        doc.InsertBefore(xmlDeclaration, doc.DocumentElement);
+
+        // Root Document Element
+        XmlElement root = doc.CreateElement(string.Empty, "App", string.Empty);
+        doc.AppendChild(root);
+
+        XmlAttribute attrs;
+
+        #region == Window settings ==
+
+        // Main Window element
+        XmlElement mainWindow = doc.CreateElement(string.Empty, "MainWindow", string.Empty);
+
+        //Window w = (sender as Window);
+        // Main Window attributes
+        attrs = doc.CreateAttribute("height");
+        if (this.WindowState == WindowState.Maximized)
+        {
+            //attrs.Value = w.RestoreBounds.Height.ToString();
+        }
+        else
+        {
+            attrs.Value = this.Height.ToString();
+        }
+        mainWindow.SetAttributeNode(attrs);
+
+        attrs = doc.CreateAttribute("width");
+        if (this.WindowState == WindowState.Maximized)
+        {
+            //attrs.Value = w.RestoreBounds.Width.ToString();
+            //windowWidth = w.RestoreBounds.Width;
+        }
+        else
+        {
+            attrs.Value = this.Width.ToString();
+            //windowWidth = this.Width;
+
+        }
+        mainWindow.SetAttributeNode(attrs);
+
+        attrs = doc.CreateAttribute("top");
+        if (this.WindowState == WindowState.Maximized)
+        {
+            //attrs.Value = w.RestoreBounds.Top.ToString();
+        }
+        else
+        {
+            //attrs.Value = w.Top.ToString();
+            attrs.Value = this.Position.Y.ToString();
+        }
+        mainWindow.SetAttributeNode(attrs);
+
+        attrs = doc.CreateAttribute("left");
+        if (this.WindowState == WindowState.Maximized)
+        {
+            //attrs.Value = w.RestoreBounds.Left.ToString();
+        }
+        else
+        {
+            //attrs.Value = w.Left.ToString();
+            attrs.Value = this.Position.X.ToString();
+        }
+        mainWindow.SetAttributeNode(attrs);
+
+        attrs = doc.CreateAttribute("state");
+        if (this.WindowState == WindowState.Maximized)
+        {
+            attrs.Value = "Maximized";
+        }
+        else if (this.WindowState == WindowState.Normal)
+        {
+            attrs.Value = "Normal";
+
+        }
+        else if (this.WindowState == WindowState.Minimized)
+        {
+            attrs.Value = "Minimized";
+        }
+        mainWindow.SetAttributeNode(attrs);
+
+        // set MainWindow element to root.
+        root.AppendChild(mainWindow);
+
+        #endregion
+
+        try
+        {
+            if (!Directory.Exists(App.AppDataFolder))
+            {
+                Directory.CreateDirectory(App.AppDataFolder);
+            }
+
+            doc.Save(App.AppConfigFilePath);
+        }
+        //catch (System.IO.FileNotFoundException) { }
+        catch (Exception ex)
+        {
+            if (vm.IsSaveLog)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    App.AppendErrorLog("Exception@OnWindowClosing", ex.Message);
+                });
+            }
+        }
     }
 
     private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (sender is Window)
+        if (sender is not Window)
         {
-            //var oldState = (WindowState)e.OldValue;
-            //var newState = (WindowState)e.NewValue;
+            return;
+        }
+        if (e.Property.Name != nameof(WindowState))
+        {
+            return;
+        }
 
-            if (e.Property.Name == nameof(WindowState))
-            {
-                if (this.DataContext is not  MainViewModel vm)
-                {
-                    return;
-                }
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
 
-                if (e.NewValue is WindowState.FullScreen)
-                {
-                    //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
-                    vm.IsFullscreen = true;
-                }
-                else if (e.NewValue is WindowState.Normal)
-                {
-                    vm.IsFullscreen = false;
-                }
-                else if (e.NewValue is WindowState.Minimized)
-                {
-                    vm.IsFullscreen = false;
-                }
-                else
-                {
-                    vm.IsFullscreen = false;
-                }
-            }
+        // Let vm know WindowState changed.
+
+        if (e.NewValue is WindowState.FullScreen)
+        {
+            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
+            vm.IsFullscreen = true;
+        }
+        else if (e.NewValue is WindowState.Normal)
+        {
+            vm.IsFullscreen = false;
+        }
+        else if (e.NewValue is WindowState.Minimized)
+        {
+            vm.IsFullscreen = false;
+        }
+        else
+        {
+            vm.IsFullscreen = false;
         }
     }
 
@@ -108,15 +359,15 @@ public partial class MainWindow : Window
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
-            if (WindowState == WindowState.Normal)
+            if (this.WindowState == WindowState.Normal)
             {
                 // Call BeginMoveDrag to enable window dragging
                 BeginMoveDrag(e);
             }
-        }
-        else
-        {
-
+            else if (this.WindowState == WindowState.FullScreen)
+            {
+                this.Cursor = new Cursor(StandardCursorType.None);
+            }
         }
 
         // Right clicked on Window.
@@ -128,6 +379,11 @@ public partial class MainWindow : Window
 
                 // Show the flyout using the 'Placement="Pointer"' property.
                 flyout?.ShowAt(target);
+
+                if (this.WindowState == WindowState.FullScreen)
+                {
+                    this.Cursor = Cursor.Default;
+                }
             }
         }
     }
@@ -161,28 +417,29 @@ public partial class MainWindow : Window
             if (fileNames is not null && fileNames.Count != 0)
             {
                 // Fire and forget.
-                ProcessFiles(fileNames);
+                _ = ProcessFiles(fileNames);
                 //ProcessFiles(fileNames.Select(x => x.Path.LocalPath).ToList);
             }
         }
     }
 
-    private void ProcessFiles(List<IStorageItem> fileNames)//List<Avalonia.Platform.Storage.IStorageItem>
+    private async Task ProcessFiles(List<IStorageItem> fileNames)//List<Avalonia.Platform.Storage.IStorageItem>
     {
         if (this.DataContext is not MainViewModel vm)
         {
             return;
         }
 
-        // Don't wait. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
+        //vm.IsWorking = true;
+
+        // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
         // Don't _ =, nor await = . at all. 
-        Task.Run(() =>
+        await Task.Run(() =>
         {
             Dispatcher.UIThread.Post(() =>
             {
                 vm.IsWorking = true;
                 //await Task.Yield();
-
             });
 
             var validExt = vm.ValidExtensions;
@@ -220,7 +477,7 @@ public partial class MainWindow : Window
                     }
                 }
 
-                // Single file dropped, get all siblings.
+                // Single file dropped, in that case, get all siblings.
                 if ((droppedFiles.Count == 1) && isSingleFileDropped)
                 {
                     if (File.Exists(droppedFiles[0]))
@@ -239,16 +496,18 @@ public partial class MainWindow : Window
 
                                 if (droppedFiles.Count > 1)
                                 {
-                                    // Sort to move the first instance of 'originalFile' to the front, followed by other fruits.
+                                    // Sort to move the first instance of 'originalFile' to the front, followed by other files.
                                     // Using `Distinct()` will remove the remaining duplicates.
+#pragma warning disable IDE0305
                                     droppedFiles = droppedFiles.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
+#pragma warning restore IDE0305
                                 }
                             }
                         }
                     }
                 }
 
-                var droppedImages = new List<string>();
+                var droppedImages = new ObservableCollection<ImageInfo>();
 
                 foreach (var file in droppedFiles)
                 {
@@ -263,7 +522,11 @@ public partial class MainWindow : Window
                         continue;
                     }
 
-                    droppedImages.Add(file);
+                    var img = new ImageInfo
+                    {
+                        ImageFilePath = file
+                    };
+                    droppedImages.Add(img);
                 }
                 Dispatcher.UIThread.Post(() =>
                 {
@@ -285,84 +548,6 @@ public partial class MainWindow : Window
         });
     }
 
-    // Marshal.AllocHGlobal way.
-    /*
-    private static void EnableBlurBehind(IntPtr handle)
-    {
-        // Hexadecimal BGR color value
-        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
-
-        var accent = new NativeMethods.AccentPolicy
-        {
-            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
-            AccentFlags = 0,
-            GradientColor = darkGrayTint,//0,
-            AnimationId = 0
-        };
-
-        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
-        Marshal.StructureToPtr(accent, accentPtr, false);
-
-        var data = new NativeMethods.WindowCompositionAttributeData
-        {
-            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-            SizeOfData = Marshal.SizeOf(accent),
-            Data = accentPtr
-        };
-
-        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-
-        Marshal.FreeHGlobal(accentPtr);
-    }
-    */
-
-    // Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
-    public static unsafe void EnableBlurBehind(IntPtr handle)
-    {
-        // The pointer for the unmanaged memory.
-        void* accentPtr = null;
-
-        try
-        {
-            uint darkGrayTint = 0;
-
-            var accent = new NativeMethods.AccentPolicy
-            {
-                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
-                AccentFlags = 0,
-                GradientColor = darkGrayTint,
-                AnimationId = 0
-            };
-
-            // Get the size of the structure.
-            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
-
-            // Allocate and zero the unmanaged memory.
-            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
-
-            // Copy the managed struct to the unmanaged memory.
-            Unsafe.Copy(accentPtr, ref accent);
-
-            var data = new NativeMethods.WindowCompositionAttributeData
-            {
-                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-                SizeOfData = (int)sizeOfAccent,
-                // Convert the void* pointer to an IntPtr for the interop call.
-                Data = (IntPtr)accentPtr
-            };
-
-            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-        }
-        finally
-        {
-            // Free the unmanaged memory if it was successfully allocated.
-            if (accentPtr != null)
-            {
-                NativeMemory.Free(accentPtr);
-            }
-        }
-    }
-
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
@@ -377,11 +562,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        //Task.Run(Test);
-    }
-
     private void SetWindowStateFullScreen()
     {
         // hack for CaptionButtons not dissapearing fast enough problem.
@@ -393,7 +573,7 @@ public partial class MainWindow : Window
 
             this.WindowState = WindowState.FullScreen;
 
-            this.Cursor = new Cursor(StandardCursorType.None);
+            //this.Cursor = new Cursor(StandardCursorType.None);
         });
     }
 
@@ -445,19 +625,20 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Key.F)
         {
-            if (this.DataContext is MainViewModel vm)
+            if (WindowState == WindowState.FullScreen)
             {
-                if (WindowState == WindowState.FullScreen)
-                {
-                    SetWindowStateNormal();
-                }
-                else if (WindowState == WindowState.Normal)
-                {
-                    SetWindowStateFullScreen();
-                }
-
-                e.Handled = true;
+                SetWindowStateNormal();
             }
+            else if (WindowState == WindowState.Normal)
+            {
+                SetWindowStateFullScreen();
+            }
+
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Tab)
+        {
+            //e.Handled = true;
         }
     }
 
@@ -465,7 +646,7 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Right)
         {
-            if (this.DataContext is MainViewModel vm)
+            if (this.DataContext is MainViewModel)
             {
                 //vm.NextKeyPressed();
 
@@ -474,7 +655,7 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Key.Left)
         {
-            if (this.DataContext is MainViewModel vm)
+            if (this.DataContext is MainViewModel)
             {
                 //vm.NextKeyPressed();
 
@@ -483,10 +664,14 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Key.F)
         {
-            if (this.DataContext is MainViewModel vm)
+            if (this.DataContext is MainViewModel)
             {
                 e.Handled = true;
             }
+        }
+        else if (e.Key == Key.Tab)
+        {
+            //e.Handled = true;
         }
     }
 
@@ -509,6 +694,279 @@ public partial class MainWindow : Window
 
         e.Handled = true;
     }
+
+    // Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
+    public static unsafe void EnableBlurBehind(IntPtr handle)
+    {
+        // The pointer for the unmanaged memory.
+        void* accentPtr = null;
+
+        try
+        {
+            uint darkGrayTint = 0;
+
+            var accent = new NativeMethods.AccentPolicy
+            {
+                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
+                AccentFlags = 0,
+                GradientColor = darkGrayTint,
+                AnimationId = 0
+            };
+
+            // Get the size of the structure.
+            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
+
+            // Allocate and zero the unmanaged memory.
+            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
+
+            // Copy the managed struct to the unmanaged memory.
+            Unsafe.Copy(accentPtr, ref accent);
+
+            var data = new NativeMethods.WindowCompositionAttributeData
+            {
+                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+                SizeOfData = (int)sizeOfAccent,
+                // Convert the void* pointer to an IntPtr for the interop call.
+                Data = (IntPtr)accentPtr
+            };
+
+            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+        }
+        finally
+        {
+            // Free the unmanaged memory if it was successfully allocated.
+            if (accentPtr != null)
+            {
+                NativeMemory.Free(accentPtr);
+            }
+        }
+    }
+
+    private void ListBox_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void ListBox_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (sender is not ListBox lb)
+        {
+            return;
+        }
+
+        if (lb.SelectedItem is not ImageInfo item)
+        {
+            return;
+        }
+
+        if (this.DataContext is MainViewModel vm)
+        {
+            vm.ListBoxItemSelected(item);
+        }
+    }
+
+    private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Tab)
+        {
+            this.Focus();
+            e.Handled = true;
+        }
+    }
+
+    private void ListBox_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Tab)
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void ListBox_GotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
+    {
+        this.ListBoxBackgroundLayerBorder.IsVisible = true;
+    }
+
+    private void ListBox_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        this.ListBoxBackgroundLayerBorder.IsVisible = false;
+    }
+
+    private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
+    {
+        //await Task.Yield();
+        //await Task.Delay(800); // Need to wait for UI to update
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.QueueListBox is ListBox lb)
+            {
+                if (DataContext is not MainViewModel vm)
+                {
+                    return;
+                }
+                var item = lb.SelectedItem;
+                if (item is ImageInfo img)
+                {
+                    var ind = vm.Queue.IndexOf(img);
+                    if (ind > 0)
+                    {
+                        lb.ScrollIntoView(ind);
+
+                        var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                        if (scrollViewer is null)
+                        {
+                            return;
+                        }
+                        var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+                        if (virtualPanel is null)
+                        {
+                            return;
+                        }
+                        UpdateVisibleItems(scrollViewer, virtualPanel);
+                    }
+                }
+
+            }
+        });
+    }
+
+    private async void OnQueueHasBeenChanged(object? sender, int ind)
+    {
+        await Task.Yield();
+        //await Task.Delay(800); // Need to wait for UI to update
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.QueueListBox is ListBox lb)
+            {
+                lb.ScrollIntoView(ind);
+
+                if (DataContext is not MainViewModel vm)
+                {
+                    return;
+                }
+
+                var test = vm?.Queue[ind];
+                if (test != null)
+                {
+                    lb.SelectedItem = test;
+                }
+
+                var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                if (scrollViewer is null)
+                {
+                    return;
+                }
+                var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+                if (virtualPanel is null)
+                {
+                    return;
+                }
+                UpdateVisibleItems(scrollViewer, virtualPanel);
+            }
+        });
+    }
+
+    private void ListBox_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is not ListBox listBox)
+        {
+            return;
+        }
+        //var listBox = sender;
+
+        if (listBox.Tag != null)
+        {
+            //Debug.WriteLine("(listBox.Tag != null) @ListBoxStackPanelBehaviors");
+            return;
+        }
+
+        listBox.Tag = "ListBox_Loaded_ListBoxStackPanelBehaviors";
+
+        var scrollViewer = listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+
+        var virtualPanel = listBox.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+
+        if ((scrollViewer != null) && (virtualPanel != null))
+        {
+            // Subscribe to the scroll event to update the visible items.
+            scrollViewer.ScrollChanged += (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
+            // .. size changed event too.
+            scrollViewer.SizeChanged += (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
+
+            // Call it once initially to set the property.
+            UpdateVisibleItems(scrollViewer, virtualPanel);
+        }
+    }
+
+    private void UpdateVisibleItems(ScrollViewer scrollViewer, VirtualizingStackPanel virtualPanel)
+    {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        //var _scrollViewer = listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+        if (scrollViewer == null) return;
+
+        //var _virtualPanel = listBox.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+        if (virtualPanel == null) return;
+
+        var viewportRect = new Rect(new Point(scrollViewer.Offset.X, scrollViewer.Offset.Y), scrollViewer.Viewport);
+
+        var visibleObjects = virtualPanel.Children.Where(child => child.Bounds.Intersects(viewportRect)).ToList();
+
+        var visibleItems = new List<object>();
+
+        foreach (var itemContainer in visibleObjects)
+        {
+            var dataItem = itemContainer.DataContext;
+            if (dataItem != null)
+            {
+                visibleItems.Add(dataItem);
+            }
+        }
+
+        // Set the new value of the attached property.
+        //listBox.SetValue(VisibleItemsProperty, visibleItems);
+        vm.VisibleItemsImageInfo = visibleItems;
+    }
+
+    private void ListBox_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+
+    // Marshal.AllocHGlobal way.
+    /*
+    private static void EnableBlurBehind(IntPtr handle)
+    {
+        // Hexadecimal BGR color value
+        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
+
+        var accent = new NativeMethods.AccentPolicy
+        {
+            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
+            AccentFlags = 0,
+            GradientColor = darkGrayTint,//0,
+            AnimationId = 0
+        };
+
+        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
+        Marshal.StructureToPtr(accent, accentPtr, false);
+
+        var data = new NativeMethods.WindowCompositionAttributeData
+        {
+            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+            SizeOfData = Marshal.SizeOf(accent),
+            Data = accentPtr
+        };
+
+        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+
+        Marshal.FreeHGlobal(accentPtr);
+    }
+    */
 
     // TryRegisterWindowsMenu() for sys menu (alt+space)
     /*

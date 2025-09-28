@@ -1,18 +1,28 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-
+using Avalonia.Threading;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
+using System.Text;
 
 namespace ImageViewer;
 
 public partial class App : Application
 {
+    public static readonly string AppName = "ImageViewer2";
+    private static readonly string _appDeveloper = "torum";
+
+    // Data folder and Config file path.
+    private static readonly string _envDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(_envDataFolder, _appDeveloper), AppName);
+    public static string AppConfigFilePath { get; } = System.IO.Path.Combine(AppDataFolder, AppName + ".config");
+
     public IHost AppHost { get; private set; }
 
     public App()
@@ -52,13 +62,14 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            Dispatcher.UIThread.UnhandledException += OnUnhandledException;
+
             /*
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainViewModel()
             };
             */
-
             desktop.MainWindow = App.GetService<MainWindow>();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
@@ -70,5 +81,40 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+
+    // Log file.
+    private static readonly StringBuilder _errortxt = new();
+    private static readonly string _logFilePath = System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + System.IO.Path.DirectorySeparatorChar + AppName + "_errors.txt";
+
+    private void OnUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        // Prevent the application from crashing
+        e.Handled = true;
+
+        // Log the exception for debugging
+        //Console.WriteLine($"An unhandled exception occurred: {e.Exception}");
+        AppendErrorLog("DispatcherUnhandledException", e.Exception.ToString());
+
+        SaveErrorLog();
+    }
+
+    public static void AppendErrorLog(string errorTxt, string kindTxt)
+    {
+        var dt = DateTime.Now;
+        var nowString = dt.ToString("yyyy/MM/dd HH:mm:ss");
+
+        _errortxt.AppendLine(nowString + " - " + kindTxt + " - " + errorTxt);
+    }
+
+    public static void SaveErrorLog()
+    {
+        if (string.IsNullOrEmpty(_logFilePath))
+            return;
+
+        var s = _errortxt.ToString();
+        if (!string.IsNullOrEmpty(s))
+            File.WriteAllText(_logFilePath, s);
     }
 }
