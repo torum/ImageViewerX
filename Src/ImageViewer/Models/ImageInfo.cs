@@ -14,7 +14,7 @@ public class ImageInfo : ObservableObject
     
     public bool IsAcquired { get; set; } = false;
 
-    public string? ImageFilePath { get; set; }
+    public string? ImageFilePath { get; set; } = string.Empty;
 
     public int BinarySize { get; set; }
 
