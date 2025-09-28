@@ -271,11 +271,17 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             _isShuffleOn = value;
-            OnPropertyChanged(nameof(IsShuffleOn));
-            OnPropertyChanged(nameof(DataShuffleIcon));
 
             if (_queue.Count > 0)
             {
+                IsWorking = true;
+
+                // Slideshow Timer temp stop.
+                if (_timer.IsEnabled)
+                {
+                    _timer.Stop();
+                }
+
                 if (_isShuffleOn)
                 {
                     _queue = new ObservableCollection<ImageInfo>(_originalQueue);
@@ -285,8 +291,46 @@ public partial class MainViewModel : ObservableObject
                 {
                     _queue = new ObservableCollection<ImageInfo>(_originalQueue);
                 }
+
+                if (!string.IsNullOrEmpty(_currentFile))
+                {
+                    var cur = _queue.FirstOrDefault(x => x.ImageFilePath == _currentFile);
+                    if (cur is not null)
+                    {
+                        _queueIndex = _queue.IndexOf(cur);
+
+                        if (_queueIndex < (_queue.Count - 1))
+                        {
+                            _queueIndex++;
+                        }
+                    }
+                }
+
+                /*
+                if (SelectedQueueImage is not null)
+                {
+                    _queueIndex = _queue.IndexOf(SelectedQueueImage);
+
+                    if (_queueIndex < (_queue.Count - 1))
+                    {
+                        _queueIndex++;
+                    }
+                }
+                */
+
+                // Slideshow timer restart.
+                if (IsSlideshowOn)
+                {
+                    _timer.Start();
+                }
+
+                IsWorking = false;
+
                 OnPropertyChanged(nameof(Queue));
             }
+
+            OnPropertyChanged(nameof(IsShuffleOn));
+            OnPropertyChanged(nameof(DataShuffleIcon));
         }
     }
 
@@ -500,7 +544,24 @@ public partial class MainViewModel : ObservableObject
         if (_queue.Count <= 0) return;
 
         //_queueIndex++;
-        if ((_queueIndex) > (_queue.Count - 1)) return;
+        if ((_queueIndex) > (_queue.Count - 1)) 
+        {
+            if (IsRepeatOn)
+            {
+                // Reset index.
+                _queueIndex = 0;
+            }
+            else
+            {
+                if (IsSlideshowOn)
+                {
+                    // No more to show.
+                    IsSlideshowOn = false;
+                }
+
+                return;
+            }
+        }
 
         /////////
         _isUseDummyNoOverrappingCrossfade = false;
@@ -593,6 +654,11 @@ public partial class MainViewModel : ObservableObject
         if (_timer.IsEnabled)
         {
             _timer.Stop();
+        }
+
+        if (IsWorking)
+        {
+            await Task.Delay(500);
         }
 
         /*
@@ -788,6 +854,12 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void ToggleSlideshow()
     {
+        var isOn = IsSlideshowOn;
+
+        var page = App.GetService<MainView>();
+        page.UpDownAnimation(isOn, TimeSpan.FromMilliseconds(600));
+
+
         if (IsSlideshowOn)
         {
             Debug.WriteLine("StartSlideshow false");

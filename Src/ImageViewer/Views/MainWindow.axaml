@@ -28,7 +28,8 @@
 Closing="Window_Closing"
 		KeyDown="Window_KeyDown"
 		KeyUp="Window_KeyUp"
-		Resized="Window_Resized">
+		Resized="Window_Resized"
+		PointerMoved="Window_PointerMoved">
 	<!--
 	    TransparencyBackgroundFallback="Transparent"
 		TransparencyLevelHint="Transparent"
@@ -127,6 +128,9 @@ Closing="Window_Closing"
 												<Image Margin="0" Source="{Binding}" Stretch="UniformToFill" VerticalAlignment="Center"/>
 											</DataTemplate>
 										</TransitioningContentControl.ContentTemplate>
+										<TransitioningContentControl.PageTransition>
+											<CrossFade Duration="0:00:00.992" />
+										</TransitioningContentControl.PageTransition>
 									</TransitioningContentControl>
 									<!--
 									<Button Command="{Binding $parent[ListBox].((vm:MainViewModel)DataContext).AlbumsItemInvokedCommand}" Background="Transparent" BorderThickness="0" CommandParameter="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">

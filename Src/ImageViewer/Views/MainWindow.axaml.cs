@@ -13,6 +13,7 @@ using Avalonia.VisualTree;
 using ImageViewer.Models;
 using ImageViewer.ViewModels;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -30,6 +31,9 @@ namespace ImageViewer.Views;
 
 public partial class MainWindow : Window
 {
+
+    private readonly DispatcherTimer _timer;
+
     public MainWindow()
     {
         this.DataContext = App.GetService<MainViewModel>();
@@ -40,12 +44,41 @@ public partial class MainWindow : Window
 
         InitBackground();
 
-        this.ContentFrame.Content = (new MainView() as UserControl);
+        this.ContentFrame.Content = App.GetService<MainView>();//(new MainView() as UserControl);
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
 
         (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
+
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(3)
+        };
+        _timer.Tick += OnTimerTick;
     }
+
+    private void OnTimerTick(object? sender, EventArgs e)
+    {
+        // This code runs on the UI thread, so it's safe to update UI elements.
+
+        this.Cursor = new Cursor(StandardCursorType.None);
+    }
+
+    private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
+    {
+        if (this.WindowState == WindowState.FullScreen)
+        {
+            if (_timer.IsEnabled)
+            {
+                _timer.Stop();
+            }
+
+            this.Cursor = Cursor.Default;
+
+            _timer.Start();
+        }
+    }
+
 
     private void InitBackground()
     {
@@ -574,6 +607,12 @@ public partial class MainWindow : Window
             this.WindowState = WindowState.FullScreen;
 
             //this.Cursor = new Cursor(StandardCursorType.None);
+
+            if (_timer.IsEnabled)
+            {
+                _timer.Stop();
+            }
+            _timer.Start();
         });
     }
 
@@ -583,6 +622,11 @@ public partial class MainWindow : Window
 
         this.WindowState = WindowState.Normal;
         this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+
+        if (_timer.IsEnabled)
+        {
+            _timer.Stop();
+        }
     }
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -935,6 +979,7 @@ public partial class MainWindow : Window
     {
         e.Handled = true;
     }
+
 
 
     // Marshal.AllocHGlobal way.

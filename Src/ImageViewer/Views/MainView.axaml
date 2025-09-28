@@ -14,7 +14,7 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-	<Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
 
 		<TransitioningContentControl Content="{Binding DiplayImage1, Mode=OneWay}"  HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
@@ -32,6 +32,11 @@
 				</CompositePageTransition>
 			</TransitioningContentControl.PageTransition>
 		</TransitioningContentControl>
+
+		<!--
+		<Image Margin="0" Source="{Binding DiplayImage1}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center">
+		</Image>
+		-->
 
 	</Grid>
 </UserControl>
