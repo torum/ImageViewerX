@@ -96,80 +96,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private void GetPictures(IEnumerable<object>? imageInfoItems)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (imageInfoItems is null)
-            {
-                Debug.WriteLine("imageInfoItems is null");
-                return;
-            }
-
-            if (Queue.Count < 1)
-            {
-                Debug.WriteLine("Queue.Count < 1");
-                return;
-            }
-
-            foreach (var item in imageInfoItems)
-            {
-                if (item is not ImageInfo img)
-                {
-                    Debug.WriteLine("item is not ImageInfo");
-                    continue;
-                }
-
-                if (img is null)
-                {
-                    Debug.WriteLine("img is null");
-                    continue;
-                }
-
-                if (img.IsAcquired)
-                {
-                    //Debug.WriteLine("img.IsAcquired");
-                    continue;
-                }
-
-                if (img.IsLoading)
-                {
-                    Debug.WriteLine("img.IsLoading");
-                    continue;
-                }
-                img.IsLoading = true;
-
-                if (File.Exists(img.ImageFilePath))
-                {
-                    img.IsLoading = true;
-
-                    Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
-
-                    try
-                    {
-                        Bitmap? bitmap = new(img.ImageFilePath);
-                        img.ImageSource = bitmap;
-                        img.IsAcquired = true;
-                        img.IsLoading = false;
-                    }
-                    catch (Exception e)
-                    {
-                        img.IsLoading = false;
-                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
-                        continue;
-                    }
-                    finally
-                    {
-                        img.IsLoading = false;
-                    }
-
-                    //await Task.Delay(5);
-                    //await Task.Yield();
-                }
-            }
-        });
-    }
-
     private Bitmap? _diplayImage1;
     public Bitmap? DiplayImage1
     {
@@ -832,6 +758,83 @@ public partial class MainViewModel : ObservableObject
 
     }
     */
+
+
+    private void GetPictures(IEnumerable<object>? imageInfoItems)
+    {
+        Dispatcher.UIThread.Post(async () =>
+        {
+            if (imageInfoItems is null)
+            {
+                Debug.WriteLine("imageInfoItems is null");
+                return;
+            }
+
+            if (Queue.Count < 1)
+            {
+                Debug.WriteLine("Queue.Count < 1");
+                return;
+            }
+
+            foreach (var item in imageInfoItems)
+            {
+                if (item is not ImageInfo img)
+                {
+                    Debug.WriteLine("item is not ImageInfo");
+                    continue;
+                }
+
+                if (img is null)
+                {
+                    Debug.WriteLine("img is null");
+                    continue;
+                }
+
+                if (img.IsAcquired)
+                {
+                    //Debug.WriteLine("img.IsAcquired");
+                    continue;
+                }
+
+                if (img.IsLoading)
+                {
+                    Debug.WriteLine("img.IsLoading");
+                    continue;
+                }
+                img.IsLoading = true;
+
+                if (File.Exists(img.ImageFilePath))
+                {
+                    img.IsLoading = true;
+
+                    Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+
+                    try
+                    {
+                        Bitmap? bitmap = new(img.ImageFilePath);
+                        img.ImageSource = bitmap;
+                        img.IsAcquired = true;
+                        img.IsLoading = false;
+                    }
+                    catch (Exception e)
+                    {
+                        img.IsLoading = false;
+                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
+                        continue;
+                    }
+                    finally
+                    {
+                        img.IsLoading = false;
+                    }
+
+                    await Task.Delay(100);
+                    //await Task.Yield();
+                }
+            }
+        });
+    }
+
+
     #endregion
 
     #region == Commands ==
