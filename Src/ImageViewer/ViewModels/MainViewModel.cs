@@ -34,8 +34,7 @@ public partial class MainViewModel : ObservableObject
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timer;
     private readonly System.Threading.Lock _lock = new();
-    private readonly int _crossfadeWaitDuration = 1000;//1000;
-    private bool _isUseDummyNoOverrappingCrossfade = true;
+    //private readonly int _crossfadeWaitDuration = 1000;//1000;
     //private readonly SemaphoreSlim _semaphore = new(1, 1);
     //readonly Queue<int> _tasks = new();
     private readonly Bitmap? _diplayImageDummy;
@@ -181,6 +180,26 @@ public partial class MainViewModel : ObservableObject
 
             _slideshowTimerInterval = value;
             OnPropertyChanged(nameof(SlideshowTimerInterval));
+        }
+    }
+
+    private bool _isOverrappingCrossfadeOn = true;
+    public bool IsOverrappingCrossfadeOn
+    {
+        get
+        {
+            return _isOverrappingCrossfadeOn;
+        }
+        set
+        {
+            if (_isOverrappingCrossfadeOn == value)
+                return;
+
+            _isOverrappingCrossfadeOn = value;
+            OnPropertyChanged(nameof(IsOverrappingCrossfadeOn));
+            OnPropertyChanged(nameof(DataCrossfadeIcon));
+
+            TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -387,9 +406,27 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private readonly string _checkedBox = "M4.5 2C3.11929 2 2 3.11929 2 4.5V11.5C2 12.8807 3.11929 14 4.5 14H11.5C12.8807 14 14 12.8807 14 11.5V4.5C14 3.11929 12.8807 2 11.5 2H4.5ZM3 4.5C3 3.67157 3.67157 3 4.5 3H11.5C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H4.5C3.67157 13 3 12.3284 3 11.5V4.5ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7 9.29289L5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L6.64645 10.3536C6.84171 10.5488 7.15829 10.5488 7.35355 10.3536L10.8536 6.85355Z";
+    private readonly string _uncheckedBox = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
+    public string DataCrossfadeIcon
+    {
+        get
+        {
+            if (IsOverrappingCrossfadeOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
+            }
+        }
+    }
+
     #endregion
 
     public event EventHandler<int>? QueueHasBeenChanged;
+    public event EventHandler? TransitionsHasBeenChanged;
 
     public MainViewModel()
     {
@@ -438,7 +475,7 @@ public partial class MainViewModel : ObservableObject
             }
 
             // no wait for transitional effect.
-            await Show(1);
+            await Show();
 
             OnPropertyChanged(nameof(Queue));
         }
@@ -492,8 +529,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         /////////
-        _isUseDummyNoOverrappingCrossfade = false;
-        await Show(_crossfadeWaitDuration);
+        await Show();
     }
 
     public async void PrevKeyPressed()
@@ -513,7 +549,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         _queueIndex = inx;
-        await Show(_crossfadeWaitDuration);
+        await Show();
     }
 
     public async void ListBoxItemSelected(ImageInfo img)
@@ -524,7 +560,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         _queueIndex = Queue.IndexOf(img);
-        await Show(_crossfadeWaitDuration);
+        await Show();
     }
 
     #endregion
@@ -554,10 +590,10 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        await Show(_crossfadeWaitDuration);
+        await Show();
     }
 
-    private async Task Show(int crossfadeWaitDuration)
+    private async Task Show()
     {
         if (_queue.Count <= 0) return;
         if (_queueIndex > (_queue.Count - 1)) 
@@ -620,12 +656,12 @@ public partial class MainViewModel : ObservableObject
         if (HasImageExtension(img.ImageFilePath, _validExtensions) == false)
         {
             _queueIndex++;
-            await Show(crossfadeWaitDuration);
+            await Show();
             return;
         }
 
         //Task.Run(() => ShowImage(filePath));
-        if (await ShowImage(img, crossfadeWaitDuration, _isUseDummyNoOverrappingCrossfade))
+        if (await ShowImage(img))
         {
             if (IsSlideshowOn)
             {
@@ -638,11 +674,11 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task<bool> ShowImage(ImageInfo img, int crossfadeWaitDuration, bool useDummyNoOverrappingCrossfade)
+    private Task<bool> ShowImage(ImageInfo img)
     {
         if (string.IsNullOrEmpty(img.ImageFilePath))
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         if (!string.IsNullOrEmpty(_currentFile))
@@ -651,7 +687,7 @@ public partial class MainViewModel : ObservableObject
             {
                 Debug.WriteLine($"{_queueIndex} dupe skipping");
                 _queueIndex++;
-                return true;
+                return Task.FromResult(true);
             }
         }
 
@@ -691,12 +727,6 @@ public partial class MainViewModel : ObservableObject
 
         }
 
-        if (useDummyNoOverrappingCrossfade)
-        {
-            DiplayImage1 = _diplayImageDummy;
-            await Task.Delay(crossfadeWaitDuration).ConfigureAwait(true);
-        }
-        //DiplayImage1 = _diplayImageDummy;
         DiplayImage1 = bitmap;
 
         //_queueIndex++;
@@ -708,7 +738,7 @@ public partial class MainViewModel : ObservableObject
             _timer.Start();
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 
     public static bool HasImageExtension(string fileName, string[] extensions)
@@ -873,6 +903,12 @@ public partial class MainViewModel : ObservableObject
         }
 
         IsStayOnTop = !IsStayOnTop;
+    }
+
+    [RelayCommand]
+    public void ToggleCrossfade()
+    {
+        IsOverrappingCrossfadeOn = !IsOverrappingCrossfadeOn;
     }
 
     [RelayCommand]

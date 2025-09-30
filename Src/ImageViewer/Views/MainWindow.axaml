@@ -75,6 +75,12 @@ Closing="Window_Closing"
 					</PathIcon>
 				</MenuItem.Icon>
 			</MenuItem>
+			<MenuItem Header="Crossfade" Command="{Binding ToggleCrossfadeCommand}">
+				<MenuItem.Icon>
+					<PathIcon Data="{Binding DataCrossfadeIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					</PathIcon>
+				</MenuItem.Icon>
+			</MenuItem>
 			<MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}">
 				<MenuItem.Icon>
 					<PathIcon Data="{Binding DataShuffleIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
