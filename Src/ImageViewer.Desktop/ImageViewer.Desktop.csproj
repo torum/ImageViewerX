@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
 
 
 
@@ -28,11 +29,21 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> -->
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Content Include="Assets\AppIcon.ico" />
+	</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ImageViewer\ImageViewer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\AppIcon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

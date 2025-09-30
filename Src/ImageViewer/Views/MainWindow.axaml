@@ -130,6 +130,7 @@ Closing="Window_Closing"
 										</TransitioningContentControl.ContentTemplate>
 										<TransitioningContentControl.PageTransition>
 											<CrossFade Duration="0:00:00.992" />
+											<!-- <PageSlide Duration="0:00:0.100" Orientation="Vertical" /> -->
 										</TransitioningContentControl.PageTransition>
 									</TransitioningContentControl>
 									<!--

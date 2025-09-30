@@ -463,7 +463,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        //vm.IsWorking = true;
+        vm.IsWorking = true;
+        //await Task.Yield();
 
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
         // Don't _ =, nor await = . at all. 
@@ -599,6 +600,7 @@ public partial class MainWindow : Window
     {
         // hack for CaptionButtons not dissapearing fast enough problem.
         ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
+
         Dispatcher.UIThread.Post(async () =>
         {
             await Task.Delay(20);

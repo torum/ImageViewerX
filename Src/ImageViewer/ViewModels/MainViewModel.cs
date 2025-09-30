@@ -113,7 +113,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".avif"];
     public string[] ValidExtensions => _validExtensions;
 
     private bool _isFullscreen = false;
@@ -669,12 +669,26 @@ public partial class MainViewModel : ObservableObject
         else
         {
             img.IsLoading = true;
-            Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
-            img.ImageSource = new(img.ImageFilePath);
-            img.IsAcquired = true;
-            img.IsLoading = false;
+            
+            //Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
 
-            bitmap = img.ImageSource;
+            try
+            {
+                img.ImageSource = new(img.ImageFilePath);
+                img.IsAcquired = true;
+                img.IsLoading = false;
+
+                bitmap = img.ImageSource;
+            }
+            catch (Exception ex)
+            {
+                // TODO: 
+
+                Debug.WriteLine(ex);
+
+                bitmap = null;
+            }
+
         }
 
         if (useDummyNoOverrappingCrossfade)
@@ -762,6 +776,11 @@ public partial class MainViewModel : ObservableObject
 
     private void GetPictures(IEnumerable<object>? imageInfoItems)
     {
+        if (Queue.Count <= 0)
+        {
+            return;
+        }
+
         Dispatcher.UIThread.Post(async () =>
         {
             if (imageInfoItems is null)
@@ -770,9 +789,9 @@ public partial class MainViewModel : ObservableObject
                 return;
             }
 
-            if (Queue.Count < 1)
+            if (Queue.Count <= 0)
             {
-                Debug.WriteLine("Queue.Count < 1");
+                Debug.WriteLine("Queue.Count <= 0");
                 return;
             }
 
@@ -807,7 +826,7 @@ public partial class MainViewModel : ObservableObject
                 {
                     img.IsLoading = true;
 
-                    Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+                    //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
 
                     try
                     {
