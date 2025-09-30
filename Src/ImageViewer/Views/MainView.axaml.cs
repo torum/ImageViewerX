@@ -69,21 +69,21 @@ public partial class MainView : UserControl
 
         if (isOn)
         {
-            image.StartArkAnimation(isOn);
+            image.StartArk1Animation(true);
         }
         else
         {
-            image.StartFadeInAnimation(duration);
+            image.StartArk2Animation(duration);
         }
     }
 }
 
 public static partial class FadeInFadeOut
 {
-    public static void StartArkAnimation(this Visual control, bool isOn)
+    public static void StartArk1Animation(this Visual control, bool isFromTopToBottom)
     {
         int direction;
-        if (isOn)
+        if (isFromTopToBottom)
         {
             direction = 10;
         }
@@ -139,6 +139,25 @@ public static partial class FadeInFadeOut
 
     }
 
+    public static void StartArk2Animation(this Visual control, TimeSpan duration)
+    {
+        if (duration == TimeSpan.Zero) return;
+
+        var compositionVisual = ElementComposition.GetElementVisual(control);
+
+        if (compositionVisual is null) return;
+
+        var animation = compositionVisual.Compositor.CreateScalarKeyFrameAnimation();
+
+        //animation.InsertKeyFrame(0f, 0f);
+        animation.InsertKeyFrame(0.5f, 0.5f);
+        animation.InsertKeyFrame(1f, 1f);
+        animation.Duration = duration;
+        animation.Target = nameof(CompositionVisual.Opacity);
+
+        compositionVisual.StartAnimation(nameof(CompositionVisual.Opacity), animation);
+    }
+
     public static void StartFadeInAnimation(this Visual control, TimeSpan duration)
     {
         if (duration == TimeSpan.Zero) return;
@@ -150,7 +169,7 @@ public static partial class FadeInFadeOut
         var animation = compositionVisual.Compositor.CreateScalarKeyFrameAnimation();
 
         animation.InsertKeyFrame(0f, 0f);
-        animation.InsertKeyFrame(0.5f, 0.5f);
+        //animation.InsertKeyFrame(0.5f, 0.5f);
         animation.InsertKeyFrame(1f, 1f);
         animation.Duration = duration;
         animation.Target = nameof(CompositionVisual.Opacity);
@@ -169,7 +188,7 @@ public static partial class FadeInFadeOut
         var animation = compositionVisual.Compositor.CreateScalarKeyFrameAnimation();
 
         animation.InsertKeyFrame(0f, 1f);
-        animation.InsertKeyFrame(0.5f, 0.5f);
+        //animation.InsertKeyFrame(0.5f, 0.5f);
         animation.InsertKeyFrame(1f, 0f);
         animation.Duration = duration;
         animation.Target = nameof(CompositionVisual.Opacity);

@@ -59,7 +59,7 @@ Closing="Window_Closing"
 					<PathIcon Data="{Binding DataStayOnTopIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
 				</MenuItem.Icon>
 			</MenuItem>
-			<MenuItem Header="StartSlideshow" Command="{Binding ToggleSlideshowCommand}">
+			<MenuItem x:Name="MenuItemStartSlideshow" Header="StartSlideshow" Command="{Binding ToggleSlideshowCommand}">
 				<MenuItem.Icon>
 					<PathIcon Data="{Binding DataPlayPauseIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
 						<!--
@@ -144,7 +144,7 @@ Closing="Window_Closing"
 											</DataTemplate>
 										</TransitioningContentControl.ContentTemplate>
 										<TransitioningContentControl.PageTransition>
-											<CrossFade Duration="0:00:00.992" />
+											<CrossFade Duration="0:00:00.600" />
 											<!-- <PageSlide Duration="0:00:0.100" Orientation="Vertical" /> -->
 										</TransitioningContentControl.PageTransition>
 									</TransitioningContentControl>

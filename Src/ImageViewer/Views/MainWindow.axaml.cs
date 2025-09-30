@@ -54,6 +54,21 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromSeconds(3)
         };
         _timerPointerCursorHide.Tick += OnTimerTick;
+
+        #region == KeyBindings ==
+
+        var SpaceKeyBinding = new KeyBinding
+        {
+            Gesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None),
+            Command = (this.DataContext as MainViewModel)!.ToggleSlideshowCommand
+        };
+
+        //this.MenuItemStartSlideshow.KeyBindings.Add(SpaceKeyBinding);
+        this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
+
+        this.KeyBindings.Add(SpaceKeyBinding);
+
+        #endregion
     }
 
     private void OnTimerTick(object? sender, EventArgs e)
@@ -141,12 +156,6 @@ public partial class MainWindow : Window
         {
             this.Background = new SolidColorBrush(Color.Parse("#131313"));
         }
-    }
-
-    private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        // Too late to change window size etc. Move to constructor.
-        //LoadSettings();
     }
 
     private void LoadSettings()
@@ -251,9 +260,10 @@ public partial class MainWindow : Window
         #endregion
     }
 
-    private void Window_Closed(object? sender, System.EventArgs e)
+    private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // Cleanup?
+        // Too late to change window size etc. Move to constructor.
+        //LoadSettings();
     }
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
@@ -376,6 +386,11 @@ public partial class MainWindow : Window
                 });
             }
         }
+    }
+
+    private void Window_Closed(object? sender, System.EventArgs e)
+    {
+        // Cleanup?
     }
 
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
@@ -645,7 +660,7 @@ public partial class MainWindow : Window
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        if (e.Key == Avalonia.Input.Key.Escape)
         {
             if (WindowState == WindowState.FullScreen)
             {
@@ -654,16 +669,16 @@ public partial class MainWindow : Window
                 e.Handled = true;
             }
         }
-        else if (e.Key == Key.Space)
+        else if (e.Key == Avalonia.Input.Key.Space)
         {
             if (this.DataContext is MainViewModel vm)
             {
-                vm.SpaceKeyPressed();
+                //vm.SpaceKeyPressed();
 
-                e.Handled = true;
+                //e.Handled = true;
             }
         }
-        else if (e.Key == Key.Right)
+        else if (e.Key == Avalonia.Input.Key.Right)
         {
             if (this.DataContext is MainViewModel vm)
             {
@@ -672,7 +687,7 @@ public partial class MainWindow : Window
                 e.Handled = true;
             }
         }
-        else if (e.Key == Key.Left)
+        else if (e.Key == Avalonia.Input.Key.Left)
         {
             if (this.DataContext is MainViewModel vm)
             {
@@ -681,7 +696,7 @@ public partial class MainWindow : Window
                 e.Handled = true;
             }
         }
-        else if (e.Key == Key.F)
+        else if (e.Key == Avalonia.Input.Key.F)
         {
             if (WindowState == WindowState.FullScreen)
             {
@@ -694,7 +709,7 @@ public partial class MainWindow : Window
 
             e.Handled = true;
         }
-        else if (e.Key == Key.Tab)
+        else if (e.Key == Avalonia.Input.Key.Tab)
         {
             //e.Handled = true;
         }
@@ -702,7 +717,22 @@ public partial class MainWindow : Window
 
     private void Window_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.Right)
+        if (e.Key == Avalonia.Input.Key.Escape)
+        {
+            if (WindowState == WindowState.FullScreen)
+            {
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == Avalonia.Input.Key.Space)
+        {
+            if (this.DataContext is MainViewModel)
+            {
+                //vm.SpaceKeyPressed();
+
+                //e.Handled = true;
+            }
+        } else if (e.Key == Key.Right)
         {
             if (this.DataContext is MainViewModel)
             {
