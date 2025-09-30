@@ -53,6 +53,8 @@ public partial class MainWindow : Window
         (this.DataContext as MainViewModel)!.SlideshowStatusChanged += OnSlideshowStatusChanged;
         (this.DataContext as MainViewModel)!.QueueLoaded += OnQueueLoaded;
 
+        this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+
         _timerPointerCursorHide = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(3)
@@ -186,10 +188,33 @@ public partial class MainWindow : Window
             }
             else if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Light)
             {
-                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#000000"));
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
             }
         }
     }
+
+    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        var newTheme = ActualThemeVariant;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+
+        }
+        else
+        {
+            this.BackgroundLayerBorder.IsVisible = true;
+            if (newTheme == ThemeVariant.Dark)
+            {
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#222222"));
+            }
+            else if (newTheme == ThemeVariant.Light)
+            {
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
+            }
+        }
+    }
+
 
     private void LoadSettings()
     {
