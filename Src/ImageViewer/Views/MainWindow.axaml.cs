@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageViewer.Models;
@@ -176,7 +177,17 @@ public partial class MainWindow : Window
         }
         else
         {
-            this.Background = new SolidColorBrush(Color.Parse("#131313"));
+            //this.Background = new SolidColorBrush(Color.Parse("#131313"));
+
+            this.BackgroundLayerBorder.IsVisible = true;
+            if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Dark)
+            {
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#222222"));
+            }
+            else if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Light)
+            {
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#000000"));
+            }
         }
     }
 
