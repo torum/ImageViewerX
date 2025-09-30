@@ -448,9 +448,23 @@ public partial class MainWindow : Window
                 _timerPointerCursorHide.Stop();
             }
 
-            this.Cursor = Cursor.Default;
+            if (this.DataContext is MainViewModel vm)
+            {
+                if (vm.IsWorking)
+                {
+                    this.Cursor = new Cursor(StandardCursorType.AppStarting);
+                }
+                else
+                {
+                    this.Cursor = Cursor.Default;
+                }
+            }
+            else
+            {
+                this.Cursor = Cursor.Default;
+            }
 
-            _timerPointerCursorHide.Start();
+             _timerPointerCursorHide.Start();
         }
     }
 
@@ -481,7 +495,21 @@ public partial class MainWindow : Window
 
                 if (this.WindowState == WindowState.FullScreen)
                 {
-                    this.Cursor = Cursor.Default;
+                    if (this.DataContext is MainViewModel vm)
+                    {
+                        if (vm.IsWorking)
+                        {
+                            this.Cursor = new Cursor(StandardCursorType.AppStarting);
+                        }
+                        else
+                        {
+                            this.Cursor = Cursor.Default;
+                        }
+                    }
+                    else
+                    {
+                        this.Cursor = Cursor.Default;
+                    }
                 }
             }
         }
@@ -715,7 +743,21 @@ public partial class MainWindow : Window
 
     private void SetWindowStateNormal()
     {
-        this.Cursor = Cursor.Default;
+        if (this.DataContext is MainViewModel vm)
+        {
+            if (vm.IsWorking)
+            {
+                this.Cursor = new Cursor(StandardCursorType.AppStarting);
+            }
+            else
+            {
+                this.Cursor = Cursor.Default;
+            }
+        }
+        else
+        {
+            this.Cursor = Cursor.Default;
+        }
 
         this.WindowState = WindowState.Normal;
 
@@ -728,11 +770,12 @@ public partial class MainWindow : Window
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (this.DataContext is not MainViewModel vm)
+            if (this.DataContext is not MainViewModel vms)
             {
                 return;
             }
-            if (vm.IsSlideshowOn)
+
+            if (vms.IsSlideshowOn)
             {
                 Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
