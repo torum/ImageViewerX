@@ -36,7 +36,6 @@
 		    </TransitioningContentControl.PageTransition>
 		-->
 
-
 		<!-- 
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
@@ -46,10 +45,10 @@
 		    </TransitioningContentControl.PageTransition>
 		-->
 
-
 		<!--
 		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" PropertyChanged="Image_PropertyChanged" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center">
 		</Image>
 		-->
+
 	</Grid>
 </UserControl>

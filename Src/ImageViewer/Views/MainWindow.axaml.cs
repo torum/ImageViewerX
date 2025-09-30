@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ImageViewer.Views;
@@ -49,6 +50,7 @@ public partial class MainWindow : Window
 
         (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
         (this.DataContext as MainViewModel)!.SlideshowStatusChanged += OnSlideshowStatusChanged;
+        (this.DataContext as MainViewModel)!.QueueLoaded += OnQueueLoaded;
 
         _timerPointerCursorHide = new DispatcherTimer
         {
@@ -59,7 +61,11 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
     }
-
+    private void OnQueueLoaded(object? sender, EventArgs e)
+    {
+        this.WelcomeMessageGrid.IsVisible = false;
+    }
+    
     private void OnTimerTick(object? sender, EventArgs e)
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
@@ -180,7 +186,7 @@ public partial class MainWindow : Window
         double windowWidth = 300;
         WindowState windowState = WindowState.Normal;
 
-        if (!File.Exists(App.AppConfigFilePath))
+        if (!System.IO.File.Exists(App.AppConfigFilePath))
         {
             return;
         }
@@ -507,14 +513,30 @@ public partial class MainWindow : Window
             var fileNames = e.Data.GetFiles()?.ToList();
             if (fileNames is not null && fileNames.Count != 0)
             {
+                var droppedFiles = new List<string>();
+                foreach (var file in fileNames)
+                {
+                    var filePath = file.TryGetLocalPath();
+                    if (filePath != null) 
+                    {
+                        droppedFiles.Add(filePath);
+                    }
+                }
+
+                if (droppedFiles.Count > 0)
+                {
+                    //_ = ProcessFiles(droppedFiles);
+                    ProcessFiles(droppedFiles);
+                }
+
                 // Fire and forget.
-                _ = ProcessFiles(fileNames);
-                //ProcessFiles(fileNames.Select(x => x.Path.LocalPath).ToList);
+                //_ = ProcessFiles(fileNames);
+                ////ProcessFiles(fileNames.Select(x => x.Path.LocalPath).ToList);
             }
         }
     }
 
-    private async Task ProcessFiles(List<Avalonia.Platform.Storage.IStorageItem> fileNames)
+    private void ProcessFiles(List<string> fileNames)
     {
         if (this.DataContext is not MainViewModel vm)
         {
@@ -526,7 +548,7 @@ public partial class MainWindow : Window
 
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
         // Don't _ =, nor await = . at all. 
-        await Task.Run(() =>
+        Task.Run(() =>
         {
             Dispatcher.UIThread.Post(() =>
             {
@@ -543,7 +565,7 @@ public partial class MainWindow : Window
 
                 if (fileNames.Count == 1)
                 {
-                    if (File.Exists(fileNames[0].Path.LocalPath))
+                    if (System.IO.File.Exists(fileNames[0]))//.Path.LocalPath
                     {
                         isSingleFileDropped = true;
                     }
@@ -552,27 +574,27 @@ public partial class MainWindow : Window
                 // Get all files recursively.
                 foreach (var item in fileNames)
                 {
-                    if (File.Exists(item.Path.LocalPath))
+                    if (System.IO.File.Exists(item))//.Path.LocalPath
                     {
                         // Add single files
-                        droppedFiles.Add(item.Path.LocalPath);
+                        droppedFiles.Add(item);//.Path.LocalPath
                     }
-                    else if (Directory.Exists(item.Path.LocalPath))
+                    else if (Directory.Exists(item))//.Path.LocalPath
                     {
                         // Recursively get all files from a dropped folder
-                        var filesInFolder = Directory.GetFiles(item.Path.LocalPath, "*", SearchOption.AllDirectories);
+                        var filesInFolder = Directory.GetFiles(item, "*", SearchOption.AllDirectories);//.Path.LocalPath
                         droppedFiles.AddRange(filesInFolder);
                     }
                     else
                     {
-                        Debug.WriteLine("else: " + item.Path.LocalPath);
+                        Debug.WriteLine("else: " + item);//.Path.LocalPath
                     }
                 }
 
                 // Single file dropped, in that case, get all siblings.
                 if ((droppedFiles.Count == 1) && isSingleFileDropped)
                 {
-                    if (File.Exists(droppedFiles[0]))
+                    if (System.IO.File.Exists(droppedFiles[0]))
                     {
                         var originalFile = droppedFiles[0];
 
@@ -599,7 +621,7 @@ public partial class MainWindow : Window
                     }
                 }
 
-                var droppedImages = new ObservableCollection<ImageInfo>();
+                var droppedImages = new List<ImageInfo>();
 
                 foreach (var file in droppedFiles)
                 {
@@ -640,7 +662,7 @@ public partial class MainWindow : Window
                 });
             }
         });
-    }
+    } //Avalonia.Platform.Storage.IStorageItem
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
@@ -1090,6 +1112,98 @@ public partial class MainWindow : Window
             if (accentPtr != null)
             {
                 NativeMemory.Free(accentPtr);
+            }
+        }
+    }
+
+    private async void Button_FilePick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        await OpenFilePicker();
+    }
+
+    public async Task OpenFilePicker()
+    {
+        // Get the IStorageProvider for the current window
+        var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
+
+        if (storageProvider == null) return; // Storage provider not available on this platform
+
+        var options = new FilePickerOpenOptions
+        {
+            Title = "Select Image Files",
+            AllowMultiple = true, // Set to true to allow multiple selections
+            /*
+            FileTypeFilter = new[]
+            {
+                FilePickerFileTypes.ImageAll // All image types
+            }
+            */
+            FileTypeFilter =
+            [
+                FilePickerFileTypes.ImageAll // All image types
+            ]
+        };
+
+        var files = await storageProvider.OpenFilePickerAsync(options);
+
+        if (files != null && files.Any())
+        {
+            var droppedFiles = new List<string>();
+            foreach (var file in files)
+            {
+                var filePath = file.TryGetLocalPath();
+                if (filePath != null)
+                {
+                    droppedFiles.Add(filePath);
+                }
+            }
+
+            if (droppedFiles.Count > 0)
+            {
+                ProcessFiles(droppedFiles);
+            }
+        }
+    }
+
+    private async void Button_FolderPick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        await SelectFolder();
+    }
+
+    public async Task SelectFolder()
+    {
+        // Get the IStorageProvider for the current window
+        var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
+
+        if (storageProvider == null) return; // Storage provider not available on this platform
+
+        // Configure the options for the folder picker
+        var options = new FolderPickerOpenOptions
+        {
+            Title = "Select Folders",
+            AllowMultiple = true // Set to true to allow multiple folders
+        };
+
+        // Display the folder selection dialog
+        var folders = await storageProvider.OpenFolderPickerAsync(options);
+
+        // Process the result
+        if (folders.Any())
+        {
+            var droppedFiles = new List<string>();
+
+            foreach (var item in folders)
+            {
+                var filePath = item.TryGetLocalPath();
+                if (filePath is not null)
+                {
+                    droppedFiles.Add(filePath);
+                }
+            }
+
+            if (droppedFiles.Count > 0)
+            {
+                ProcessFiles(droppedFiles);
             }
         }
     }

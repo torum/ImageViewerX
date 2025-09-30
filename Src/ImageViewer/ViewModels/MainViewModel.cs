@@ -100,7 +100,10 @@ public partial class MainViewModel : ObservableObject
             {
                 return;
             }
-            _ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
+
+            // Don't await. No _ = either.
+            Task.Run(() => GetPictures(_visibleItemsImageInfo));
+            //_ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
             //GetPictures(_visibleItemsImageInfo);
         }
     }
@@ -122,7 +125,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".avif"];
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 
     private bool _isFullscreen = false;
@@ -554,6 +557,7 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler<int>? QueueHasBeenChanged;
     public event EventHandler? TransitionsHasBeenChanged;
     public event EventHandler? SlideshowStatusChanged;
+    public event EventHandler? QueueLoaded;
 
     public MainViewModel()
     {
@@ -575,22 +579,32 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public Methods ==
 
-    public async void DroppedFiles(ObservableCollection<ImageInfo> images)
+    public async void DroppedFiles(List<ImageInfo> images)
     {
         if (images == null)
         {
             return;
         }
 
-        _timerSlideshow.Stop();
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
 
-        _queue = images;
-        _originalQueue = [.. images];
+        _queue.Clear();
+        _queue = new ObservableCollection<ImageInfo>(images);
+        _originalQueue = images;//[.. images];
 
         _queueIndex = 0;
+        SelectedQueueImage = null;
+
+        DiplayImage1 = null;
 
         if (_queue.Count > 0)
         {
+            //
+            QueueLoaded?.Invoke(this,EventArgs.Empty);
+
             if (_isShuffleOn)
             {
                 _queue.Shuffle();
@@ -598,10 +612,16 @@ public partial class MainViewModel : ObservableObject
 
             IsTransitionReversed = false;
 
-            // no wait for transitional effect.
             await Show();
 
+            //await Task.Delay(500);
+
             OnPropertyChanged(nameof(Queue));
+
+            if (_isShuffleOn)
+            {
+                QueueHasBeenChanged?.Invoke(this, 0);
+            }
         }
     }
 
@@ -653,7 +673,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         IsTransitionReversed = false;
-        /////////
+
         await Show();
     }
 
@@ -691,9 +711,109 @@ public partial class MainViewModel : ObservableObject
         await Show();
     }
 
+    public static bool HasImageExtension(string fileName, string[] extensions)
+    {
+        string extension = System.IO.Path.GetExtension(fileName);
+
+        foreach (string validExt in extensions)
+        {
+            if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     #endregion
 
     #region == Private Methods ==
+
+    private Task GetPictures(IEnumerable<object>? imageInfoItems)
+    {
+        if (Queue.Count <= 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (imageInfoItems is null)
+            {
+                Debug.WriteLine("imageInfoItems is null");
+                return;
+            }
+
+            if (Queue.Count <= 0)
+            {
+                Debug.WriteLine("Queue.Count <= 0");
+                return;
+            }
+
+            foreach (var item in imageInfoItems)
+            {
+                if (item is not ImageInfo img)
+                {
+                    Debug.WriteLine("item is not ImageInfo");
+                    continue;
+                }
+
+                if (img is null)
+                {
+                    Debug.WriteLine("img is null");
+                    continue;
+                }
+
+                if (img.IsAcquired)
+                {
+                    //Debug.WriteLine("img.IsAcquired");
+                    continue;
+                }
+
+                if (img.IsLoading)
+                {
+                    Debug.WriteLine("img.IsLoading");
+                    continue;
+                }
+                img.IsLoading = true;
+
+                if (File.Exists(img.ImageFilePath))
+                {
+                    img.IsLoading = true;
+
+                    //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+
+                    try
+                    {
+                        Bitmap? bitmap = new(img.ImageFilePath);
+                        img.ImageSource = bitmap;
+                        img.IsAcquired = true;
+                        img.IsLoading = false;
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO:
+
+                        img.IsAcquired = false;
+                        img.IsLoading = false;
+                        img.ImageSource = null;
+
+                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
+
+                        continue;
+                    }
+                    finally
+                    {
+                        img.IsLoading = false;
+                    }
+
+                    //await Task.Delay(100);
+                }
+            }
+        });
+
+        return Task.CompletedTask;
+    }
 
     private async void OnSlideshowTimerTick(object? sender, EventArgs e)
     {
@@ -755,26 +875,6 @@ public partial class MainViewModel : ObservableObject
             await Task.Delay(500);
         }
 
-        /*
-        _tasks.Enqueue(_queueIndex++);
-
-        //lock(_lock)
-        //using (_lock.EnterScope())
-        await _semaphore.WaitAsync();
-        try
-        {
-            //_tasks.Enqueue(_queueIndex+1);
-
-            //await Task.Delay(100);
-        }
-        finally
-        {
-            _semaphore.Release(); 
-        }
-
-        await ShowImage(wait);
-        */
-
         var img = _queue[_queueIndex];
 
         if (string.IsNullOrEmpty(img.ImageFilePath))
@@ -790,7 +890,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        //Task.Run(() => ShowImage(filePath));
+        /*
         if (await ShowImage(img))
         {
             if (IsSlideshowOn)
@@ -802,6 +902,26 @@ public partial class MainViewModel : ObservableObject
 
             QueueHasBeenChanged?.Invoke(this, _queueIndex-1);
         }
+        */
+
+        // Little hackkish..
+        _ = Task.Run(async () =>
+        {
+            if (await ShowImage(img))
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (IsSlideshowOn)
+                    {
+                        _timerSlideshow.Start();
+                    }
+
+                    //_queueIndex = index;
+
+                    QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
+                });
+            }
+        });
     }
 
     private Task<bool> ShowImage(ImageInfo img)
@@ -832,11 +952,15 @@ public partial class MainViewModel : ObservableObject
         {
             bitmap = img.ImageSource;
         }
+        else if (img.IsLoading)
+        {
+            Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
+
+            bitmap = img.ImageSource;
+        }
         else
         {
             img.IsLoading = true;
-
-            //Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
 
             //Debug.WriteLine($"{idx} {Path.GetFileName(_currentFile)}");
 
@@ -852,9 +976,16 @@ public partial class MainViewModel : ObservableObject
             {
                 // TODO: 
 
-                Debug.WriteLine(ex);
+                Debug.WriteLine($"{ex} @ShowImage");
+
+                img.IsAcquired = false;
+                img.IsLoading = false;
 
                 bitmap = null;
+            }
+            finally
+            {
+                img.IsLoading = false;
             }
 
         }
@@ -922,149 +1053,6 @@ public partial class MainViewModel : ObservableObject
         return Task.FromResult(true);
     }
 
-    public static bool HasImageExtension(string fileName, string[] extensions)
-    {
-        string extension = System.IO.Path.GetExtension(fileName);
-
-        foreach (string validExt in extensions)
-        {
-            if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /*
-    private async void Start()
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(6));
-
-        while (await timer.WaitForNextTickAsync())
-        {
-            if (_queue.Count <= 0) continue;
-            if (_queueIndex > (_queue.Count - 1)) continue;
-
-            var filePath = _queue[_queueIndex];
-            if (HasImageExtension(filePath, _validExtensions) == false)
-            {
-                continue;
-            }
-
-            //Bitmap? bitmap = new(filePath);
-            //DiplayImage = bitmap;
-            //ShowImage(filePath);
-
-            _queueIndex++;
-        }
-    }
-    */
-    /*
-    private async Task Test()
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(6));
-
-        while (await timer.WaitForNextTickAsync())
-        {
-            Debug.WriteLine($"Test {Thread.CurrentThread.Name} : {_queue.Count}");
-            if (_queue.Count <= 0) continue;
-            if (_queueIndex > (_queue.Count - 1)) continue;
-
-            Dispatcher.UIThread.Post(() =>
-            {
-                //var filePath = _queue[_queueIndex];
-
-                //Bitmap? bitmap = new(filePath);
-                //DiplayImage = bitmap;
-            });
-            _queueIndex++;
-        }
-
-    }
-    */
-
-
-    private void GetPictures(IEnumerable<object>? imageInfoItems)
-    {
-        if (Queue.Count <= 0)
-        {
-            return;
-        }
-
-        Dispatcher.UIThread.Post(async () =>
-        {
-            if (imageInfoItems is null)
-            {
-                Debug.WriteLine("imageInfoItems is null");
-                return;
-            }
-
-            if (Queue.Count <= 0)
-            {
-                Debug.WriteLine("Queue.Count <= 0");
-                return;
-            }
-
-            foreach (var item in imageInfoItems)
-            {
-                if (item is not ImageInfo img)
-                {
-                    Debug.WriteLine("item is not ImageInfo");
-                    continue;
-                }
-
-                if (img is null)
-                {
-                    Debug.WriteLine("img is null");
-                    continue;
-                }
-
-                if (img.IsAcquired)
-                {
-                    //Debug.WriteLine("img.IsAcquired");
-                    continue;
-                }
-
-                if (img.IsLoading)
-                {
-                    Debug.WriteLine("img.IsLoading");
-                    continue;
-                }
-                img.IsLoading = true;
-
-                if (File.Exists(img.ImageFilePath))
-                {
-                    img.IsLoading = true;
-
-                    //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
-
-                    try
-                    {
-                        Bitmap? bitmap = new(img.ImageFilePath);
-                        img.ImageSource = bitmap;
-                        img.IsAcquired = true;
-                        img.IsLoading = false;
-                    }
-                    catch (Exception e)
-                    {
-                        img.IsLoading = false;
-                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
-                        continue;
-                    }
-                    finally
-                    {
-                        img.IsLoading = false;
-                    }
-
-                    await Task.Delay(100);
-                    //await Task.Yield();
-                }
-            }
-        });
-    }
-
-
     #endregion
 
     #region == Commands ==
@@ -1121,7 +1109,7 @@ public partial class MainViewModel : ObservableObject
         IsEffectPageSlideOn = !IsNoEffectsOn;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanToggleSlideshow))]
     public void ToggleSlideshow()
     {
         var isOn = IsSlideshowOn;
@@ -1165,6 +1153,10 @@ public partial class MainViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsSlideshowOn));
     }
+    private bool CanToggleSlideshow()
+    {
+        return _queue.Count > 1;
+    }
 
     [RelayCommand]
     public void ToggleShuffle()
@@ -1178,7 +1170,7 @@ public partial class MainViewModel : ObservableObject
         IsRepeatOn = !IsRepeatOn;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanShowInExplorer))]
     public void ShowInExplorer()
     {
         if (string.IsNullOrEmpty(_currentFile))
@@ -1206,6 +1198,10 @@ public partial class MainViewModel : ObservableObject
                 }
             }
         }
+    }
+    private bool CanShowInExplorer()
+    {
+        return _queue.Count > 0;
     }
 
     [RelayCommand]
