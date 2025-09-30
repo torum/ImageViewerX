@@ -31,8 +31,7 @@ namespace ImageViewer.Views;
 
 public partial class MainWindow : Window
 {
-
-    private readonly DispatcherTimer _timer;
+    private readonly DispatcherTimer _timerPointerCursorHide;
 
     public MainWindow()
     {
@@ -50,11 +49,11 @@ public partial class MainWindow : Window
 
         (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
 
-        _timer = new DispatcherTimer
+        _timerPointerCursorHide = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(3)
         };
-        _timer.Tick += OnTimerTick;
+        _timerPointerCursorHide.Tick += OnTimerTick;
     }
 
     private void OnTimerTick(object? sender, EventArgs e)
@@ -64,21 +63,47 @@ public partial class MainWindow : Window
         this.Cursor = new Cursor(StandardCursorType.None);
     }
 
-    private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
+    private void OnQueueHasBeenChanged(object? sender, int ind)
     {
-        if (this.WindowState == WindowState.FullScreen)
-        {
-            if (_timer.IsEnabled)
-            {
-                _timer.Stop();
-            }
-
-            this.Cursor = Cursor.Default;
-
-            _timer.Start();
-        }
+        UpdateQueueListBoxImages(ind);
     }
 
+    private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (sender is not Window)
+        {
+            return;
+        }
+        if (e.Property.Name != nameof(WindowState))
+        {
+            return;
+        }
+
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        // Let vm know WindowState changed.
+
+        if (e.NewValue is WindowState.FullScreen)
+        {
+            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
+            vm.IsFullscreen = true;
+        }
+        else if (e.NewValue is WindowState.Normal)
+        {
+            vm.IsFullscreen = false;
+        }
+        else if (e.NewValue is WindowState.Minimized)
+        {
+            vm.IsFullscreen = false;
+        }
+        else
+        {
+            vm.IsFullscreen = false;
+        }
+    }
 
     private void InitBackground()
     {
@@ -120,6 +145,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
+        // Too late to change window size etc. Move to constructor.
         //LoadSettings();
     }
 
@@ -227,6 +253,7 @@ public partial class MainWindow : Window
 
     private void Window_Closed(object? sender, System.EventArgs e)
     {
+        // Cleanup?
     }
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
@@ -351,40 +378,23 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
     {
-        if (sender is not Window)
-        {
-            return;
-        }
-        if (e.Property.Name != nameof(WindowState))
-        {
-            return;
-        }
+        UpdateQueueListBoxImages();
+    }
 
-        if (this.DataContext is not MainViewModel vm)
+    private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
+    {
+        if (this.WindowState == WindowState.FullScreen)
         {
-            return;
-        }
+            if (_timerPointerCursorHide.IsEnabled)
+            {
+                _timerPointerCursorHide.Stop();
+            }
 
-        // Let vm know WindowState changed.
+            this.Cursor = Cursor.Default;
 
-        if (e.NewValue is WindowState.FullScreen)
-        {
-            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
-            vm.IsFullscreen = true;
-        }
-        else if (e.NewValue is WindowState.Normal)
-        {
-            vm.IsFullscreen = false;
-        }
-        else if (e.NewValue is WindowState.Minimized)
-        {
-            vm.IsFullscreen = false;
-        }
-        else
-        {
-            vm.IsFullscreen = false;
+            _timerPointerCursorHide.Start();
         }
     }
 
@@ -444,7 +454,7 @@ public partial class MainWindow : Window
         }
 
         // Check if the dropped data contains file paths
-        if (e.Data.Contains(DataFormats.Files))
+        if (e.Data.Contains(Avalonia.Input.DataFormats.Files))
         {
             var fileNames = e.Data.GetFiles()?.ToList();
             if (fileNames is not null && fileNames.Count != 0)
@@ -456,7 +466,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task ProcessFiles(List<IStorageItem> fileNames)//List<Avalonia.Platform.Storage.IStorageItem>
+    private async Task ProcessFiles(List<Avalonia.Platform.Storage.IStorageItem> fileNames)
     {
         if (this.DataContext is not MainViewModel vm)
         {
@@ -560,8 +570,10 @@ public partial class MainWindow : Window
                     {
                         ImageFilePath = file
                     };
+
                     droppedImages.Add(img);
                 }
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     vm.DroppedFiles(droppedImages);
@@ -610,11 +622,11 @@ public partial class MainWindow : Window
 
             //this.Cursor = new Cursor(StandardCursorType.None);
 
-            if (_timer.IsEnabled)
+            if (_timerPointerCursorHide.IsEnabled)
             {
-                _timer.Stop();
+                _timerPointerCursorHide.Stop();
             }
-            _timer.Start();
+            _timerPointerCursorHide.Start();
         });
     }
 
@@ -625,9 +637,9 @@ public partial class MainWindow : Window
         this.WindowState = WindowState.Normal;
         this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
 
-        if (_timer.IsEnabled)
+        if (_timerPointerCursorHide.IsEnabled)
         {
-            _timer.Stop();
+            _timerPointerCursorHide.Stop();
         }
     }
 
@@ -741,53 +753,6 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    // Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
-    public static unsafe void EnableBlurBehind(IntPtr handle)
-    {
-        // The pointer for the unmanaged memory.
-        void* accentPtr = null;
-
-        try
-        {
-            uint darkGrayTint = 0;
-
-            var accent = new NativeMethods.AccentPolicy
-            {
-                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
-                AccentFlags = 0,
-                GradientColor = darkGrayTint,
-                AnimationId = 0
-            };
-
-            // Get the size of the structure.
-            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
-
-            // Allocate and zero the unmanaged memory.
-            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
-
-            // Copy the managed struct to the unmanaged memory.
-            Unsafe.Copy(accentPtr, ref accent);
-
-            var data = new NativeMethods.WindowCompositionAttributeData
-            {
-                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-                SizeOfData = (int)sizeOfAccent,
-                // Convert the void* pointer to an IntPtr for the interop call.
-                Data = (IntPtr)accentPtr
-            };
-
-            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-        }
-        finally
-        {
-            // Free the unmanaged memory if it was successfully allocated.
-            if (accentPtr != null)
-            {
-                NativeMemory.Free(accentPtr);
-            }
-        }
-    }
-
     private void ListBox_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
     {
         e.Handled = true;
@@ -833,83 +798,14 @@ public partial class MainWindow : Window
         this.ListBoxBackgroundLayerBorder.IsVisible = true;
     }
 
+    private void ListBox_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
     private void ListBox_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         this.ListBoxBackgroundLayerBorder.IsVisible = false;
-    }
-
-    private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
-    {
-        //await Task.Yield();
-        //await Task.Delay(800); // Need to wait for UI to update
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (this.QueueListBox is ListBox lb)
-            {
-                if (DataContext is not MainViewModel vm)
-                {
-                    return;
-                }
-                var item = lb.SelectedItem;
-                if (item is ImageInfo img)
-                {
-                    var ind = vm.Queue.IndexOf(img);
-                    if (ind > 0)
-                    {
-                        lb.ScrollIntoView(ind);
-
-                        var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-                        if (scrollViewer is null)
-                        {
-                            return;
-                        }
-                        var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
-                        if (virtualPanel is null)
-                        {
-                            return;
-                        }
-                        UpdateVisibleItems(scrollViewer, virtualPanel);
-                    }
-                }
-
-            }
-        });
-    }
-
-    private async void OnQueueHasBeenChanged(object? sender, int ind)
-    {
-        await Task.Yield();
-        //await Task.Delay(800); // Need to wait for UI to update
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (this.QueueListBox is ListBox lb)
-            {
-                lb.ScrollIntoView(ind);
-
-                if (DataContext is not MainViewModel vm)
-                {
-                    return;
-                }
-
-                var test = vm?.Queue[ind];
-                if (test != null)
-                {
-                    lb.SelectedItem = test;
-                }
-
-                var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-                if (scrollViewer is null)
-                {
-                    return;
-                }
-                var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
-                if (virtualPanel is null)
-                {
-                    return;
-                }
-                UpdateVisibleItems(scrollViewer, virtualPanel);
-            }
-        });
     }
 
     private void ListBox_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -977,14 +873,129 @@ public partial class MainWindow : Window
         vm.VisibleItemsImageInfo = visibleItems;
     }
 
-    private void ListBox_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    private async void UpdateQueueListBoxImages(int selectedIndex)
     {
-        e.Handled = true;
+        await Task.Yield();
+        //await Task.Delay(800); // Need to wait for UI to update
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.QueueListBox is ListBox lb)
+            {
+                lb.ScrollIntoView(selectedIndex);
+
+                if (DataContext is not MainViewModel vm)
+                {
+                    return;
+                }
+
+                var test = vm?.Queue[selectedIndex];
+                if (test != null)
+                {
+                    lb.SelectedItem = test;
+                }
+
+                var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                if (scrollViewer is null)
+                {
+                    return;
+                }
+                var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+                if (virtualPanel is null)
+                {
+                    return;
+                }
+                UpdateVisibleItems(scrollViewer, virtualPanel);
+            }
+        });
     }
 
+    private async void UpdateQueueListBoxImages()
+    {
+        await Task.Yield();
+        //await Task.Delay(800); // Need to wait for UI to update
 
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (this.QueueListBox is ListBox lb)
+            {
+                if (DataContext is not MainViewModel vm)
+                {
+                    return;
+                }
+                var item = lb.SelectedItem;
+                if (item is ImageInfo img)
+                {
+                    var ind = vm.Queue.IndexOf(img);
+                    if (ind > 0)
+                    {
+                        lb.ScrollIntoView(ind);
 
-    // Marshal.AllocHGlobal way.
+                        var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                        if (scrollViewer is null)
+                        {
+                            return;
+                        }
+                        var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+                        if (virtualPanel is null)
+                        {
+                            return;
+                        }
+                        UpdateVisibleItems(scrollViewer, virtualPanel);
+                    }
+                }
+
+            }
+        });
+    }
+
+    // EnableBlurBehind: Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
+    public static unsafe void EnableBlurBehind(IntPtr handle)
+    {
+        // The pointer for the unmanaged memory.
+        void* accentPtr = null;
+
+        try
+        {
+            uint darkGrayTint = 0;
+
+            var accent = new NativeMethods.AccentPolicy
+            {
+                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
+                AccentFlags = 0,
+                GradientColor = darkGrayTint,
+                AnimationId = 0
+            };
+
+            // Get the size of the structure.
+            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
+
+            // Allocate and zero the unmanaged memory.
+            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
+
+            // Copy the managed struct to the unmanaged memory.
+            Unsafe.Copy(accentPtr, ref accent);
+
+            var data = new NativeMethods.WindowCompositionAttributeData
+            {
+                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+                SizeOfData = (int)sizeOfAccent,
+                // Convert the void* pointer to an IntPtr for the interop call.
+                Data = (IntPtr)accentPtr
+            };
+
+            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+        }
+        finally
+        {
+            // Free the unmanaged memory if it was successfully allocated.
+            if (accentPtr != null)
+            {
+                NativeMemory.Free(accentPtr);
+            }
+        }
+    }
+
+    // EnableBlurBehind: Marshal.AllocHGlobal way.
     /*
     private static void EnableBlurBehind(IntPtr handle)
     {
