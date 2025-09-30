@@ -957,12 +957,29 @@ public partial class MainWindow : Window
 
     private async void UpdateQueueListBoxImages(int selectedIndex)
     {
+        if (DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        var c = vm.Queue.Count;
+
+        if ((selectedIndex > c) && (selectedIndex < 0))
+        {
+            return;
+        }
+
         await Task.Yield();
         //await Task.Delay(800); // Need to wait for UI to update
         Dispatcher.UIThread.Post(() =>
         {
             if (this.QueueListBox is ListBox lb)
             {
+                if (lb.ItemCount < (selectedIndex + 1))
+                {
+                    return;
+                }
+
                 lb.ScrollIntoView(selectedIndex);
 
                 if (DataContext is not MainViewModel vm)

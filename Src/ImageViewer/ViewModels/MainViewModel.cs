@@ -824,8 +824,8 @@ public partial class MainViewModel : ObservableObject
         int idx = _queueIndex;
 
         _currentFile = img.ImageFilePath;
-
-        Debug.WriteLine($"{idx} Enter critical section.");
+        
+        //Debug.WriteLine($"{idx} Enter critical section.");
 
         Bitmap? bitmap;
         if (img.IsAcquired)
@@ -835,8 +835,10 @@ public partial class MainViewModel : ObservableObject
         else
         {
             img.IsLoading = true;
-            
+
             //Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
+
+            //Debug.WriteLine($"{idx} {Path.GetFileName(_currentFile)}");
 
             try
             {
@@ -861,7 +863,56 @@ public partial class MainViewModel : ObservableObject
 
         //_queueIndex++;
         _queueIndex = idx+1;
-        Debug.WriteLine($"{idx} Exit critical section.");
+        //Debug.WriteLine($"{idx} Exit critical section.");
+
+        #region == Unload some of the images from memory ==
+
+        if (_queueIndex > 20)
+        {
+            int i = _queueIndex - 15;
+            if (_queue[i].ImageSource is not null)
+            {
+                _queue[i].ImageSource = null;
+                _queue[i].IsAcquired = false;
+                _queue[i].IsLoading = false;
+            }
+            /*
+            for (int i = 0; i < (_queueIndex - 10); i++)
+            {
+                if (_queue[i].ImageSource is not null)
+                {
+                    _queue[i].ImageSource = null;
+                    _queue[i].IsAcquired = false;
+                    _queue[i].IsLoading = false;
+                }
+            }
+            */
+        }
+
+        var c = _queue.Count;
+        if (_queueIndex + 20 < c)
+        {
+            int i = _queueIndex + 15;
+            if (_queue[i].ImageSource is not null)
+            {
+                _queue[i].ImageSource = null;
+                _queue[i].IsAcquired = false;
+                _queue[i].IsLoading = false;
+            }
+            /*
+            for (int i = (c-1); i > (_queueIndex + 10); i--)
+            {
+                if (_queue[i].ImageSource is not null)
+                {
+                    _queue[i].ImageSource = null;
+                    _queue[i].IsAcquired = false;
+                    _queue[i].IsLoading = false;
+                }
+            }
+            */
+        }
+
+        #endregion
 
         if (IsSlideshowOn)
         {
