@@ -43,7 +43,7 @@ public partial class MainWindow : Window
 
         InitBackground();
 
-        this.ContentFrame.Content = App.GetService<MainView>();//(new MainView() as UserControl);
+        this.ContentFrame.Content = App.GetService<MainView>();
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
 

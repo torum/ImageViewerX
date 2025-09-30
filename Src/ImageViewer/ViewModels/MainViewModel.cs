@@ -26,18 +26,10 @@ public partial class MainViewModel : ObservableObject
 {
     #region == Private ==
 
-    //private List<string> _queue = [];
-    //private List<string> _originalQueue = [];
-    //private List<string> _shuffledQueue = [];
-    //private List<string> _sortedQueue = [];
     private int _queueIndex = 0;
     private string _currentFile = string.Empty;
-    private readonly DispatcherTimer _timer;
-    private readonly System.Threading.Lock _lock = new();
-    //private readonly int _crossfadeWaitDuration = 1000;//1000;
-    //private readonly SemaphoreSlim _semaphore = new(1, 1);
-    //readonly Queue<int> _tasks = new();
-    private readonly Bitmap? _diplayImageDummy;
+    private readonly DispatcherTimer _timerSlideshow;
+    //private readonly System.Threading.Lock _lock = new();
     //private bool _isBusy = false;
     private List<ImageInfo> _originalQueue = [];
     #endregion
@@ -183,6 +175,29 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private bool _isEffectsOn = true;
+    public bool IsEffectsOn
+    {
+        get
+        {
+            return _isEffectsOn;
+        }
+        set
+        {
+            if (_isEffectsOn == value)
+                return;
+
+            _isEffectsOn = value;
+            OnPropertyChanged(nameof(IsEffectsOn));
+            OnPropertyChanged(nameof(DataEffectsEnableIcon));
+
+            TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
+
+            //
+            ToggleCrossfadeCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     private bool _isOverrappingCrossfadeOn = true;
     public bool IsOverrappingCrossfadeOn
     {
@@ -222,9 +237,9 @@ public partial class MainViewModel : ObservableObject
                 IsWorking = true;
 
                 // Slideshow Timer temp stop.
-                if (_timer.IsEnabled)
+                if (_timerSlideshow.IsEnabled)
                 {
-                    _timer.Stop();
+                    _timerSlideshow.Stop();
                 }
 
                 if (_isShuffleOn)
@@ -266,7 +281,7 @@ public partial class MainViewModel : ObservableObject
                 // Slideshow timer restart.
                 if (IsSlideshowOn)
                 {
-                    _timer.Start();
+                    _timerSlideshow.Start();
                 }
 
                 IsWorking = false;
@@ -370,7 +385,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-
     private readonly string _repeatOn = "M12.8935 5.23788C13.579 5.95588 14 6.92865 14 7.99975C14 10.1419 12.316 11.8908 10.1996 11.9949L10 11.9997L6.707 11.999L7.85525 13.1479C8.02882 13.3215 8.0481 13.5909 7.91311 13.7858L7.85525 13.855C7.68169 14.0286 7.41226 14.0479 7.21739 13.9129L7.14815 13.855L5.14645 11.8533C4.97288 11.6797 4.9536 11.4103 5.08859 11.2154L5.14645 11.1462L7.14815 9.14449C7.34341 8.94923 7.65999 8.94923 7.85525 9.14449C8.02882 9.31806 8.0481 9.58748 7.91311 9.78235L7.85525 9.8516L6.707 10.999L10 10.9997C11.5977 10.9997 12.9037 9.75083 12.9949 8.17602L13 7.99975C13 7.17778 12.6694 6.43303 12.134 5.89117C12.0522 5.80305 12 5.68194 12 5.54865C12 5.2725 12.2239 5.04865 12.5 5.04865C12.6227 5.04865 12.7351 5.09287 12.8221 5.16624L12.8935 5.23788ZM8.78431 2.08664L8.85355 2.14449L10.8553 4.14619L10.9131 4.21544C11.0312 4.38595 11.0312 4.61354 10.9131 4.78405L10.8553 4.8533L8.85355 6.855L8.78431 6.91286C8.6138 7.03098 8.3862 7.03098 8.21569 6.91286L8.14645 6.855L8.08859 6.78575C7.97047 6.61524 7.97047 6.38765 8.08859 6.21714L8.14645 6.14789L9.294 4.99905L6 4.99975C4.40232 4.99975 3.09634 6.24867 3.00509 7.82347L3 7.99975C3 8.8193 3.32863 9.56209 3.8613 10.1035C3.94745 10.1919 4 10.3134 4 10.4472C4 10.7234 3.77614 10.9472 3.5 10.9472C3.36244 10.9472 3.23785 10.8917 3.14745 10.8018C2.4379 10.0823 2 9.09215 2 7.99975C2 5.85755 3.68397 4.10867 5.80036 4.00464L6 3.99975L9.294 3.99905L8.14645 2.8516L8.08859 2.78235C7.9536 2.58748 7.97288 2.31806 8.14645 2.14449C8.32001 1.97093 8.58944 1.95164 8.78431 2.08664Z";
     private readonly string _repeatOff = "M2.78431 2.08834L2.85355 2.14619L13.8536 13.1462C14.0488 13.3415 14.0488 13.658 13.8536 13.8533C13.68 14.0269 13.4106 14.0462 13.2157 13.9112L13.1464 13.8533L11.1305 11.8378C10.8437 11.9221 10.5435 11.9752 10.2339 11.993L10 11.9997L6.707 11.999L7.85525 13.1479C8.02882 13.3215 8.0481 13.5909 7.91311 13.7858L7.85525 13.855C7.68169 14.0286 7.41226 14.0479 7.21739 13.9129L7.14815 13.855L5.14645 11.8533C4.97288 11.6797 4.9536 11.4103 5.08859 11.2154L5.14645 11.1462L7.14815 9.14449C7.34341 8.94923 7.65999 8.94923 7.85525 9.14449C8.02882 9.31806 8.0481 9.58748 7.91311 9.78235L7.85525 9.8516L6.707 10.999L10 10.9997C10.0941 10.9997 10.1871 10.9954 10.279 10.9869L4.62614 5.33211C3.66034 5.83052 3 6.83802 3 7.99975C3 8.8193 3.32863 9.56209 3.8613 10.1035C3.94745 10.1919 4 10.3134 4 10.4472C4 10.7234 3.77614 10.9472 3.5 10.9472C3.36244 10.9472 3.23785 10.8917 3.14745 10.8018C2.4379 10.0823 2 9.09215 2 7.99975C2 6.56381 2.75664 5.30459 3.89297 4.59904L2.14645 2.8533C1.95118 2.65804 1.95118 2.34146 2.14645 2.14619C2.32001 1.97263 2.58944 1.95334 2.78431 2.08834ZM12.5 5.04865C12.6227 5.04865 12.7351 5.09287 12.8221 5.16624L12.8935 5.23788C13.579 5.95588 14 6.92865 14 7.99975C14 9.07744 13.5738 10.0556 12.8808 10.7748L12.174 10.0671C12.6858 9.52898 13 8.80105 13 7.99975C13 7.17778 12.6694 6.43303 12.134 5.89117C12.0522 5.80305 12 5.68194 12 5.54865C12 5.2725 12.2239 5.04865 12.5 5.04865ZM8.14645 2.14449C8.32001 1.97093 8.58944 1.95164 8.78431 2.08664L8.85355 2.14449L10.8553 4.14619L10.9131 4.21544C11.0312 4.38595 11.0312 4.61354 10.9131 4.78405L10.8553 4.8533L8.907 6.80005L8.2 6.09305L9.294 4.99905H7.105L6.105 3.99905H9.294L8.14645 2.8516L8.08859 2.78235C7.9536 2.58748 7.97288 2.31806 8.14645 2.14449Z";
     public string DataRepeatIcon
@@ -423,6 +437,25 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private readonly string _effectsOn = "M4.5 2C3.11929 2 2 3.11929 2 4.5V11.5C2 12.8807 3.11929 14 4.5 14H11.5C12.8807 14 14 12.8807 14 11.5V4.5C14 3.11929 12.8807 2 11.5 2H4.5ZM3 4.5C3 3.67157 3.67157 3 4.5 3H11.5C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H4.5C3.67157 13 3 12.3284 3 11.5V4.5ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7 9.29289L5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L6.64645 10.3536C6.84171 10.5488 7.15829 10.5488 7.35355 10.3536L10.8536 6.85355Z";
+    private readonly string _effectsOff = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
+    public string DataEffectsEnableIcon
+    {
+        get
+        {
+            if (IsEffectsOn)
+            {
+                return _effectsOn;
+            }
+            else
+            {
+                return _effectsOff;
+            }
+        }
+    }
+
+    //
+
     #endregion
 
     public event EventHandler<int>? QueueHasBeenChanged;
@@ -431,16 +464,16 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
     {
         // Load dummyimage
-        var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
-        using var stream = AssetLoader.Open(uri);
-        _diplayImageDummy = new Bitmap(stream);
+        //var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
+        //using var stream = AssetLoader.Open(uri);
+        //_diplayImageDummy = new Bitmap(stream);
 
         // Init Timer.
-        _timer = new DispatcherTimer
+        _timerSlideshow = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(_slideshowTimerInterval)
         };
-        _timer.Tick += OnTimerTick;
+        _timerSlideshow.Tick += OnSlideshowTimerTick;
 
 #if DEBUG
         IsSaveLog = true;
@@ -460,7 +493,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        _timer.Stop();
+        _timerSlideshow.Stop();
 
         _queue = images;
         _originalQueue = [.. images];
@@ -485,9 +518,9 @@ public partial class MainViewModel : ObservableObject
     {
         ToggleSlideshow();
         /*
-        if (_timer.IsEnabled)
+        if (_timerSlideshow.IsEnabled)
         {
-            _timer.Stop();
+            _timerSlideshow.Stop();
         }
         else
         {
@@ -501,9 +534,9 @@ public partial class MainViewModel : ObservableObject
 
     public async void NextKeyPressed()
     {
-        if (_timer.IsEnabled)
+        if (_timerSlideshow.IsEnabled)
         {
-            _timer.Stop();
+            _timerSlideshow.Stop();
         }
 
         if (_queue.Count <= 0) return;
@@ -534,9 +567,9 @@ public partial class MainViewModel : ObservableObject
 
     public async void PrevKeyPressed()
     {
-        if (_timer.IsEnabled)
+        if (_timerSlideshow.IsEnabled)
         {
-            _timer.Stop();
+            _timerSlideshow.Stop();
         }
 
         if (_queue.Count <= 0) return;
@@ -567,7 +600,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Private Methods ==
 
-    private async void OnTimerTick(object? sender, EventArgs e)
+    private async void OnSlideshowTimerTick(object? sender, EventArgs e)
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
         if (_queue.Count <= 0) return;
@@ -615,9 +648,9 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        if (_timer.IsEnabled)
+        if (_timerSlideshow.IsEnabled)
         {
-            _timer.Stop();
+            _timerSlideshow.Stop();
         }
 
         if (IsWorking)
@@ -665,7 +698,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (IsSlideshowOn)
             {
-                _timer.Start();
+                _timerSlideshow.Start();
             }
 
             //_queueIndex = index;
@@ -735,7 +768,7 @@ public partial class MainViewModel : ObservableObject
 
         if (IsSlideshowOn)
         {
-            _timer.Start();
+            _timerSlideshow.Start();
         }
 
         return Task.FromResult(true);
@@ -905,10 +938,15 @@ public partial class MainViewModel : ObservableObject
         IsStayOnTop = !IsStayOnTop;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanToggleCrossfade))]
     public void ToggleCrossfade()
     {
         IsOverrappingCrossfadeOn = !IsOverrappingCrossfadeOn;
+    }
+
+    private bool CanToggleCrossfade()
+    {
+        return IsEffectsOn;
     }
 
     [RelayCommand]
@@ -917,7 +955,7 @@ public partial class MainViewModel : ObservableObject
         var isOn = IsSlideshowOn;
 
         var page = App.GetService<MainView>();
-        page.UpDownAnimation(isOn, TimeSpan.FromMilliseconds(600));
+        page.ToggleSlideshowAnimation(isOn, TimeSpan.FromMilliseconds(600));
 
 
         if (IsSlideshowOn)
@@ -925,16 +963,16 @@ public partial class MainViewModel : ObservableObject
             Debug.WriteLine("StartSlideshow false");
             IsSlideshowOn = false;
 
-            if (_timer.IsEnabled)
+            if (_timerSlideshow.IsEnabled)
             {
-                _timer.Stop();
+                _timerSlideshow.Stop();
             }
         }
         else
         {
-            if (_timer.IsEnabled)
+            if (_timerSlideshow.IsEnabled)
             {
-                _timer.Stop();
+                _timerSlideshow.Stop();
             }
 
             if (_queue.Count > 0)
@@ -948,7 +986,7 @@ public partial class MainViewModel : ObservableObject
                     _queueIndex = 0;
                 }
 
-                _timer.Start();
+                _timerSlideshow.Start();
                 //_ = Show(_crossfadeWaitDuration);
             }
         }
@@ -1011,6 +1049,12 @@ public partial class MainViewModel : ObservableObject
         }
 
         ListBoxItemSelected(img);
+    }
+
+    [RelayCommand]
+    public void ToggleEffects()
+    {
+        IsEffectsOn = !IsEffectsOn;
     }
 
     #endregion

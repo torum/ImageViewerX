@@ -28,28 +28,42 @@ public partial class MainView : UserControl
 
         /*
         var compositeTransition = new CompositePageTransition();
-        //compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Vertical));
-        //compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Horizontal));
+        compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Vertical));
+        compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Horizontal));
         compositeTransition.PageTransitions.Add(new CrossFade(TimeSpan.FromMilliseconds(1000)));
-
         this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         */
 
-        var compositeTransition = new CompositePageTransition();
-        compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsOverrappingCrossfadeOn));
-        this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-
         _viewModel.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
+
+        UpdatePageTransition();
     }
 
     private void OnTransitionsHasBeenChanged(object? sender, EventArgs e)
     {
-        var compositeTransition = new CompositePageTransition();
-        compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsOverrappingCrossfadeOn));
-        this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+        UpdatePageTransition();
     }
 
-    public void UpDownAnimation(bool isOn, TimeSpan duration)
+    private void UpdatePageTransition()
+    {
+        if (_viewModel.IsEffectsOn)
+        {
+            var compositeTransition = new CompositePageTransition();
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsOverrappingCrossfadeOn));
+            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+        }
+        else
+        {
+            // This does not work. Every other image does not show...
+            //this.ImageTransitioningContentControl.PageTransition = null;
+
+            var compositeTransition = new CompositePageTransition();
+            compositeTransition.PageTransitions.Add(new CustomNoTransition(TimeSpan.FromMilliseconds(0)));
+            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+        }
+    }
+
+    public void ToggleSlideshowAnimation(bool isOn, TimeSpan duration)
     {
         var image = this.ImageGrid;
 
@@ -240,6 +254,72 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         //await Task.WhenAll(fromAnimTask, toAnimTask);
 
         _first = false;
+    }
+}
+
+public class CustomNoTransition(TimeSpan duration) : IPageTransition
+{
+    private readonly TimeSpan _duration = duration;
+
+    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
+    {
+        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
+        if (parent == null) return;
+
+        var fromAnimTask = Task.CompletedTask;
+        var toAnimTask = Task.CompletedTask;
+
+        // Animate the "from" page to fade out
+        if (from != null)
+        {
+            var fromAnimation = new Avalonia.Animation.Animation
+            {
+                Duration = _duration,
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame
+                    {
+                        Cue = new Cue(0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.0 } }
+                    },
+                    new KeyFrame
+                    {
+                        Cue = new Cue(1.0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 0.0 } }
+                    }
+                }
+            };
+            fromAnimTask = fromAnimation.RunAsync(from, cancellationToken);
+        }
+
+        // Animate the "to" page to fade in
+        if (to != null)
+        {
+            //to.Opacity = 0.0;
+
+            var toAnimation = new Avalonia.Animation.Animation
+            {
+                Duration = _duration,
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame
+                    {
+                        Cue = new Cue(0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.1 } }
+                    },
+                    new KeyFrame
+                    {
+                        Cue = new Cue(1.0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.0 } }
+                    }
+                }
+            };
+            toAnimTask = toAnimation.RunAsync(to, cancellationToken);
+        }
+
+        await Task.WhenAll(fromAnimTask, toAnimTask);
     }
 }
 
