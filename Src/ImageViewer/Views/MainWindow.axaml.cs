@@ -90,17 +90,19 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (vm.IsSlideshowOn)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
-            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+            if (vm.IsSlideshowOn)
+            {
+                Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
+                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+            }
+            else
+            {
+                Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
+                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+            }
         }
-        else
-        {
-            Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
-            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
-        }
-
     }
 
     private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -697,12 +699,15 @@ public partial class MainWindow : Window
             }
             _timerPointerCursorHide.Start();
 
-            if (this.DataContext is MainViewModel vm)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (vm.IsSlideshowOn)
+                if (this.DataContext is MainViewModel vm)
                 {
-                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+                    if (vm.IsSlideshowOn)
+                    {
+                        Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                        NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+                    }
                 }
             }
         });
@@ -721,14 +726,17 @@ public partial class MainWindow : Window
             _timerPointerCursorHide.Stop();
         }
 
-        if (this.DataContext is not MainViewModel vm)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return;
-        }
-        if (vm.IsSlideshowOn)
-        {
-            Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
-            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+            if (this.DataContext is not MainViewModel vm)
+            {
+                return;
+            }
+            if (vm.IsSlideshowOn)
+            {
+                Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
+                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+            }
         }
     }
 
@@ -1115,6 +1123,36 @@ public partial class MainWindow : Window
             }
         }
     }
+    // EnableBlurBehind: Marshal.AllocHGlobal way.
+    /*
+    private static void EnableBlurBehind(IntPtr handle)
+    {
+        // Hexadecimal BGR color value
+        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
+
+        var accent = new NativeMethods.AccentPolicy
+        {
+            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
+            AccentFlags = 0,
+            GradientColor = darkGrayTint,//0,
+            AnimationId = 0
+        };
+
+        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
+        Marshal.StructureToPtr(accent, accentPtr, false);
+
+        var data = new NativeMethods.WindowCompositionAttributeData
+        {
+            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+            SizeOfData = Marshal.SizeOf(accent),
+            Data = accentPtr
+        };
+
+        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+
+        Marshal.FreeHGlobal(accentPtr);
+    }
+    */
 
     private async void Button_FilePick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -1123,6 +1161,8 @@ public partial class MainWindow : Window
 
     public async Task OpenFilePicker()
     {
+        // TODO: remember the last picked folder path.
+
         // Get the IStorageProvider for the current window
         var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
 
@@ -1172,6 +1212,8 @@ public partial class MainWindow : Window
 
     public async Task SelectFolder()
     {
+        // TODO: remember the last picked folder.
+
         // Get the IStorageProvider for the current window
         var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
 
@@ -1208,53 +1250,6 @@ public partial class MainWindow : Window
         }
     }
 
-    // EnableBlurBehind: Marshal.AllocHGlobal way.
-    /*
-    private static void EnableBlurBehind(IntPtr handle)
-    {
-        // Hexadecimal BGR color value
-        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
-
-        var accent = new NativeMethods.AccentPolicy
-        {
-            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
-            AccentFlags = 0,
-            GradientColor = darkGrayTint,//0,
-            AnimationId = 0
-        };
-
-        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
-        Marshal.StructureToPtr(accent, accentPtr, false);
-
-        var data = new NativeMethods.WindowCompositionAttributeData
-        {
-            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-            SizeOfData = Marshal.SizeOf(accent),
-            Data = accentPtr
-        };
-
-        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-
-        Marshal.FreeHGlobal(accentPtr);
-    }
-    */
-
-    // TryRegisterWindowsMenu() for sys menu (alt+space)
-    /*
-    private void TryRegisterWindowsMenu()
-    {
-        if (!OperatingSystem.IsWindows()) return;
-        if (GetTopLevel(this)?.TryGetPlatformHandle() is not { } handle) return;
-        const uint wmSysCommandMessage = 0x0112;
-        const nint sysCommandsScKeyMenu = 0xF100;
-        const nint spaceChar = ' ';
-        AddHandler(KeyUpEvent, (sender, args) =>
-        {
-            if (args.Key != Key.Space || args.KeyModifiers == KeyModifiers.None) return;
-            NativeMethods.DefWindowProc(handle.Handle, wmSysCommandMessage, sysCommandsScKeyMenu, spaceChar);
-        }, RoutingStrategies.Tunnel);
-    }
-    */
 }
 
 public static partial class NativeMethods
@@ -1319,3 +1314,20 @@ public static partial class NativeMethods
     #endregion
 
 }
+
+// TryRegisterWindowsMenu() for sys menu (alt+space)
+/*
+private void TryRegisterWindowsMenu()
+{
+    if (!OperatingSystem.IsWindows()) return;
+    if (GetTopLevel(this)?.TryGetPlatformHandle() is not { } handle) return;
+    const uint wmSysCommandMessage = 0x0112;
+    const nint sysCommandsScKeyMenu = 0xF100;
+    const nint spaceChar = ' ';
+    AddHandler(KeyUpEvent, (sender, args) =>
+    {
+        if (args.Key != Key.Space || args.KeyModifiers == KeyModifiers.None) return;
+        NativeMethods.DefWindowProc(handle.Handle, wmSysCommandMessage, sysCommandsScKeyMenu, spaceChar);
+    }, RoutingStrategies.Tunnel);
+}
+*/
