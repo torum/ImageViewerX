@@ -48,6 +48,7 @@ public partial class MainWindow : Window
         this.PropertyChanged += this.OnWindow_PropertyChanged;
 
         (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
+        (this.DataContext as MainViewModel)!.SlideshowStatusChanged += OnSlideshowStatusChanged;
 
         _timerPointerCursorHide = new DispatcherTimer
         {
@@ -69,6 +70,31 @@ public partial class MainWindow : Window
     private void OnQueueHasBeenChanged(object? sender, int ind)
     {
         UpdateQueueListBoxImages(ind);
+    }
+
+    private void OnSlideshowStatusChanged(object? sender, EventArgs e)
+    {
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        if (this.WindowState != WindowState.FullScreen)
+        {
+            return;
+        }
+
+        if (vm.IsSlideshowOn)
+        {
+            Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
+            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+        }
+        else
+        {
+            Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
+            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+        }
+
     }
 
     private void OnWindow_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -643,12 +669,20 @@ public partial class MainWindow : Window
             this.WindowState = WindowState.FullScreen;
 
             //this.Cursor = new Cursor(StandardCursorType.None);
-
             if (_timerPointerCursorHide.IsEnabled)
             {
                 _timerPointerCursorHide.Stop();
             }
             _timerPointerCursorHide.Start();
+
+            if (this.DataContext is MainViewModel vm)
+            {
+                if (vm.IsSlideshowOn)
+                {
+                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+                }
+            }
         });
     }
 
@@ -657,11 +691,22 @@ public partial class MainWindow : Window
         this.Cursor = Cursor.Default;
 
         this.WindowState = WindowState.Normal;
+
         this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
 
         if (_timerPointerCursorHide.IsEnabled)
         {
             _timerPointerCursorHide.Stop();
+        }
+
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+        if (vm.IsSlideshowOn)
+        {
+            Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
+            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
         }
     }
 
@@ -1083,6 +1128,8 @@ public partial class MainWindow : Window
 
 public static partial class NativeMethods
 {
+    #region == Blur Background (SetWindowCompositionAttribute) ==
+
     [LibraryImport("user32.dll", SetLastError = true)]
     public static partial int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
 
@@ -1119,9 +1166,25 @@ public static partial class NativeMethods
         ACCENT_INVALID_STATE = 5
     }
 
+    #endregion
+
     /*
     // For Alt+Space sys menu.
     [LibraryImport("user32.dll", EntryPoint = "DefWindowProcW")]
     public static partial IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
     */
+
+    #region == Prevent from sleep (SetThreadExecutionState) ==
+
+    // Define the execution state flags
+    public const uint ES_CONTINUOUS = 0x80000000;
+    public const uint ES_SYSTEM_REQUIRED = 0x00000001;
+    public const uint ES_DISPLAY_REQUIRED = 0x00000002;
+    public const uint ES_AWAYMODE_REQUIRED = 0x00000040;
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    public static partial uint SetThreadExecutionState(uint esFlags);
+
+    #endregion
+
 }

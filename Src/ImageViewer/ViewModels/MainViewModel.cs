@@ -405,6 +405,8 @@ public partial class MainViewModel : ObservableObject
             _isSlideshowOn = value;
             OnPropertyChanged(nameof(IsSlideshowOn));
             OnPropertyChanged(nameof(DataPlayPauseIcon));
+
+            SlideshowStatusChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -551,14 +553,10 @@ public partial class MainViewModel : ObservableObject
 
     public event EventHandler<int>? QueueHasBeenChanged;
     public event EventHandler? TransitionsHasBeenChanged;
+    public event EventHandler? SlideshowStatusChanged;
 
     public MainViewModel()
     {
-        // Load dummyimage
-        //var uri = new Uri("avares://ImageViewer/Assets/Untitled.png");
-        //using var stream = AssetLoader.Open(uri);
-        //_diplayImageDummy = new Bitmap(stream);
-
         // Init Timer.
         _timerSlideshow = new DispatcherTimer
         {
@@ -1048,28 +1046,20 @@ public partial class MainViewModel : ObservableObject
         return !IsNoEffectsOn;
     }
 
-    [RelayCommand(CanExecute = nameof(CanToggleFadeInAndOut))]
+    [RelayCommand]
     public void ToggleFadeInAndOut()
     {
         IsEffectFadeInAndOutOn = true;//!IsEffectFadeInAndOutOn;
         IsEffectPageSlideOn = !IsEffectFadeInAndOutOn;
         IsNoEffectsOn = !IsEffectFadeInAndOutOn;
     }
-    private bool CanToggleFadeInAndOut()
-    {
-        return true;//IsNoEffectsOn;
-    }
 
-    [RelayCommand(CanExecute = nameof(CanTogglePageSlide))]
+    [RelayCommand]
     public void TogglePageSlide()
     {
         IsEffectPageSlideOn = true;//!IsEffectPageSlideOn;
         IsEffectFadeInAndOutOn = !IsEffectPageSlideOn;
         IsNoEffectsOn = !IsEffectPageSlideOn;
-    }
-    private bool CanTogglePageSlide()
-    {
-        return true;//IsNoEffectsOn;
     }
 
     [RelayCommand]
