@@ -55,20 +55,8 @@ public partial class MainWindow : Window
         };
         _timerPointerCursorHide.Tick += OnTimerTick;
 
-        #region == KeyBindings ==
-
-        var SpaceKeyBinding = new KeyBinding
-        {
-            Gesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None),
-            Command = (this.DataContext as MainViewModel)!.ToggleSlideshowCommand
-        };
-
-        //this.MenuItemStartSlideshow.KeyBindings.Add(SpaceKeyBinding);
-        this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
-
-        this.KeyBindings.Add(SpaceKeyBinding);
-
-        #endregion
+        // TODO: more
+        InitKeyBindigs();
     }
 
     private void OnTimerTick(object? sender, EventArgs e)
@@ -258,6 +246,25 @@ public partial class MainWindow : Window
         }
 
         #endregion
+    }
+
+    private void InitKeyBindigs()
+    {
+        // TODO: more
+
+        var ToggleSlideshowCommandKeyBinding = new KeyBinding
+        {
+            Gesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None),
+            Command = (this.DataContext as MainViewModel)!.ToggleSlideshowCommand
+        };
+
+        // InputGesture only. Command binding is done already in xaml.
+        //this.MenuItemStartSlideshow.KeyBindings.Add(SpaceKeyBinding);
+        this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
+
+        // set keybinding here instead of in Window_KeyDown.
+        this.KeyBindings.Add(ToggleSlideshowCommandKeyBinding);
+
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -671,7 +678,7 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.Space)
         {
-            if (this.DataContext is MainViewModel vm)
+            if (this.DataContext is MainViewModel)
             {
                 //vm.SpaceKeyPressed();
 

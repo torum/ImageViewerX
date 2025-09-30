@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -67,6 +68,23 @@ public partial class MainViewModel : ObservableObject
 
             _selectedQueueImage = value;
             OnPropertyChanged(nameof(SelectedQueueImage));
+        }
+    }
+
+    private bool _isTransitionReversed = false;
+    public bool IsTransitionReversed
+    {
+        get
+        {
+            return _isTransitionReversed;
+        }
+        set
+        {
+            if (_isTransitionReversed == value)
+                return;
+
+            _isTransitionReversed = value;
+            OnPropertyChanged(nameof(IsTransitionReversed));
         }
     }
 
@@ -175,21 +193,21 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool _isEffectsOn = true;
-    public bool IsEffectsOn
+    private bool _isNoEffectsOn = false;
+    public bool IsNoEffectsOn
     {
         get
         {
-            return _isEffectsOn;
+            return _isNoEffectsOn;
         }
         set
         {
-            if (_isEffectsOn == value)
+            if (_isNoEffectsOn == value)
                 return;
 
-            _isEffectsOn = value;
-            OnPropertyChanged(nameof(IsEffectsOn));
-            OnPropertyChanged(nameof(DataEffectsEnableIcon));
+            _isNoEffectsOn = value;
+            OnPropertyChanged(nameof(IsNoEffectsOn));
+            OnPropertyChanged(nameof(DataNoEffectsIcon));
 
             TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
 
@@ -198,21 +216,61 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool _isOverrappingCrossfadeOn = true;
-    public bool IsOverrappingCrossfadeOn
+    private bool _isEffectCrossfadeOn = true;
+    public bool IsEffectCrossfadeOn
     {
         get
         {
-            return _isOverrappingCrossfadeOn;
+            return _isEffectCrossfadeOn;
         }
         set
         {
-            if (_isOverrappingCrossfadeOn == value)
+            if (_isEffectCrossfadeOn == value)
                 return;
 
-            _isOverrappingCrossfadeOn = value;
-            OnPropertyChanged(nameof(IsOverrappingCrossfadeOn));
+            _isEffectCrossfadeOn = value;
+            OnPropertyChanged(nameof(IsEffectCrossfadeOn));
             OnPropertyChanged(nameof(DataCrossfadeIcon));
+
+            TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private bool _isEffectFadeInAndOutOn = true;
+    public bool IsEffectFadeInAndOutOn
+    {
+        get
+        {
+            return _isEffectFadeInAndOutOn;
+        }
+        set
+        {
+            if (_isEffectFadeInAndOutOn == value)
+                return;
+
+            _isEffectFadeInAndOutOn = value;
+            OnPropertyChanged(nameof(IsEffectFadeInAndOutOn));
+            OnPropertyChanged(nameof(DataFadeInFadeOutIcon));
+
+            TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private bool _isEffectPageSlideOn = false;
+    public bool IsEffectPageSlideOn
+    {
+        get
+        {
+            return _isEffectPageSlideOn;
+        }
+        set
+        {
+            if (_isEffectPageSlideOn == value)
+                return;
+
+            _isEffectPageSlideOn = value;
+            OnPropertyChanged(nameof(IsEffectPageSlideOn));
+            OnPropertyChanged(nameof(DataPageSlideIcon));
 
             TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -426,7 +484,7 @@ public partial class MainViewModel : ObservableObject
     {
         get
         {
-            if (IsOverrappingCrossfadeOn)
+            if (IsEffectCrossfadeOn)
             {
                 return _checkedBox;
             }
@@ -439,13 +497,13 @@ public partial class MainViewModel : ObservableObject
 
     private readonly string _effectsOn = "M4.5 2C3.11929 2 2 3.11929 2 4.5V11.5C2 12.8807 3.11929 14 4.5 14H11.5C12.8807 14 14 12.8807 14 11.5V4.5C14 3.11929 12.8807 2 11.5 2H4.5ZM3 4.5C3 3.67157 3.67157 3 4.5 3H11.5C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H4.5C3.67157 13 3 12.3284 3 11.5V4.5ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7 9.29289L5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L6.64645 10.3536C6.84171 10.5488 7.15829 10.5488 7.35355 10.3536L10.8536 6.85355Z";
     private readonly string _effectsOff = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
-    public string DataEffectsEnableIcon
+    public string DataNoEffectsIcon
     {
         get
         {
-            if (IsEffectsOn)
+            if (IsNoEffectsOn)
             {
-                return _effectsOn;
+                return _effectsOn; 
             }
             else
             {
@@ -454,6 +512,39 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private readonly string _pageSlideOn = "M4.5 2C3.11929 2 2 3.11929 2 4.5V11.5C2 12.8807 3.11929 14 4.5 14H11.5C12.8807 14 14 12.8807 14 11.5V4.5C14 3.11929 12.8807 2 11.5 2H4.5ZM3 4.5C3 3.67157 3.67157 3 4.5 3H11.5C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H4.5C3.67157 13 3 12.3284 3 11.5V4.5ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7 9.29289L5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L6.64645 10.3536C6.84171 10.5488 7.15829 10.5488 7.35355 10.3536L10.8536 6.85355Z";
+    private readonly string _pageSlideOff = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
+    public string DataPageSlideIcon
+    {
+        get
+        {
+            if (IsEffectPageSlideOn)
+            {
+                return _pageSlideOn;
+            }
+            else
+            {
+                return _pageSlideOff;
+            }
+        }
+    }
+
+    private readonly string _fadeInFadeOutOn = "M4.5 2C3.11929 2 2 3.11929 2 4.5V11.5C2 12.8807 3.11929 14 4.5 14H11.5C12.8807 14 14 12.8807 14 11.5V4.5C14 3.11929 12.8807 2 11.5 2H4.5ZM3 4.5C3 3.67157 3.67157 3 4.5 3H11.5C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H4.5C3.67157 13 3 12.3284 3 11.5V4.5ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7 9.29289L5.85355 8.14645C5.65829 7.95118 5.34171 7.95118 5.14645 8.14645C4.95118 8.34171 4.95118 8.65829 5.14645 8.85355L6.64645 10.3536C6.84171 10.5488 7.15829 10.5488 7.35355 10.3536L10.8536 6.85355Z";
+    private readonly string _fadeInFadeOutOff = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
+    public string DataFadeInFadeOutIcon
+    {
+        get
+        {
+            if (IsEffectFadeInAndOutOn)
+            {
+                return _fadeInFadeOutOn;
+            }
+            else
+            {
+                return _fadeInFadeOutOff;
+            }
+        }
+    }
     //
 
     #endregion
@@ -506,6 +597,8 @@ public partial class MainViewModel : ObservableObject
             {
                 _queue.Shuffle();
             }
+
+            IsTransitionReversed = false;
 
             // no wait for transitional effect.
             await Show();
@@ -561,6 +654,7 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
+        IsTransitionReversed = false;
         /////////
         await Show();
     }
@@ -581,6 +675,8 @@ public partial class MainViewModel : ObservableObject
             inx = _queueIndex - 2;
         }
 
+
+        IsTransitionReversed = true;
         _queueIndex = inx;
         await Show();
     }
@@ -592,6 +688,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        IsTransitionReversed = false;
         _queueIndex = Queue.IndexOf(img);
         await Show();
     }
@@ -622,6 +719,8 @@ public partial class MainViewModel : ObservableObject
                 return;
             }
         }
+
+        IsTransitionReversed = false;
 
         await Show();
     }
@@ -941,12 +1040,44 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanToggleCrossfade))]
     public void ToggleCrossfade()
     {
-        IsOverrappingCrossfadeOn = !IsOverrappingCrossfadeOn;
+        IsEffectCrossfadeOn = !IsEffectCrossfadeOn;
     }
 
     private bool CanToggleCrossfade()
     {
-        return IsEffectsOn;
+        return !IsNoEffectsOn;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanToggleFadeInAndOut))]
+    public void ToggleFadeInAndOut()
+    {
+        IsEffectFadeInAndOutOn = true;//!IsEffectFadeInAndOutOn;
+        IsEffectPageSlideOn = !IsEffectFadeInAndOutOn;
+        IsNoEffectsOn = !IsEffectFadeInAndOutOn;
+    }
+    private bool CanToggleFadeInAndOut()
+    {
+        return true;//IsNoEffectsOn;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanTogglePageSlide))]
+    public void TogglePageSlide()
+    {
+        IsEffectPageSlideOn = true;//!IsEffectPageSlideOn;
+        IsEffectFadeInAndOutOn = !IsEffectPageSlideOn;
+        IsNoEffectsOn = !IsEffectPageSlideOn;
+    }
+    private bool CanTogglePageSlide()
+    {
+        return true;//IsNoEffectsOn;
+    }
+
+    [RelayCommand]
+    public void ToggleNoEffects()
+    {
+        IsNoEffectsOn = true;// !IsNoEffectsOn;
+        IsEffectFadeInAndOutOn = !IsNoEffectsOn;
+        IsEffectPageSlideOn = !IsNoEffectsOn;
     }
 
     [RelayCommand]
@@ -1051,11 +1182,6 @@ public partial class MainViewModel : ObservableObject
         ListBoxItemSelected(img);
     }
 
-    [RelayCommand]
-    public void ToggleEffects()
-    {
-        IsEffectsOn = !IsEffectsOn;
-    }
 
     #endregion
 }

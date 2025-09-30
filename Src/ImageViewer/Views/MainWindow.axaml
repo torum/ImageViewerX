@@ -76,9 +76,21 @@ Closing="Window_Closing"
 				</MenuItem.Icon>
 			</MenuItem>
 			<MenuItem Header="Effects">
-				<MenuItem Header="Enable" Command="{Binding ToggleEffectsCommand}">
+				<MenuItem Header="FadeInAndOut" Command="{Binding ToggleFadeInAndOutCommand}">
 					<MenuItem.Icon>
-						<PathIcon Data="{Binding DataEffectsEnableIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						<PathIcon Data="{Binding DataFadeInFadeOutIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="SlideInAndOut" Command="{Binding TogglePageSlideCommand}">
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataPageSlideIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="No Effect" Command="{Binding ToggleNoEffectsCommand}">
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataNoEffectsIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
 						</PathIcon>
 					</MenuItem.Icon>
 				</MenuItem>

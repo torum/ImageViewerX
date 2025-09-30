@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -46,19 +47,65 @@ public partial class MainView : UserControl
 
     private void UpdatePageTransition()
     {
-        if (_viewModel.IsEffectsOn)
-        {
-            var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsOverrappingCrossfadeOn));
-            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-        }
-        else
+        if (_viewModel.IsNoEffectsOn)
         {
             // This does not work. Every other image does not show...
             //this.ImageTransitioningContentControl.PageTransition = null;
 
             var compositeTransition = new CompositePageTransition();
             compositeTransition.PageTransitions.Add(new CustomNoTransition(TimeSpan.FromMilliseconds(0)));
+            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+
+            return;
+        }
+
+        if (_viewModel.IsEffectFadeInAndOutOn)
+        {
+            var compositeTransition = new CompositePageTransition();
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+        }
+        else if (_viewModel.IsEffectPageSlideOn)
+        {
+            var compositeTransition = new CompositePageTransition();
+
+            if (_viewModel.IsEffectCrossfadeOn)
+            {
+                var crossFade = new CrossFade(TimeSpan.FromSeconds(0.3));
+                compositeTransition.PageTransitions.Add(crossFade);
+            }
+
+            //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical)
+            var pageSlide = new CustomPageSlideTransition(TimeSpan.FromSeconds(0.5), CustomPageSlideTransition.SlideAxis.Horizontal)
+            {
+                SlideInEasing = new CubicEaseOut(),
+                SlideOutEasing = new CubicEaseIn()
+
+                //SlideInEasing = new QuadraticEaseIn(),
+                //SlideOutEasing = new QuadraticEaseOut()
+
+                //SlideInEasing = new ElasticEaseIn(),
+                //SlideOutEasing = new ElasticEaseOut()
+
+                //SlideInEasing = new BounceEaseIn(),
+                //SlideOutEasing = new BounceEaseOut()
+
+                //SlideInEasing = new SineEaseIn(),
+                //SlideOutEasing = new SineEaseOut()
+
+                //SlideInEasing = new LinearEasing(),
+                //SlideOutEasing = new LinearEasing()
+            };
+
+            compositeTransition.PageTransitions.Add(pageSlide);
+
+            this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+        }
+        else
+        {
+            // shouldn't be happening.
+            var compositeTransition = new CompositePageTransition();
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
     }
@@ -342,3 +389,171 @@ public class CustomNoTransition(TimeSpan duration) : IPageTransition
     }
 }
 
+public class CustomPageSlideTransition : IPageTransition
+{
+    /// <summary>
+    /// The axis on which the PageSlide should occur
+    /// </summary>
+    public enum SlideAxis
+    {
+        Horizontal,
+        Vertical
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PageSlide"/> class.
+    /// </summary>
+    public CustomPageSlideTransition()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PageSlide"/> class.
+    /// </summary>
+    /// <param name="duration">The duration of the animation.</param>
+    /// <param name="orientation">The axis on which the animation should occur</param>
+    public CustomPageSlideTransition(TimeSpan duration, SlideAxis orientation = SlideAxis.Horizontal)
+    {
+        Duration = duration;
+        Orientation = orientation;
+    }
+
+    /// <summary>
+    /// Gets the duration of the animation.
+    /// </summary>
+    public TimeSpan Duration { get; set; }
+
+    /// <summary>
+    /// Gets the orientation of the animation.
+    /// </summary>
+    public SlideAxis Orientation { get; set; }
+
+    /// <summary>
+    /// Gets or sets element entrance easing.
+    /// </summary>
+    public Easing SlideInEasing { get; set; } = new LinearEasing();
+
+    /// <summary>
+    /// Gets or sets element exit easing.
+    /// </summary>
+    public Easing SlideOutEasing { get; set; } = new LinearEasing();
+
+    /// <inheritdoc />
+    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        //var parent = GetVisualParent(from, to);
+        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
+        if (parent == null) return;
+
+        var tasks = new List<Task>();
+        var distance = Orientation == SlideAxis.Horizontal ? parent.Bounds.Width : parent.Bounds.Height;
+        var translateProperty = Orientation == SlideAxis.Horizontal ? TranslateTransform.XProperty : TranslateTransform.YProperty;
+
+        if (from != null)
+        {
+            // This!!!!
+            from.IsVisible = true;
+            from.Opacity = 1.0;
+
+            var animation = new Animation
+            {
+                Easing = SlideOutEasing,
+                Children =
+                    {
+                        new KeyFrame
+                        {
+                            Setters = { new Setter { Property = translateProperty, Value = 0d } },
+                            Cue = new Cue(0d)
+                        },
+                        new KeyFrame
+                        {
+                            Setters =
+                            {
+                                new Setter
+                                {
+                                    Property = translateProperty,
+                                    Value = forward ? -distance : distance
+                                }
+                            },
+                            Cue = new Cue(1d)
+                        }
+                    },
+                Duration = Duration
+            };
+            tasks.Add(animation.RunAsync(from, cancellationToken));
+        }
+
+        if (to != null)
+        {
+            to.IsVisible = true;
+            to.Opacity = 1.0;
+            var animation = new Animation
+            {
+                Easing = SlideInEasing,
+                Children =
+                    {
+                        new KeyFrame
+                        {
+                            Setters =
+                            {
+                                new Setter
+                                {
+                                    Property = translateProperty,
+                                    Value = forward ? distance : -distance
+                                }
+                            },
+                            Cue = new Cue(0d)
+                        },
+                        new KeyFrame
+                        {
+                            Setters = { new Setter { Property = translateProperty, Value = 0d } },
+                            Cue = new Cue(1d)
+                        }
+                    },
+                Duration = Duration
+            };
+            tasks.Add(animation.RunAsync(to, cancellationToken));
+        }
+
+        await Task.WhenAll(tasks);
+        //await Task.WhenAll(tasks[0]);
+
+        if (from != null && !cancellationToken.IsCancellationRequested)
+        {
+            from.IsVisible = false;
+
+            from.Opacity = 0.0;
+        }
+    }
+    /*
+    /// <summary>
+    /// Gets the common visual parent of the two control.
+    /// </summary>
+    /// <param name="from">The from control.</param>
+    /// <param name="to">The to control.</param>
+    /// <returns>The common parent.</returns>
+    /// <exception cref="ArgumentException">
+    /// The two controls do not share a common parent.
+    /// </exception>
+    /// <remarks>
+    /// Any one of the parameters may be null, but not both.
+    /// </remarks>
+    protected static Visual GetVisualParent(Visual? from, Visual? to)
+    {
+        var p1 = (from ?? to)!.VisualParent;
+        var p2 = (to ?? from)!.VisualParent;
+
+        if (p1 != null && p2 != null && p1 != p2)
+        {
+            throw new ArgumentException("Controls for PageSlide must have same parent.");
+        }
+
+        return p1 ?? throw new InvalidOperationException("Cannot determine visual parent.");
+    }
+    */
+}

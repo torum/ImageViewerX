@@ -16,7 +16,7 @@
 
 	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
 
-		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Center">
+		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="Bitmap">
 					<Image Margin="0" Source="{Binding}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
