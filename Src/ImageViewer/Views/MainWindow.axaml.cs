@@ -190,8 +190,8 @@ public partial class MainWindow : Window
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                this.DragDropTextBlock.IsVisible = false;
-                this.YoImageHereTextBlock.IsVisible = false;
+                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on thie platform.";
+                this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
             }
         }
     }
@@ -639,8 +639,12 @@ public partial class MainWindow : Window
 
                         Dispatcher.UIThread.Post(() =>
                         {
-                            // Writes to Window title bar.
-                            this.Title = System.IO.Path.GetFileName(fileNames[0]);
+                            string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
+                            if (parentFolderPath is not null)
+                            {
+                                // Writes to Window title bar.
+                                this.Title = System.IO.Path.GetFileName(parentFolderPath);
+                            }
                         });
                     }
                     else if (Directory.Exists(fileNames[0]))
