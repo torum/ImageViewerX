@@ -633,6 +633,20 @@ public partial class MainWindow : Window
                     if (System.IO.File.Exists(fileNames[0]))//.Path.LocalPath
                     {
                         isSingleFileDropped = true;
+
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            // Writes to Window title bar.
+                            this.Title = System.IO.Path.GetFileName(fileNames[0]);
+                        });
+                    }
+                    else if (Directory.Exists(fileNames[0]))
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            // Writes to Window title bar.
+                            this.Title = System.IO.Path.GetFileName(fileNames[0]);
+                        });
                     }
                 }
 

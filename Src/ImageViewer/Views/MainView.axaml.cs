@@ -62,7 +62,7 @@ public partial class MainView : UserControl
         if (_viewModel.IsEffectFadeInAndOutOn)
         {
             var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(800), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
         else if (_viewModel.IsEffectPageSlideOn)
@@ -71,15 +71,18 @@ public partial class MainView : UserControl
 
             if (_viewModel.IsEffectCrossfadeOn)
             {
-                var crossFade = new CrossFade(TimeSpan.FromSeconds(0.3));
+                var crossFade = new CrossFade(TimeSpan.FromSeconds(0.5));
                 compositeTransition.PageTransitions.Add(crossFade);
             }
 
-            //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical)
-            var pageSlide = new CustomPageSlideTransition(TimeSpan.FromSeconds(0.5), CustomPageSlideTransition.SlideAxis.Horizontal)
+            //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical) //Horizontal
+            var pageSlide = new CustomPageSlideTransition(TimeSpan.FromSeconds(0.7), CustomPageSlideTransition.SlideAxis.Vertical)
             {
-                SlideInEasing = new CubicEaseOut(),
-                SlideOutEasing = new CubicEaseIn()
+                SlideInEasing = new CubicEaseIn(),
+                SlideOutEasing = new BounceEaseOut()
+
+                //SlideInEasing = new CubicEaseOut(),
+                //SlideOutEasing = new CubicEaseIn()
 
                 //SlideInEasing = new QuadraticEaseIn(),
                 //SlideOutEasing = new QuadraticEaseOut()
