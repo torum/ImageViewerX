@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.ViewModels;
 using System;
@@ -24,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -319,12 +321,11 @@ public partial class MainWindow : Window
         if ((windowLeft >= 0) && (windowTop >= 0))
         {
             this.Position = new PixelPoint(windowLeft, windowTop);
-            Debug.WriteLine($"(windowLeft{windowLeft} >= 0) && (windowTop{windowTop} >= 0)");
+            //Debug.WriteLine($"(windowLeft{windowLeft} >= 0) && (windowTop{windowTop} >= 0)");
         }
         else
         {
-
-            Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
+            //Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
         }
 
         #endregion
@@ -616,6 +617,46 @@ public partial class MainWindow : Window
         }
     }
 
+    private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
+    {
+        List<FileSystemInfo> files = [];
+        foreach (var path in fileNames)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                files.Add(new FileInfo(path));
+            }
+        }
+
+        // Sort only on Linux.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            IComparer<string> _naturalSortComparer = new NaturalSortComparer();
+            files = [.. files.OrderBy(x => x.Name, _naturalSortComparer)];//StringComparer.Ordinal
+        }
+
+        allItems.AddRange(files);
+
+        foreach (var path in fileNames)
+        {
+            if (Directory.Exists(path))
+            {
+                DirectoryInfo directory = new(path);
+                var folderFiles = directory.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly).ToList();
+                
+                if (folderFiles is not null)
+                {
+                    List<string> folderFileNames = [.. folderFiles.Select(x => x.FullName)];
+
+                    if (folderFileNames.Count > 0)
+                    {
+                        RecursivelyProcessFiles(folderFileNames, allItems);
+                    }
+                }
+            }
+        }
+    }
+
     private void ProcessFiles(List<string> fileNames)
     {
         if (this.DataContext is not MainViewModel vm)
@@ -640,18 +681,13 @@ public partial class MainWindow : Window
 
             try
             {
-                var droppedFiles = new List<string>();
-                var isSingleFileDropped = false;
-
-                if (fileNames.Count == 1)
+                if (fileNames.Count > 0)
                 {
                     if (System.IO.File.Exists(fileNames[0]))//.Path.LocalPath
                     {
-                        isSingleFileDropped = true;
-
                         Dispatcher.UIThread.Post(() =>
                         {
-                            string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
+                            string? parentFolderPath = System.IO.Path.GetDirectoryName(fileNames[0]);
                             if (parentFolderPath is not null)
                             {
                                 // Writes to Window title bar.
@@ -669,77 +705,166 @@ public partial class MainWindow : Window
                     }
                 }
 
-                // Get all files recursively.
-                foreach (var item in fileNames)
-                {
-                    if (System.IO.File.Exists(item))//.Path.LocalPath
-                    {
-                        // Add single files
-                        droppedFiles.Add(item);//.Path.LocalPath
-                    }
-                    else if (Directory.Exists(item))//.Path.LocalPath
-                    {
-                        // Recursively get all files from a dropped folder
-                        var filesInFolder = Directory.GetFiles(item, "*", SearchOption.AllDirectories);//.Path.LocalPath
-                        droppedFiles.AddRange(filesInFolder);
-                    }
-                    else
-                    {
-                        Debug.WriteLine("else: " + item);//.Path.LocalPath
-                    }
-                }
+                // 
+                var droppedImages = new List<ImageInfo>();
 
-                // Single file dropped, in that case, get all siblings.
-                if ((droppedFiles.Count == 1) && isSingleFileDropped)
+                // Linux for sort
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    if (System.IO.File.Exists(droppedFiles[0]))
-                    {
-                        var originalFile = droppedFiles[0];
+                    List<string> IncludeSiblingsFileNames = new();
 
-                        // Get parent dir.
-                        string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
-                        if (parentFolderPath is not null)
+                    // Single file dropped, in that case, get all siblings.
+                    if (fileNames.Count == 1)
+                    {
+                        if (System.IO.File.Exists(fileNames[0]))
                         {
-                            if (Directory.Exists(parentFolderPath))
-                            {
-                                // NON-Recursively get all files from the folder
-                                var filesInFolder = Directory.GetFiles(parentFolderPath, "*", SearchOption.TopDirectoryOnly);
-                                droppedFiles.AddRange(filesInFolder);
+                            var originalFile = fileNames[0];
 
-                                if (droppedFiles.Count > 1)
+                            // Get parent dir.
+                            string? parentFolderPath = System.IO.Path.GetDirectoryName(fileNames[0]);
+                            if (parentFolderPath is not null)
+                            {
+                                if (Directory.Exists(parentFolderPath))
                                 {
-                                    // Sort to move the first instance of 'originalFile' to the front, followed by other files.
-                                    // Using `Distinct()` will remove the remaining duplicates.
+                                    // NON-Recursively get all files from the folder
+                                    var filesInFolder = Directory.GetFiles(parentFolderPath, "*", SearchOption.TopDirectoryOnly);
+
+                                    // Sort
+                                    //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+
+                                    IncludeSiblingsFileNames.AddRange(filesInFolder);
+
+                                    if (IncludeSiblingsFileNames.Count > 1)
+                                    {
+                                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
+                                        // Using `Distinct()` will remove the remaining duplicates.
 #pragma warning disable IDE0305
-                                    droppedFiles = droppedFiles.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
+                                        IncludeSiblingsFileNames = IncludeSiblingsFileNames.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
 #pragma warning restore IDE0305
+                                    }
                                 }
                             }
                         }
                     }
+
+
+                    IncludeSiblingsFileNames.AddRange(fileNames);
+
+                    List<FileSystemInfo> allItems = [];
+
+                    RecursivelyProcessFiles(IncludeSiblingsFileNames, allItems);
+
+                    foreach (var item in allItems)
+                    {
+                        //Debug.WriteLine(item.FullName);
+
+                        if (item is DirectoryInfo)
+                        {
+                            //Debug.WriteLine($"[FOLDER] Full Path: {item.FullName}, Name: {item.Name}");
+                        }
+                        else if (item is FileInfo)
+                        {
+                            //Debug.WriteLine($"[FILE]   Full Path: {item.FullName}, Name: {item.Name}");
+
+                            if (!MainViewModel.HasImageExtension(item.Name, validExt))
+                            {
+                                continue;
+                            }
+
+                            // Avoid MacOS's garbage. Use char overload for faster comp if possible.
+                            if ((item.Name.StartsWith('.')) || (item.Name.StartsWith("._")))
+                            {
+                                continue;
+                            }
+
+                            var img = new ImageInfo
+                            {
+                                ImageFilePath = item.FullName
+                            };
+
+                            droppedImages.Add(img);
+                        }
+                    }
                 }
-
-                var droppedImages = new List<ImageInfo>();
-
-                foreach (var file in droppedFiles)
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
                 {
-                    if (!MainViewModel.HasImageExtension(file, validExt))
+                    var droppedFiles = new List<string>();
+
+                    // Get all files recursively.
+                    foreach (var item in fileNames)
                     {
-                        continue;
+                        if (System.IO.File.Exists(item))//.Path.LocalPath
+                        {
+                            // Add single files
+                            droppedFiles.Add(item);//.Path.LocalPath
+                        }
+                        else if (Directory.Exists(item))//.Path.LocalPath
+                        {
+                            // Recursively get all files from a dropped folder
+                            var filesInFolder = Directory.GetFiles(item, "*", SearchOption.AllDirectories);//.Path.LocalPath
+                            //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+                            droppedFiles.AddRange(filesInFolder);
+                        }
+                        else
+                        {
+                            Debug.WriteLine("else: " + item);//.Path.LocalPath
+                        }
                     }
 
-                    // Avoid MacOS's garbage. Use char overload for faster comp if possible.
-                    if ((file.StartsWith('.')) || (file.StartsWith("._")))
+                    // Single file dropped, in that case, get all siblings.
+                    if (droppedFiles.Count == 1)
                     {
-                        continue;
+                        if (System.IO.File.Exists(droppedFiles[0]))
+                        {
+                            var originalFile = droppedFiles[0];
+
+                            // Get parent dir.
+                            string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
+                            if (parentFolderPath is not null)
+                            {
+                                if (Directory.Exists(parentFolderPath))
+                                {
+                                    // NON-Recursively get all files from the folder
+                                    var filesInFolder = Directory.GetFiles(parentFolderPath, "*", SearchOption.TopDirectoryOnly);
+
+                                    // Sort
+                                    //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+
+                                    droppedFiles.AddRange(filesInFolder);
+
+                                    if (droppedFiles.Count > 1)
+                                    {
+                                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
+                                        // Using `Distinct()` will remove the remaining duplicates.
+#pragma warning disable IDE0305
+                                        droppedFiles = droppedFiles.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
+#pragma warning restore IDE0305
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    var img = new ImageInfo
+                    foreach (var file in droppedFiles)
                     {
-                        ImageFilePath = file
-                    };
+                        if (!MainViewModel.HasImageExtension(file, validExt))
+                        {
+                            continue;
+                        }
 
-                    droppedImages.Add(img);
+                        // Avoid MacOS's garbage. Use char overload for faster comp if possible.
+                        if ((file.StartsWith('.')) || (file.StartsWith("._")))
+                        {
+                            continue;
+                        }
+
+                        var img = new ImageInfo
+                        {
+                            ImageFilePath = file
+                        };
+
+                        droppedImages.Add(img);
+                    }
                 }
 
                 /*
@@ -749,10 +874,12 @@ public partial class MainWindow : Window
                 });
                 */
                 vm.DroppedFiles(droppedImages);
+
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO: log error and show error message.
+                Debug.WriteLine(ex);
             }
             finally
             {
@@ -764,6 +891,8 @@ public partial class MainWindow : Window
             }
         });
     } //Avalonia.Platform.Storage.IStorageItem
+
+
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {

@@ -338,6 +338,8 @@ public partial class MainViewModel : ObservableObject
 
                 QueueHasBeenChanged?.Invoke(this, _queueIndex);
 
+                _queueIndex++;
+
                 IsWorking = false;
 
                 // Slideshow timer restart.
@@ -617,17 +619,17 @@ public partial class MainViewModel : ObservableObject
 
                 await Show();
 
-                //await Task.Yield();
                 await Task.Delay(1000);
 
                 OnPropertyChanged(nameof(Queue));
 
-                //await Task.Delay(100);
+
+                await Task.Yield();
 
                 if (_isShuffleOn)
                 {
-                    QueueHasBeenChanged?.Invoke(this, 0);
                 }
+                QueueHasBeenChanged?.Invoke(this, 0);
             }
         }, DispatcherPriority.Loaded);
 
@@ -1145,10 +1147,9 @@ public partial class MainViewModel : ObservableObject
         var page = App.GetService<MainView>();
         page.ToggleSlideshowAnimation(isOn, TimeSpan.FromMilliseconds(600));
 
-
         if (IsSlideshowOn)
         {
-            Debug.WriteLine("StartSlideshow false");
+            //Debug.WriteLine("StartSlideshow false");
             IsSlideshowOn = false;
 
             if (_timerSlideshow.IsEnabled)
@@ -1165,7 +1166,7 @@ public partial class MainViewModel : ObservableObject
 
             if (_queue.Count > 0)
             {
-                Debug.WriteLine("StartSlideshow true");
+                //Debug.WriteLine("StartSlideshow true");
                 IsSlideshowOn = true;
 
                 // If at the end, reset index.
