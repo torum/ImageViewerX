@@ -45,7 +45,7 @@ public partial class MainWindow : Window
 
         InitBackground();
 
-        this.ContentFrame.Content = App.GetService<MainView>();
+        this.ContentFrame.Content = App.GetService<MainView>().Content;
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
 
@@ -462,7 +462,6 @@ public partial class MainWindow : Window
                 Directory.CreateDirectory(App.AppDataFolder);
             }
 
-            Debug.WriteLine("doc.Save");
             doc.Save(App.AppConfigFilePath);
         }
         //catch (System.IO.FileNotFoundException) { }
@@ -743,10 +742,13 @@ public partial class MainWindow : Window
                     droppedImages.Add(img);
                 }
 
+                /*
                 Dispatcher.UIThread.Post(() =>
                 {
                     vm.DroppedFiles(droppedImages);
                 });
+                */
+                vm.DroppedFiles(droppedImages);
             }
             catch
             {
@@ -1010,22 +1012,36 @@ public partial class MainWindow : Window
     private void ListBox_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         e.Handled = true;
-        /*
+
         if (sender is not ListBox lb)
         {
             return;
         }
 
-        if (lb.SelectedItem is not ImageInfo item)
+        var element = e.Source as Visual;
+
+        var listBoxItem = element?.FindAncestorOfType<ListBoxItem>();
+        if (listBoxItem == null)
         {
             return;
         }
+        var dataItem = listBoxItem.DataContext;
 
-        if (this.DataContext is MainViewModel vm)
+        if (dataItem == null)
         {
-            vm.ListBoxItemSelected(item);
+            return;
         }
-        */
+        if (dataItem is not ImageInfo Item)
+        {
+            return;
+        }
+        if (this.DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+        lb.SelectedItem = Item;
+
+        vm.ListBoxItemSelected(Item);
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -1174,8 +1190,16 @@ public partial class MainWindow : Window
                     return;
                 }
                 UpdateVisibleItems(scrollViewer, virtualPanel);
+
+                // Center selected.
+                if (lb.SelectedItem is not null)
+                {
+                    if (lb.ContainerFromItem(lb.SelectedItem) is not ListBoxItem item) return;
+                    BringIntoViewCenter(item);
+                }
+
             }
-        });
+        }, DispatcherPriority.Loaded);
     }
 
     private async void UpdateQueueListBoxImages()
@@ -1210,11 +1234,18 @@ public partial class MainWindow : Window
                             return;
                         }
                         UpdateVisibleItems(scrollViewer, virtualPanel);
+
+                        // Center selected.
+                        if (lb.SelectedItem is not null)
+                        {
+                            if (lb.ContainerFromItem(item) is not ListBoxItem listitem) return;
+                            BringIntoViewCenter(listitem);
+                        }
                     }
                 }
 
             }
-        });
+        }, DispatcherPriority.Loaded);
     }
 
     // EnableBlurBehind: Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
@@ -1398,36 +1429,6 @@ public partial class MainWindow : Window
     private void Button2_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
     {
         e.Handled = true;
-    }
-
-    private void ListBox_SelectionChanged(object? sender, Avalonia.Controls.SelectionChangedEventArgs e)
-    {
-        e.Handled = false;
-
-        if (sender is not ListBox listBox || e.AddedItems.Count == 0) return;
-
-        var selectedItem = e.AddedItems[0];
-
-        if (selectedItem is null) return;
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (listBox.ContainerFromItem(selectedItem) is not ListBoxItem item) return;
-
-            BringIntoViewCenter(item);
-        }, DispatcherPriority.Loaded);
-
-        ///
-
-        if (listBox.SelectedItem is not ImageInfo item)
-        {
-            return;
-        }
-
-        if (this.DataContext is MainViewModel vm)
-        {
-            vm.ListBoxItemSelected(item);
-        }
     }
 
     private static void BringIntoViewCenter(Control control)
