@@ -8,14 +8,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ImageViewer.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
-
+	
 	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
-
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="Bitmap">
@@ -23,20 +17,21 @@
 				</DataTemplate>
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>
+	</Grid>
 
-		<!-- 
+	<!-- 
 			<TransitioningContentControl.PageTransition>
 				<CrossFade Duration="0:00:01.000" />
 			</TransitioningContentControl.PageTransition>
 		-->
 
-		<!-- 
+	<!-- 
 			<TransitioningContentControl.PageTransition>
 				<CrossFade Duration="0:00:02.900" />
 		    </TransitioningContentControl.PageTransition>
 		-->
 
-		<!-- 
+	<!-- 
 			<TransitioningContentControl.PageTransition>
 				<CompositePageTransition>
 					<CrossFade Duration="0:00:01.000" />
@@ -45,10 +40,9 @@
 		    </TransitioningContentControl.PageTransition>
 		-->
 
-		<!--
+	<!--
 		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" PropertyChanged="Image_PropertyChanged" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center">
 		</Image>
 		-->
 
-	</Grid>
 </UserControl>

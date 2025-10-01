@@ -62,7 +62,7 @@ public partial class MainView : UserControl
         if (_viewModel.IsEffectFadeInAndOutOn)
         {
             var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(800), _viewModel.IsEffectCrossfadeOn));
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
         else if (_viewModel.IsEffectPageSlideOn)
@@ -266,13 +266,14 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         {
             var fromAnimation = new Avalonia.Animation.Animation
             {
+                Easing = new CubicEaseIn(),
                 Duration = _duration,
-                FillMode = FillMode.Forward,
+                FillMode = FillMode.Both,
                 Children =
                 {
                     new KeyFrame
                     {
-                        Cue = new Cue(0),
+                        Cue = new Cue(0.0),
                         Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.0 } }
                     },
                     new KeyFrame
@@ -299,13 +300,14 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
 
             var toAnimation = new Avalonia.Animation.Animation
             {
+                //Easing = new CubicEaseOut(),
                 Duration = _duration,
-                FillMode = FillMode.Forward,
+                FillMode = FillMode.Both,
                 Children =
                 {
                     new KeyFrame
                     {
-                        Cue = new Cue(0),
+                        Cue = new Cue(0.0),
                         Setters = { new Setter { Property = Visual.OpacityProperty, Value = 0.0 } }
                     },
                     new KeyFrame

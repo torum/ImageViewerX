@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Generators;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Controls.Shapes;
@@ -20,11 +21,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+
 
 namespace ImageViewer.Views;
 
@@ -228,6 +231,7 @@ public partial class MainWindow : Window
 
         if (!System.IO.File.Exists(App.AppConfigFilePath))
         {
+            Debug.WriteLine("(!System.IO.File.Exists(App.AppConfigFilePath)");
             return;
         }
         
@@ -315,6 +319,12 @@ public partial class MainWindow : Window
         if ((windowLeft >= 0) && (windowTop >= 0))
         {
             this.Position = new PixelPoint(windowLeft, windowTop);
+            Debug.WriteLine($"(windowLeft{windowLeft} >= 0) && (windowTop{windowTop} >= 0)");
+        }
+        else
+        {
+
+            Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
         }
 
         #endregion
@@ -452,11 +462,14 @@ public partial class MainWindow : Window
                 Directory.CreateDirectory(App.AppDataFolder);
             }
 
+            Debug.WriteLine("doc.Save");
             doc.Save(App.AppConfigFilePath);
         }
         //catch (System.IO.FileNotFoundException) { }
         catch (Exception ex)
         {
+            Debug.WriteLine("Exception@OnWindowClosing: " + ex);
+
             if (vm.IsSaveLog)
             {
                 Dispatcher.UIThread.Post(() =>
@@ -996,6 +1009,8 @@ public partial class MainWindow : Window
 
     private void ListBox_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
+        e.Handled = true;
+        /*
         if (sender is not ListBox lb)
         {
             return;
@@ -1010,6 +1025,7 @@ public partial class MainWindow : Window
         {
             vm.ListBoxItemSelected(item);
         }
+        */
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -1382,6 +1398,60 @@ public partial class MainWindow : Window
     private void Button2_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
     {
         e.Handled = true;
+    }
+
+    private void ListBox_SelectionChanged(object? sender, Avalonia.Controls.SelectionChangedEventArgs e)
+    {
+        e.Handled = false;
+
+        if (sender is not ListBox listBox || e.AddedItems.Count == 0) return;
+
+        var selectedItem = e.AddedItems[0];
+
+        if (selectedItem is null) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (listBox.ContainerFromItem(selectedItem) is not ListBoxItem item) return;
+
+            BringIntoViewCenter(item);
+        }, DispatcherPriority.Loaded);
+
+        ///
+
+        if (listBox.SelectedItem is not ImageInfo item)
+        {
+            return;
+        }
+
+        if (this.DataContext is MainViewModel vm)
+        {
+            vm.ListBoxItemSelected(item);
+        }
+    }
+
+    private static void BringIntoViewCenter(Control control)
+    {
+        var scrollViewer = control.GetVisualAncestors()
+            .OfType<ScrollViewer>()
+            .FirstOrDefault();
+
+        if (scrollViewer == null)
+            return;
+
+        var bounds = control.Bounds;
+        var scrollViewerBounds = scrollViewer.Bounds;
+
+        // Calculate the center of the control and the ScrollViewer's viewport
+        var controlCenterY = bounds.Y + bounds.Height / 2;
+        var viewportCenterY = scrollViewer.Offset.Y + scrollViewerBounds.Height / 2;
+
+        // Calculate the difference between the centers
+        var diff = controlCenterY - viewportCenterY;
+
+        // Set the new scroll offset
+        var newOffset = new Vector(scrollViewer.Offset.X, scrollViewer.Offset.Y + diff);
+        scrollViewer.Offset = newOffset;
     }
 }
 
