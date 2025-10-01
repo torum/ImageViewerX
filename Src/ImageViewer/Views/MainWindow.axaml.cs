@@ -215,7 +215,6 @@ public partial class MainWindow : Window
         }
     }
 
-
     private void LoadSettings()
     {
         int windowTop = 0;
@@ -1329,6 +1328,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Button1_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void Button2_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        e.Handled = true;
+    }
 }
 
 public static partial class NativeMethods
