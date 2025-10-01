@@ -598,12 +598,17 @@ public partial class MainViewModel : ObservableObject
         _queueIndex = 0;
         SelectedQueueImage = null;
 
+        // Just because.
         DiplayImage1 = null;
+        // When the same files dropped. The same file won't reload due to "dup". So clear it.
+        _currentFile = string.Empty;
 
         if (_queue.Count > 0)
         {
             //
             QueueLoaded?.Invoke(this,EventArgs.Empty);
+
+            await Task.Yield();
 
             if (_isShuffleOn)
             {
@@ -615,8 +620,11 @@ public partial class MainViewModel : ObservableObject
             await Show();
 
             //await Task.Delay(500);
+            await Task.Yield();
 
             OnPropertyChanged(nameof(Queue));
+
+            await Task.Yield();
 
             if (_isShuffleOn)
             {

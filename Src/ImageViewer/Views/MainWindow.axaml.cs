@@ -745,14 +745,37 @@ public partial class MainWindow : Window
 
     private void SetWindowStateFullScreen()
     {
-        // hack for CaptionButtons not dissapearing fast enough problem.
-        ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
-
-        Dispatcher.UIThread.Post(async () =>
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            await Task.Delay(20);
-            //await Task.Yield();
+            // hack for CaptionButtons not dissapearing fast enough problem.
+            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
 
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await Task.Delay(20);
+                //await Task.Yield();
+
+                this.WindowState = WindowState.FullScreen;
+
+                //this.Cursor = new Cursor(StandardCursorType.None);
+                if (_timerPointerCursorHide.IsEnabled)
+                {
+                    _timerPointerCursorHide.Stop();
+                }
+                _timerPointerCursorHide.Start();
+
+                if (this.DataContext is MainViewModel vm)
+                {
+                    if (vm.IsSlideshowOn)
+                    {
+                        Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                        NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+                    }
+                }
+            });
+        }
+        else
+        {
             this.WindowState = WindowState.FullScreen;
 
             //this.Cursor = new Cursor(StandardCursorType.None);
@@ -773,7 +796,7 @@ public partial class MainWindow : Window
                     }
                 }
             }
-        });
+        }
     }
 
     private void SetWindowStateNormal()
@@ -795,8 +818,10 @@ public partial class MainWindow : Window
         }
 
         this.WindowState = WindowState.Normal;
-
-        this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+        }
 
         if (_timerPointerCursorHide.IsEnabled)
         {
