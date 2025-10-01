@@ -25,9 +25,6 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Net.WebRequestMethods;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ImageViewer.Views;
 
@@ -189,6 +186,12 @@ public partial class MainWindow : Window
             else if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Light)
             {
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                this.DragDropTextBlock.IsVisible = false;
+                this.YoImageHereTextBlock.IsVisible = false;
             }
         }
     }

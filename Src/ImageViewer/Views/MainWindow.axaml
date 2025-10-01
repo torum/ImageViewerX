@@ -208,8 +208,8 @@ Closing="Window_Closing"
 
 		<Grid x:Name="WelcomeMessageGrid" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="True">
 			<StackPanel HorizontalAlignment="Center" Spacing="24" Margin="24,36,24,0">
-				<TextBlock Text="Drag &amp; Drop" TextWrapping="Wrap" TextTrimming="WordEllipsis" FontWeight="Bold" FontSize="36" HorizontalAlignment="Center"></TextBlock>
-				<TextBlock Text="Your image files or folder here" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Opacity="0.7" FontWeight="SemiBold" HorizontalAlignment="Center"></TextBlock>
+				<TextBlock x:Name="DragDropTextBlock" Text="Drag &amp; Drop" TextWrapping="Wrap" TextTrimming="WordEllipsis" FontWeight="Bold" FontSize="36" HorizontalAlignment="Center"></TextBlock>
+				<TextBlock x:Name="YoImageHereTextBlock" Text="Your image files or folder here" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Opacity="0.7" FontWeight="SemiBold" HorizontalAlignment="Center"></TextBlock>
 
 				<WrapPanel HorizontalAlignment="Center" Margin="0,36,0,0">
 					
