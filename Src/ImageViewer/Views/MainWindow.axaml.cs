@@ -36,6 +36,7 @@ namespace ImageViewer.Views;
 public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timerPointerCursorHide;
+    private Avalonia.Point _mousePosition;
 
     public MainWindow()
     {
@@ -75,6 +76,8 @@ public partial class MainWindow : Window
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
 
+        // TODO: Is there any way to determine current cursor type?
+        // Creating new cursor every time is weird.
         this.Cursor = new Cursor(StandardCursorType.None);
     }
 
@@ -494,6 +497,16 @@ public partial class MainWindow : Window
     {
         if (this.WindowState == WindowState.FullScreen)
         {
+            var position = e.GetPosition(this);
+
+            if ((position.X == _mousePosition.X) && (position.Y == _mousePosition.Y))
+            {
+                //Debug.WriteLine($"Same pos, returning: sender {sender}, X {position.X}, Y {position.Y}, Source {e.Source}");
+                return;
+            }
+
+            _mousePosition = position;
+
             if (_timerPointerCursorHide.IsEnabled)
             {
                 _timerPointerCursorHide.Stop();
@@ -516,6 +529,8 @@ public partial class MainWindow : Window
             }
 
              _timerPointerCursorHide.Start();
+
+            e.Handled = true;
         }
     }
 
@@ -892,8 +907,6 @@ public partial class MainWindow : Window
         });
     } //Avalonia.Platform.Storage.IStorageItem
 
-
-
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
@@ -910,6 +923,8 @@ public partial class MainWindow : Window
 
     private void SetWindowStateFullScreen()
     {
+        this.QueueListBox.IsVisible = false;
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // hack for CaptionButtons not dissapearing fast enough problem.
@@ -1006,6 +1021,8 @@ public partial class MainWindow : Window
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
             }
         }
+
+        this.QueueListBox.IsVisible = true;
     }
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)

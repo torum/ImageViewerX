@@ -10,6 +10,9 @@
              x:DataType="vm:MainViewModel">
 	
 	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
+		<!--
+		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
+		-->
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="Bitmap">
@@ -18,31 +21,4 @@
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>
 	</Grid>
-
-	<!-- 
-			<TransitioningContentControl.PageTransition>
-				<CrossFade Duration="0:00:01.000" />
-			</TransitioningContentControl.PageTransition>
-		-->
-
-	<!-- 
-			<TransitioningContentControl.PageTransition>
-				<CrossFade Duration="0:00:02.900" />
-		    </TransitioningContentControl.PageTransition>
-		-->
-
-	<!-- 
-			<TransitioningContentControl.PageTransition>
-				<CompositePageTransition>
-					<CrossFade Duration="0:00:01.000" />
-					<PageSlide Duration="0:00:0.320" Orientation="Vertical" />
-				</CompositePageTransition>
-		    </TransitioningContentControl.PageTransition>
-		-->
-
-	<!--
-		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" PropertyChanged="Image_PropertyChanged" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center">
-		</Image>
-		-->
-
 </UserControl>

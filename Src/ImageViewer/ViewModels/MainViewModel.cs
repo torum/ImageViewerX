@@ -3,6 +3,7 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -142,7 +143,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // When busy, it's busy processing file in the background thread.
+    // When busy, it's busy processing file in/out the background thread.
     private bool _isWorking;
     public bool IsWorking
     {
@@ -156,7 +157,12 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             _isWorking = value;
-            OnPropertyChanged(nameof(IsWorking));
+
+            if (!IsFullscreen)
+            {
+                // Only non fullscreen mode since IsWorking is binding to busy cursor.
+                OnPropertyChanged(nameof(IsWorking));
+            }
         }
     }
 
@@ -919,17 +925,12 @@ public partial class MainViewModel : ObservableObject
 
         if (await ShowImage(img))
         {
-            Dispatcher.UIThread.Post(() =>
+            if (IsSlideshowOn)
             {
-                if (IsSlideshowOn)
-                {
-                    _timerSlideshow.Start();
-                }
+                _timerSlideshow.Start();
+            }
 
-                //_queueIndex = index;
-
-                QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
-            });
+            QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
         }
 
         /*
@@ -974,6 +975,9 @@ public partial class MainViewModel : ObservableObject
         int idx = _queueIndex;
 
         _currentFile = img.ImageFilePath;
+
+        // Test
+        IsWorking = true;
         
         //Debug.WriteLine($"{idx} Enter critical section.");
 
@@ -1074,6 +1078,9 @@ public partial class MainViewModel : ObservableObject
         }
 
         #endregion
+
+        // Test
+        IsWorking = false;
 
         if (IsSlideshowOn)
         {
@@ -1200,33 +1207,81 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]
-    public void ShowInExplorer()
+    public async Task ShowInExplorer()
     {
         if (string.IsNullOrEmpty(_currentFile))
         {
             return;
         }
 
-        if (File.Exists(_currentFile))
+        if (!System.IO.File.Exists(_currentFile))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
+        }
+
+        var dir = Path.GetDirectoryName(_currentFile);
+        if (string.IsNullOrEmpty(dir))
+        {
+            return;
+        }
+
+        var mainWin = App.GetService<MainWindow>();
+        var launcher = TopLevel.GetTopLevel(mainWin)?.Launcher;
+        if (launcher is null)
+        {
+            return;
+        }
+
+        // Open in default app.
+        //await launcher.LaunchFileInfoAsync(new FileInfo(_currentFile));
+        
+        // Open in explorer
+        await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(dir));
+
+        return;
+
+        /*
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Test A
+            Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true });
+
+            // Test B
+            string argument = $"/select, \"{_currentFile}\"";
+            Process.Start("explorer.exe", argument);
+
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Process.Start(new ProcessStartInfo
             {
-                string argument = $"/select,\"{_currentFile}\"";
-                Process.Start("explorer.exe", argument); 
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                FileName = "xdg-open",
+                Arguments = $"\"{dir}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+        }
+        */
+
+        /*
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            string argument = $"/select,\"{_currentFile}\"";
+            Process.Start("explorer.exe", argument);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            Process.Start("open", $"-R \"{_currentFile}\"");
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var dir = Path.GetDirectoryName(_currentFile);
+            if (dir is not null)
             {
-                Process.Start("open", $"-R \"{_currentFile}\"");
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                var dir = Path.GetDirectoryName(_currentFile);
-                if (dir is not null)
-                {
-                    Process.Start("xdg-open", dir);
-                }
+                Process.Start("xdg-open", dir);
             }
         }
+        */
     }
     private bool CanShowInExplorer()
     {
@@ -1247,7 +1302,6 @@ public partial class MainViewModel : ObservableObject
 
         ListBoxItemSelected(img);
     }
-
 
     #endregion
 }
