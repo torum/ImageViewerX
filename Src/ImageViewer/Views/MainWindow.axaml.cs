@@ -37,10 +37,13 @@ public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timerPointerCursorHide;
     private Avalonia.Point _mousePosition;
+    private readonly MainViewModel _mainViewModel;
 
     public MainWindow()
     {
-        this.DataContext = App.GetService<MainViewModel>();
+        _mainViewModel = App.GetService<MainViewModel>();
+
+        this.DataContext = _mainViewModel;
 
         LoadSettings();
 
@@ -48,13 +51,14 @@ public partial class MainWindow : Window
 
         InitBackground();
 
-        this.ContentFrame.Content = App.GetService<MainView>().Content;
+        // Moved to Window_Loaded.
+        //this.ContentFrame.Content = App.GetService<MainView>();
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
 
-        (this.DataContext as MainViewModel)!.QueueHasBeenChanged += OnQueueHasBeenChanged;
-        (this.DataContext as MainViewModel)!.SlideshowStatusChanged += OnSlideshowStatusChanged;
-        (this.DataContext as MainViewModel)!.QueueLoaded += OnQueueLoaded;
+        _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
+        _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
+        _mainViewModel.QueueLoaded += OnQueueLoaded;
 
         this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
 
@@ -72,7 +76,10 @@ public partial class MainWindow : Window
     {
         if ((args is not null) && args.Length > 0)
         {
-            ProcessFiles(args.ToList());
+            // Too early?
+            this.WelcomeMessageGrid.IsVisible = false;
+
+            ProcessFiles([.. args]);
         }
     }
 
@@ -97,11 +104,6 @@ public partial class MainWindow : Window
 
     private void OnSlideshowStatusChanged(object? sender, EventArgs e)
     {
-        if (this.DataContext is not MainViewModel vm)
-        {
-            return;
-        }
-
         if (this.WindowState != WindowState.FullScreen)
         {
             return;
@@ -109,7 +111,7 @@ public partial class MainWindow : Window
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (vm.IsSlideshowOn)
+            if (_mainViewModel.IsSlideshowOn)
             {
                 Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
@@ -350,7 +352,7 @@ public partial class MainWindow : Window
         var ToggleSlideshowCommandKeyBinding = new KeyBinding
         {
             Gesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None),
-            Command = (this.DataContext as MainViewModel)!.ToggleSlideshowCommand
+            Command = _mainViewModel.ToggleSlideshowCommand
         };
 
         // InputGesture only. Command binding is done already in xaml.
@@ -366,6 +368,8 @@ public partial class MainWindow : Window
     {
         // Too late to change window size etc. Move to constructor.
         //LoadSettings();
+
+        this.ContentFrame.Content = App.GetService<MainView>();
     }
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
@@ -521,23 +525,16 @@ public partial class MainWindow : Window
                 _timerPointerCursorHide.Stop();
             }
 
-            if (this.DataContext is MainViewModel vm)
+            if (_mainViewModel.IsWorking)
             {
-                if (vm.IsWorking)
-                {
-                    this.Cursor = new Cursor(StandardCursorType.AppStarting);
-                }
-                else
-                {
-                    this.Cursor = Cursor.Default;
-                }
+                this.Cursor = new Cursor(StandardCursorType.AppStarting);
             }
             else
             {
                 this.Cursor = Cursor.Default;
             }
 
-             _timerPointerCursorHide.Start();
+            _timerPointerCursorHide.Start();
 
             e.Handled = true;
         }
@@ -570,16 +567,9 @@ public partial class MainWindow : Window
 
                 if (this.WindowState == WindowState.FullScreen)
                 {
-                    if (this.DataContext is MainViewModel vm)
+                    if (_mainViewModel.IsWorking)
                     {
-                        if (vm.IsWorking)
-                        {
-                            this.Cursor = new Cursor(StandardCursorType.AppStarting);
-                        }
-                        else
-                        {
-                            this.Cursor = Cursor.Default;
-                        }
+                        this.Cursor = new Cursor(StandardCursorType.AppStarting);
                     }
                     else
                     {
@@ -592,7 +582,6 @@ public partial class MainWindow : Window
 
     private void Window_DragOver(object sender, DragEventArgs e)
     {
-
         // Only allow copy effect for file drops
         e.DragEffects = e.Data.Contains(DataFormats.Files)
             ? DragDropEffects.Copy
@@ -601,12 +590,7 @@ public partial class MainWindow : Window
 
     private void Window_Drop(object sender, DragEventArgs e)
     {
-        if (this.DataContext is not MainViewModel vm)
-        {
-            return;
-        }
-
-        if (vm.IsWorking)
+        if (_mainViewModel.IsWorking)
         {
             // Already processing. 
             return;
@@ -683,12 +667,13 @@ public partial class MainWindow : Window
 
     private void ProcessFiles(List<string> fileNames)
     {
-        if (this.DataContext is not MainViewModel vm)
+        if (_mainViewModel.IsWorking)
         {
+            // I'm busy.
             return;
         }
 
-        vm.IsWorking = true;
+        _mainViewModel.IsWorking = true;
         //await Task.Yield();
 
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
@@ -697,11 +682,11 @@ public partial class MainWindow : Window
         {
             Dispatcher.UIThread.Post(() =>
             {
-                vm.IsWorking = true;
+                _mainViewModel.IsWorking = true;
                 //await Task.Yield();
             });
 
-            var validExt = vm.ValidExtensions;
+            var validExt = _mainViewModel.ValidExtensions;
 
             try
             {
@@ -735,7 +720,7 @@ public partial class MainWindow : Window
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    List<string> IncludeSiblingsFileNames = new();
+                    List<string> IncludeSiblingsFileNames = [];
 
                     // Single file dropped, in that case, get all siblings.
                     if (fileNames.Count == 1)
@@ -897,7 +882,7 @@ public partial class MainWindow : Window
                     vm.DroppedFiles(droppedImages);
                 });
                 */
-                vm.DroppedFiles(droppedImages);
+                _mainViewModel.DroppedFiles(droppedImages);
 
             }
             catch (Exception ex)
@@ -909,7 +894,7 @@ public partial class MainWindow : Window
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    vm.IsWorking = false;
+                    _mainViewModel.IsWorking = false;
                     //await Task.Yield();
                 });
             }
@@ -953,13 +938,10 @@ public partial class MainWindow : Window
                 }
                 _timerPointerCursorHide.Start();
 
-                if (this.DataContext is MainViewModel vm)
+                if (_mainViewModel.IsSlideshowOn)
                 {
-                    if (vm.IsSlideshowOn)
-                    {
-                        Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                        NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-                    }
+                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
                 }
             });
         }
@@ -976,13 +958,10 @@ public partial class MainWindow : Window
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (this.DataContext is MainViewModel vm)
+                if (_mainViewModel.IsSlideshowOn)
                 {
-                    if (vm.IsSlideshowOn)
-                    {
-                        Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                        NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-                    }
+                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
                 }
             }
         }
@@ -990,16 +969,9 @@ public partial class MainWindow : Window
 
     private void SetWindowStateNormal()
     {
-        if (this.DataContext is MainViewModel vm)
+        if (_mainViewModel.IsWorking)
         {
-            if (vm.IsWorking)
-            {
-                this.Cursor = new Cursor(StandardCursorType.AppStarting);
-            }
-            else
-            {
-                this.Cursor = Cursor.Default;
-            }
+            this.Cursor = new Cursor(StandardCursorType.AppStarting);
         }
         else
         {
@@ -1019,12 +991,7 @@ public partial class MainWindow : Window
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            if (this.DataContext is not MainViewModel vms)
-            {
-                return;
-            }
-
-            if (vms.IsSlideshowOn)
+            if (_mainViewModel.IsSlideshowOn)
             {
                 Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
@@ -1047,30 +1014,21 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.Space)
         {
-            if (this.DataContext is MainViewModel)
-            {
-                //vm.SpaceKeyPressed();
+            //_mainViewModel.SpaceKeyPressed();
 
-                //e.Handled = true;
-            }
+            //e.Handled = true;
         }
         else if (e.Key == Avalonia.Input.Key.Right)
         {
-            if (this.DataContext is MainViewModel vm)
-            {
-                vm.NextKeyPressed();
+            _mainViewModel.NextKeyPressed();
 
-                e.Handled = true;
-            }
+            e.Handled = true;
         }
         else if (e.Key == Avalonia.Input.Key.Left)
         {
-            if (this.DataContext is MainViewModel vm)
-            {
-                vm.PrevKeyPressed();
+            _mainViewModel.PrevKeyPressed();
 
-                e.Handled = true;
-            }
+            e.Handled = true;
         }
         else if (e.Key == Avalonia.Input.Key.F)
         {
@@ -1141,19 +1099,14 @@ public partial class MainWindow : Window
 
     private void Window_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
     {
-        if (this.DataContext is not MainViewModel vm)
-        {
-            return;
-        }
-
         if (e.Delta.Y > 0) // Scroll up
         {
-            vm.PrevKeyPressed();
+            _mainViewModel.PrevKeyPressed();
         }
         else if (e.Delta.Y < 0) // Scroll down
         {
             //
-            vm.NextKeyPressed();
+            _mainViewModel.NextKeyPressed();
         }
 
         e.Handled = true;
@@ -1190,13 +1143,10 @@ public partial class MainWindow : Window
         {
             return;
         }
-        if (this.DataContext is not MainViewModel vm)
-        {
-            return;
-        }
+
         lb.SelectedItem = Item;
 
-        vm.ListBoxItemSelected(Item);
+        _mainViewModel.ListBoxItemSelected(Item);
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)

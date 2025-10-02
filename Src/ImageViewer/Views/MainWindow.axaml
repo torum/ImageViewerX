@@ -169,7 +169,7 @@ Closing="Window_Closing"
 														Margin="{TemplateBinding Padding}"/>
 
 										<Interaction.Behaviors>
-											<ia:VerticalScrollViewerAnimatedBehavior/>
+											<ia:VerticalScrollViewerAnimatedBehavior ScrollStepSize="50"/>
 										</Interaction.Behaviors>
 										
 									</ScrollViewer>

@@ -753,7 +753,7 @@ public partial class MainViewModel : ObservableObject
             return Task.CompletedTask;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.UIThread.Post(async () =>
         {
             if (imageInfoItems is null)
             {
@@ -824,7 +824,7 @@ public partial class MainViewModel : ObservableObject
                         img.IsLoading = false;
                     }
 
-                    //await Task.Delay(100);
+                    await Task.Delay(20);
                 }
             }
         });
