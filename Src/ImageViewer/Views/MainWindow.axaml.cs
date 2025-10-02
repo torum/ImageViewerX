@@ -39,15 +39,22 @@ public partial class MainWindow : Window
     private Avalonia.Point _mousePosition;
     private readonly MainViewModel _mainViewModel;
 
+    private bool _isFullyLoaded;
+    // Window position and size
+    private int _winRestoreWidth = 1024;
+    private int _winRestoreHeight = 768;
+    private int _winRestoreTop = 100;
+    private int _winRestoreLeft = 100;
+
     public MainWindow()
     {
         _mainViewModel = App.GetService<MainViewModel>();
 
         this.DataContext = _mainViewModel;
 
-        LoadSettings();
-
         InitializeComponent();
+
+        LoadSettings();
 
         InitBackground();
 
@@ -343,6 +350,9 @@ public partial class MainWindow : Window
         }
 
         #endregion
+
+
+        _isFullyLoaded = true;
     }
 
     private void InitKeyBindigs()
@@ -379,6 +389,10 @@ public partial class MainWindow : Window
 
     private void SaveSettings()
     {
+        // Make sure Window and settings have been fully loaded and not overriding with empty data.
+        if (!_isFullyLoaded)
+            return;
+
         if (this.DataContext is not MainViewModel vm)
         {
             return;
@@ -403,51 +417,46 @@ public partial class MainWindow : Window
         //Window w = (sender as Window);
         // Main Window attributes
         attrs = doc.CreateAttribute("height");
-        if (this.WindowState == WindowState.Maximized)
+        if (this.WindowState == WindowState.Normal)
         {
-            //attrs.Value = w.RestoreBounds.Height.ToString();
+            attrs.Value = this.Height.ToString();
         }
         else
         {
-            attrs.Value = this.Height.ToString();
+            attrs.Value = _winRestoreHeight.ToString();
         }
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("width");
-        if (this.WindowState == WindowState.Maximized)
+        if (this.WindowState == WindowState.Normal)
         {
-            //attrs.Value = w.RestoreBounds.Width.ToString();
-            //windowWidth = w.RestoreBounds.Width;
+            attrs.Value = this.Width.ToString();
         }
         else
         {
-            attrs.Value = this.Width.ToString();
-            //windowWidth = this.Width;
-
+            attrs.Value = _winRestoreWidth.ToString();
         }
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("top");
-        if (this.WindowState == WindowState.Maximized)
+        if (this.WindowState == WindowState.Normal)
         {
-            //attrs.Value = w.RestoreBounds.Top.ToString();
+            attrs.Value = this.Position.Y.ToString();
         }
         else
         {
-            //attrs.Value = w.Top.ToString();
-            attrs.Value = this.Position.Y.ToString();
+            attrs.Value = _winRestoreTop.ToString();
         }
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("left");
-        if (this.WindowState == WindowState.Maximized)
+        if (this.WindowState == WindowState.Normal)
         {
-            //attrs.Value = w.RestoreBounds.Left.ToString();
+            attrs.Value = this.Position.X.ToString();
         }
         else
         {
-            //attrs.Value = w.Left.ToString();
-            attrs.Value = this.Position.X.ToString();
+            attrs.Value = _winRestoreLeft.ToString();
         }
         mainWindow.SetAttributeNode(attrs);
 
@@ -504,6 +513,21 @@ public partial class MainWindow : Window
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
     {
         UpdateQueueListBoxImages();
+
+
+        if (this.WindowState == WindowState.Maximized)
+        {
+        }
+        else if (this.WindowState == WindowState.Minimized)
+        {
+        }
+        else
+        {
+            _winRestoreHeight = (int)this.Height;
+            _winRestoreWidth = (int)this.Width;
+            _winRestoreTop = (int)this.Position.X;
+            _winRestoreLeft = (int)this.Position.X;
+        }
     }
 
     private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)

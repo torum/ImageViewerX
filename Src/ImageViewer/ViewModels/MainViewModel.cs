@@ -769,6 +769,8 @@ public partial class MainViewModel : ObservableObject
 
             foreach (var item in imageInfoItems)
             {
+                await Task.Delay(10);
+
                 if (item is not ImageInfo img)
                 {
                     Debug.WriteLine("item is not ImageInfo");

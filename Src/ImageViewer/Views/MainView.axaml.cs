@@ -268,7 +268,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             {
                 Easing = new CubicEaseIn(),
                 Duration = _duration,
-                FillMode = FillMode.Both,
+                FillMode = FillMode.Forward,
                 Children =
                 {
                     new KeyFrame
@@ -302,7 +302,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             {
                 //Easing = new CubicEaseOut(),
                 Duration = _duration,
-                FillMode = FillMode.Both,
+                FillMode = FillMode.Forward,
                 Children =
                 {
                     new KeyFrame
