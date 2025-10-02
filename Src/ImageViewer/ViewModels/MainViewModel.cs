@@ -696,23 +696,28 @@ public partial class MainViewModel : ObservableObject
 
     public async void PrevKeyPressed()
     {
+        if (_queue.Count <= 0) return;
+
+        if (_queueIndex == 1)
+        {
+            Debug.WriteLine("(_queueIndex == 0) PrevKeyPressed");
+            return;
+        }
+
+        if ((_queueIndex - 2) <= -1)
+        {
+            return;
+        }
+
         if (_timerSlideshow.IsEnabled)
         {
             _timerSlideshow.Stop();
         }
 
-        if (_queue.Count <= 0) return;
-
-        int inx = 0;
-        if ((_queueIndex - 2) > -1)
-        {
-            //_queueIndex -= 2;
-            inx = _queueIndex - 2;
-        }
-
+        _queueIndex -= 2;
 
         IsTransitionReversed = true;
-        _queueIndex = inx;
+
         await Show();
     }
 
@@ -746,13 +751,13 @@ public partial class MainViewModel : ObservableObject
 
     #region == Private Methods ==
 
-    private Task GetPictures(IEnumerable<object>? imageInfoItems)
+    private async Task GetPictures(IEnumerable<object>? imageInfoItems)
     {
         if (Queue.Count <= 0)
         {
-            return Task.CompletedTask;
+            return;
         }
-
+        /*
         Dispatcher.UIThread.Post(async () =>
         {
             if (imageInfoItems is null)
@@ -769,7 +774,7 @@ public partial class MainViewModel : ObservableObject
 
             foreach (var item in imageInfoItems)
             {
-                await Task.Delay(10);
+                //await Task.Delay(10);
 
                 if (item is not ImageInfo img)
                 {
@@ -830,8 +835,89 @@ public partial class MainViewModel : ObservableObject
                 }
             }
         });
+        */
 
-        return Task.CompletedTask;
+        if (imageInfoItems is null)
+        {
+            Debug.WriteLine("imageInfoItems is null @GetPictures");
+            return;
+        }
+
+        if (Queue.Count <= 0)
+        {
+            Debug.WriteLine("Queue.Count <= 0 @GetPictures");
+            return;
+        }
+
+        foreach (var item in imageInfoItems)
+        {
+            await Task.Delay(10);
+
+            if (item is not ImageInfo img)
+            {
+                Debug.WriteLine("item is not ImageInfo @GetPictures");
+                continue;
+            }
+
+            if (img is null)
+            {
+                Debug.WriteLine("img is null @GetPictures");
+                continue;
+            }
+
+            if (img.IsAcquired)
+            {
+                //Debug.WriteLine("img.IsAcquired");
+                continue;
+            }
+
+            if (img.IsLoading)
+            {
+                //Debug.WriteLine("img.IsLoading @GetPictures");
+                continue;
+            }
+            img.IsLoading = true;
+
+            if (File.Exists(img.ImageFilePath))
+            {
+                img.IsLoading = true;
+
+                //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+
+                try
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        Bitmap? bitmap = new(img.ImageFilePath);
+                        img.ImageSource = bitmap;
+                        img.IsAcquired = true;
+                        img.IsLoading = false;
+                    }, DispatcherPriority.Loaded);//Default//.Background
+                }
+                catch (Exception e)
+                {
+                    // TODO:
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        img.IsAcquired = false;
+                        img.IsLoading = false;
+                        img.ImageSource = null;
+                    });
+
+                    Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
+
+                    continue;
+                }
+                finally
+                {
+                    img.IsLoading = false;
+                }
+
+                await Task.Delay(20);
+            }
+        }
+
+        return;
     }
 
     private async void OnSlideshowTimerTick(object? sender, EventArgs e)

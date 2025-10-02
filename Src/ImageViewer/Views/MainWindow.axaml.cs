@@ -1328,7 +1328,7 @@ public partial class MainWindow : Window
                 }
 
             }
-        }, DispatcherPriority.Loaded);
+        }, DispatcherPriority.Loaded);//.Background//.Loaded//.Default
     }
 
     private async void UpdateQueueListBoxImages()
@@ -1374,7 +1374,7 @@ public partial class MainWindow : Window
                 }
 
             }
-        }, DispatcherPriority.Loaded);
+        }, DispatcherPriority.Loaded);////.Default//.Background
     }
 
     // EnableBlurBehind: Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
