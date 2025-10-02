@@ -67,6 +67,15 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
     }
+
+    public void SetStdin(string[] args)
+    {
+        if ((args is not null) && args.Length > 0)
+        {
+            ProcessFiles(args.ToList());
+        }
+    }
+
     private void OnQueueLoaded(object? sender, EventArgs e)
     {
         this.WelcomeMessageGrid.IsVisible = false;

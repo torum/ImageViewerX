@@ -863,6 +863,7 @@ public partial class MainViewModel : ObservableObject
     private async Task Show()
     {
         if (_queue.Count <= 0) return;
+        if (_queueIndex < 0) return;
         if (_queueIndex > (_queue.Count - 1)) 
         {
             if (IsRepeatOn)
@@ -976,8 +977,8 @@ public partial class MainViewModel : ObservableObject
 
         _currentFile = img.ImageFilePath;
 
-        // Test
-        IsWorking = true;
+        // Test not good.
+        //_isWorking = true;
         
         //Debug.WriteLine($"{idx} Enter critical section.");
 
@@ -1080,7 +1081,7 @@ public partial class MainViewModel : ObservableObject
         #endregion
 
         // Test
-        IsWorking = false;
+        //_isWorking = true;
 
         if (IsSlideshowOn)
         {

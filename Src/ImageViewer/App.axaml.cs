@@ -71,6 +71,16 @@ public partial class App : Application
             };
             */
             desktop.MainWindow = App.GetService<MainWindow>();
+
+            // get Stdin, set it for parsing in MainWindow.
+            var args = desktop.Args;
+            if ((args is not null) && (args.Length > 0))
+            {
+                if (desktop.MainWindow is MainWindow mwin)
+                {
+                    mwin.SetStdin(args);
+                }
+            }
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
