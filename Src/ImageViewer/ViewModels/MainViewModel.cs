@@ -865,6 +865,11 @@ public partial class MainViewModel : ObservableObject
                 continue;
             }
 
+            if (string.IsNullOrEmpty(img.ImageFilePath))
+            {
+                continue;
+            }
+
             if (img.IsAcquired)
             {
                 //Debug.WriteLine("img.IsAcquired");
@@ -876,45 +881,51 @@ public partial class MainViewModel : ObservableObject
                 //Debug.WriteLine("img.IsLoading @GetPictures");
                 continue;
             }
-            img.IsLoading = true;
-
+            /*
             if (File.Exists(img.ImageFilePath))
             {
-                img.IsLoading = true;
 
-                //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
-
-                try
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        Bitmap? bitmap = new(img.ImageFilePath);
-                        img.ImageSource = bitmap;
-                        img.IsAcquired = true;
-                        img.IsLoading = false;
-                    }, DispatcherPriority.Loaded);//Default//.Background
-                }
-                catch (Exception e)
-                {
-                    // TODO:
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        img.IsAcquired = false;
-                        img.IsLoading = false;
-                        img.ImageSource = null;
-                    });
-
-                    Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
-
-                    continue;
-                }
-                finally
-                {
-                    img.IsLoading = false;
-                }
-
-                await Task.Delay(20);
             }
+            */
+            img.IsLoading = true;
+
+            //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
+
+            try
+            {
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    Bitmap? bitmap = await Task.Run(() =>
+                    {
+                        return new Bitmap(img.ImageFilePath);
+                    });
+                    //Bitmap? bitmap = new(img.ImageFilePath);
+                    img.ImageSource = bitmap;
+                    img.IsAcquired = true;
+                    img.IsLoading = false;
+                }, DispatcherPriority.Loaded);//Default//.Background
+
+            }
+            catch (Exception e)
+            {
+                // TODO:
+                Dispatcher.UIThread.Post(() =>
+                {
+                    img.IsAcquired = false;
+                    img.IsLoading = false;
+                    img.ImageSource = null;
+                });
+
+                Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
+
+                continue;
+            }
+            finally
+            {
+                img.IsLoading = false;
+            }
+
+            await Task.Delay(20);
         }
 
         return;
@@ -1079,7 +1090,9 @@ public partial class MainViewModel : ObservableObject
         {
             Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
 
+            //bitmap = null; // TODO:
             bitmap = img.ImageSource;
+            //return ShowImage(img) ?? Task.FromResult(false);
         }
         else
         {
@@ -1089,6 +1102,13 @@ public partial class MainViewModel : ObservableObject
 
             try
             {
+                /*
+                Bitmap? bitmapTmp = await Task.Run(() =>
+                {
+                    return new Bitmap(img.ImageFilePath);
+                });
+                img.ImageSource = bitmapTmp;
+                */
                 img.ImageSource = new(img.ImageFilePath);
                 img.IsAcquired = true;
                 img.IsLoading = false;
