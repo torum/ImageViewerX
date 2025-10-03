@@ -134,11 +134,11 @@
 		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
 			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
 			
-			<ListBox x:Name="QueueListBox" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
+			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
 				<!--  helper:ListBoxStackPanelBehaviors.VisibleItems="{Binding VisibleItemsImageInfo, Mode=OneWayToSource}" -->
 				<ListBox.Resources>
 					<!-- Edit: VerticalScrollViewerAnimatedBehavior. -->
-					<ControlTheme x:Key="{x:Type ListBox}" TargetType="ListBox">
+					<ControlTheme x:Key="CustomListBoxTheme" TargetType="ListBox">
 						<Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
 						<Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
 						<Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
@@ -170,7 +170,7 @@
 														Margin="{TemplateBinding Padding}"/>
 
 										<Interaction.Behaviors>
-											<ia:VerticalScrollViewerAnimatedBehavior ScrollStepSize="50"/>
+											<ia:VerticalScrollViewerAnimatedBehavior ScrollStepSize="60"/>
 										</Interaction.Behaviors>
 										
 									</ScrollViewer>
