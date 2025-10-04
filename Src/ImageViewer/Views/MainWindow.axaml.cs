@@ -690,6 +690,15 @@ public partial class MainWindow : Window
 
     private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
     {
+        // On Linux.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            //Sort
+            IComparer<string> _naturalSortComparer = new NaturalSortComparer();
+            fileNames = [.. fileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
+        }
+
+        // File first
         List<FileSystemInfo> files = [];
         foreach (var path in fileNames)
         {
@@ -699,15 +708,9 @@ public partial class MainWindow : Window
             }
         }
 
-        // Sort only on Linux.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            IComparer<string> _naturalSortComparer = new NaturalSortComparer();
-            files = [.. files.OrderBy(x => x.Name, _naturalSortComparer)];//StringComparer.Ordinal
-        }
-
         allItems.AddRange(files);
 
+        // Dir next.
         foreach (var path in fileNames)
         {
             if (Directory.Exists(path))
