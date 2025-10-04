@@ -318,6 +318,9 @@ public partial class MainViewModel : ObservableObject
 
             _isShuffleOn = value;
 
+            OnPropertyChanged(nameof(IsShuffleOn));
+            OnPropertyChanged(nameof(DataShuffleIcon));
+
             if (_queue.Count > 0)
             {
                 IsWorking = true;
@@ -373,9 +376,6 @@ public partial class MainViewModel : ObservableObject
                     _timerSlideshow.Start();
                 }
             }
-
-            OnPropertyChanged(nameof(IsShuffleOn));
-            OnPropertyChanged(nameof(DataShuffleIcon));
         }
     }
 
@@ -659,16 +659,20 @@ public partial class MainViewModel : ObservableObject
             // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
             await Task.Delay(500);
 
+            IsWorking = true;
+            await Task.Yield();
+
             // Display images in the ListBox.
             OnPropertyChanged(nameof(Queue));
-
-            //await Task.Yield();
 
             if (_isShuffleOn)
             {
                 // Test. No need?
                 //QueueHasBeenChanged?.Invoke(this, 0);
             }
+
+            IsWorking = false;
+            await Task.Yield();
         }
         else
         {

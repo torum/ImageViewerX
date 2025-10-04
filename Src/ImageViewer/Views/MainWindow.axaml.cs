@@ -63,12 +63,19 @@ public partial class MainWindow : Window
         //this.ContentFrame.Content = App.GetService<MainView>();
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
-
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-
         this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+
+        this.DetachedFromVisualTree += (s, e) =>
+        {
+            this.PropertyChanged -= this.OnWindow_PropertyChanged;
+            _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
+            _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
+            _mainViewModel.QueueLoaded -= OnQueueLoaded;
+            this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+        };
 
         _timerPointerCursorHide = new DispatcherTimer
         {
