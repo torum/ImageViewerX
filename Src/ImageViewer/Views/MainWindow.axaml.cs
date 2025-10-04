@@ -811,6 +811,10 @@ public partial class MainWindow : Window
                                 }
                             }
                         }
+                        else if (System.IO.Directory.Exists(fileNames[0]))
+                        {
+                            IncludeSiblingsFileNames.AddRange(fileNames);
+                        }
                     }
                     else
                     {
