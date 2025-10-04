@@ -607,10 +607,27 @@ public partial class MainWindow : Window
 
     private void Window_DragOver(object sender, DragEventArgs e)
     {
+        if (e.DataTransfer is null)
+        {
+            return;
+        }
+
         // Only allow copy effect for file drops
+        if (e.DataTransfer.Contains(DataFormat.File))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+
+        // Deprecated.
+        /*
         e.DragEffects = e.Data.Contains(DataFormats.Files)
             ? DragDropEffects.Copy
             : DragDropEffects.None;
+        */
     }
 
     private void Window_Drop(object sender, DragEventArgs e)
@@ -621,16 +638,33 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Check if the dropped data contains file paths
-        if (e.Data.Contains(Avalonia.Input.DataFormats.Files))
+        if (e.DataTransfer is null)
         {
-            var fileNames = e.Data.GetFiles()?.ToList();
+            return;
+        }
+
+        // Only allow copy effect for file drops
+        if (e.DataTransfer.Contains(DataFormat.File))
+        {
+            e.DragEffects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+
+
+        // Check if the dropped data contains file paths
+        //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
+        if (e.DataTransfer.Contains(DataFormat.File))
+        {
+            var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList(); //e.Data.GetFiles()?.ToList(); Deprecated.
             if (fileNames is not null && fileNames.Count != 0)
             {
                 var droppedFiles = new List<string>();
                 foreach (var file in fileNames)
                 {
-                    var filePath = file.TryGetLocalPath();
+                    var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
                     if (filePath != null) 
                     {
                         droppedFiles.Add(filePath);
