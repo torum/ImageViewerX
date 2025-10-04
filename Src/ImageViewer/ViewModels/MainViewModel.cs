@@ -109,6 +109,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    /*
     private Bitmap? _diplayImage1;
     public Bitmap? DiplayImage1
     {
@@ -123,6 +124,24 @@ public partial class MainViewModel : ObservableObject
 
             _diplayImage1 = value;
             OnPropertyChanged(nameof(DiplayImage1));
+        }
+    }
+    */
+
+    private ImageInfo? _displayImage;
+    public ImageInfo? DiplayImage
+    {
+        get
+        {
+            return _displayImage;
+        }
+        set
+        {
+            if (_displayImage == value)
+                return;
+
+            _displayImage = value;
+            OnPropertyChanged(nameof(DiplayImage));
         }
     }
 
@@ -582,7 +601,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public Methods ==
 
-    public void DroppedFiles(List<ImageInfo> images)
+    public async void DroppedFiles(List<ImageInfo> images)
     {
         if ((images is null) || (images.Count < 1))
         {
@@ -590,60 +609,71 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        /*
         Dispatcher.UIThread.Post(async () =>
         {
-            IsWorking = true;
 
-            if (_timerSlideshow.IsEnabled)
-            {
-                _timerSlideshow.Stop();
-            }
-
-            _queueIndex = 0;
-
-            // Just because.
-            //DiplayImage1 = null;
-            SelectedQueueImage = null;
-
-            _queue.Clear();
-            _queue = new ObservableCollection<ImageInfo>(images);
-            _originalQueue = images;//[.. images];
-
-            // When the same files dropped. The same file won't reload due to "dup". So clear it.
-            _currentFile = string.Empty;
-
-            if (_queue.Count > 0)
-            {
-                // hide welcome screen
-                QueueLoaded?.Invoke(this, EventArgs.Empty);
-
-                //await Task.Yield();
-
-                if (_isShuffleOn)
-                {
-                    _queue.Shuffle();
-                }
-
-                IsTransitionReversed = false;
-
-                await Show();
-
-                await Task.Delay(1000);
-
-                OnPropertyChanged(nameof(Queue));
-
-                await Task.Yield();
-
-                if (_isShuffleOn)
-                {
-                }
-
-                QueueHasBeenChanged?.Invoke(this, 0);
-            }
-
-            IsWorking = false;
 
         }, DispatcherPriority.Loaded);
+        */
+        IsWorking = true;
+
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
+
+        _queueIndex = 0;
+
+        // Let's keep the prev image for the sake of fade out effects.
+        //DiplayImage1 = null;
+        // Just because.
+        SelectedQueueImage = null;
+
+        _queue.Clear();
+        _queue = new ObservableCollection<ImageInfo>(images);
+        _originalQueue = images;//[.. images];
+
+        // When the same files dropped. The same file won't reload due to "dup". So clear it.
+        _currentFile = string.Empty;
+
+        if (_queue.Count > 0)
+        {
+            // hide welcome screen
+            QueueLoaded?.Invoke(this, EventArgs.Empty);
+
+            // 
+            if (_isShuffleOn)
+            {
+                _queue.Shuffle();
+            }
+
+            // Test -> yap. IsWorking causes await delay 300 mil sec in Show(),
+            IsWorking = false;
+
+            IsTransitionReversed = false;
+
+            // Show Image.
+            await Show();
+
+            // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
+            await Task.Delay(500);
+
+            // Display images in the ListBox.
+            OnPropertyChanged(nameof(Queue));
+
+            //await Task.Yield();
+
+            if (_isShuffleOn)
+            {
+                // Test. No need?
+                //QueueHasBeenChanged?.Invoke(this, 0);
+            }
+        }
+        else
+        {
+            IsWorking = false;
+        }
     }
 
     public void SpaceKeyPressed()
@@ -704,7 +734,7 @@ public partial class MainViewModel : ObservableObject
 
         if (_queueIndex == 1)
         {
-            Debug.WriteLine("(_queueIndex == 0) PrevKeyPressed");
+            //Debug.WriteLine("(_queueIndex == 0) PrevKeyPressed");
             return;
         }
 
@@ -1082,21 +1112,22 @@ public partial class MainViewModel : ObservableObject
 
         // Test not good.
         //_isWorking = true;
-        
-        //Debug.WriteLine($"{idx} Enter critical section.");
 
-        Bitmap? bitmap;
+        //Debug.WriteLine($"{idx} Enter critical section.");
+        
+        // no longer needed
+        //Bitmap? bitmap;
         if (img.IsAcquired)
         {
-            bitmap = img.ImageSource;
+            // no longer needed
+            //bitmap = img.ImageSource;
         }
         else if (img.IsLoading)
         {
             Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
 
-            //bitmap = null; // TODO:
-            bitmap = img.ImageSource;
-            //return ShowImage(img) ?? Task.FromResult(false);
+            // no longer needed
+            //bitmap = img.ImageSource;
         }
         else
         {
@@ -1117,7 +1148,8 @@ public partial class MainViewModel : ObservableObject
                 img.IsAcquired = true;
                 img.IsLoading = false;
 
-                bitmap = img.ImageSource;
+                // no longer needed
+                //bitmap = img.ImageSource;
             }
             catch (Exception ex)
             {
@@ -1128,7 +1160,8 @@ public partial class MainViewModel : ObservableObject
                 img.IsAcquired = false;
                 img.IsLoading = false;
 
-                bitmap = null;
+                // no longer needed
+                //bitmap = null;
             }
             finally
             {
@@ -1137,7 +1170,9 @@ public partial class MainViewModel : ObservableObject
 
         }
 
-        DiplayImage1 = bitmap;
+        //DiplayImage1 = bitmap;
+        // Testing
+        DiplayImage = img;
 
         //_queueIndex++;
         _queueIndex = idx + 1;
@@ -1191,9 +1226,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         #endregion
-
-        // Test
-        //_isWorking = true;
 
         if (IsSlideshowOn)
         {

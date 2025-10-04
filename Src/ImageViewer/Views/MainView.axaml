@@ -13,10 +13,19 @@
 		<!--
 		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
 		-->
+		<!-- 
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="Bitmap">
 					<Image Margin="0" Source="{Binding}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+				</DataTemplate>
+			</TransitioningContentControl.ContentTemplate>
+		</TransitioningContentControl>
+		-->
+		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
+			<TransitioningContentControl.ContentTemplate>
+				<DataTemplate DataType="mod:ImageInfo">
+					<Image Margin="0" Source="{Binding ImageSource}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
 				</DataTemplate>
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>

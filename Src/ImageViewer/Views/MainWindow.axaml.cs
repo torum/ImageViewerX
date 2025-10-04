@@ -956,13 +956,12 @@ public partial class MainWindow : Window
                     }
                 }
 
-                /*
                 Dispatcher.UIThread.Post(() =>
                 {
-                    vm.DroppedFiles(droppedImages);
+                    _mainViewModel.DroppedFiles(droppedImages);
                 });
-                */
-                _mainViewModel.DroppedFiles(droppedImages);
+                
+                //_mainViewModel.DroppedFiles(droppedImages);
 
             }
             catch (Exception ex)
