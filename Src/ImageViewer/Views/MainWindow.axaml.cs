@@ -779,9 +779,10 @@ public partial class MainWindow : Window
                             }
                         }
                     }
-
-
-                    IncludeSiblingsFileNames.AddRange(fileNames);
+                    else
+                    {
+                        IncludeSiblingsFileNames.AddRange(fileNames);
+                    }
 
                     List<FileSystemInfo> allItems = [];
 
