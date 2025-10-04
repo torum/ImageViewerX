@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using static System.Net.WebRequestMethods;
 
 
 namespace ImageViewer.Views;
@@ -744,6 +745,7 @@ public partial class MainWindow : Window
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
+                    string singleSelectedOriginalFile = string.Empty;
                     List<string> IncludeSiblingsFileNames = [];
 
                     // Single file dropped, in that case, get all siblings.
@@ -751,10 +753,10 @@ public partial class MainWindow : Window
                     {
                         if (System.IO.File.Exists(fileNames[0]))
                         {
-                            var originalFile = fileNames[0];
+                            singleSelectedOriginalFile = fileNames[0];
 
                             // Get parent dir.
-                            string? parentFolderPath = System.IO.Path.GetDirectoryName(fileNames[0]);
+                            string? parentFolderPath = System.IO.Path.GetDirectoryName(singleSelectedOriginalFile);
                             if (parentFolderPath is not null)
                             {
                                 if (Directory.Exists(parentFolderPath))
@@ -769,11 +771,8 @@ public partial class MainWindow : Window
 
                                     if (IncludeSiblingsFileNames.Count > 1)
                                     {
-                                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
-                                        // Using `Distinct()` will remove the remaining duplicates.
-#pragma warning disable IDE0305
-                                        IncludeSiblingsFileNames = IncludeSiblingsFileNames.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
-#pragma warning restore IDE0305
+                                        IComparer<string> _naturalSortComparer = new NaturalSortComparer();
+                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
                                     }
                                 }
                             }
@@ -818,6 +817,16 @@ public partial class MainWindow : Window
 
                             droppedImages.Add(img);
                         }
+                    }
+
+                    // Sort originaly selected single file to first position.
+                    if ((droppedImages.Count > 0) && (!string.IsNullOrEmpty(singleSelectedOriginalFile)))
+                    {
+                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
+                        // Using `Distinct()` will remove the remaining duplicates.
+#pragma warning disable IDE0305
+                        droppedImages = droppedImages.OrderBy(x => x.ImageFilePath == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
+#pragma warning restore IDE0305
                     }
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
