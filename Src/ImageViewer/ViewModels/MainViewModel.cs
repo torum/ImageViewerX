@@ -584,13 +584,16 @@ public partial class MainViewModel : ObservableObject
 
     public void DroppedFiles(List<ImageInfo> images)
     {
-        if (images is null)
+        if ((images is null) || (images.Count < 1))
         {
+            IsWorking = false;
             return;
         }
 
         Dispatcher.UIThread.Post(async () =>
         {
+            IsWorking = true;
+
             if (_timerSlideshow.IsEnabled)
             {
                 _timerSlideshow.Stop();
@@ -629,17 +632,18 @@ public partial class MainViewModel : ObservableObject
 
                 OnPropertyChanged(nameof(Queue));
 
-
                 await Task.Yield();
 
                 if (_isShuffleOn)
                 {
                 }
+
                 QueueHasBeenChanged?.Invoke(this, 0);
             }
+
+            IsWorking = false;
+
         }, DispatcherPriority.Loaded);
-
-
     }
 
     public void SpaceKeyPressed()
@@ -1344,8 +1348,17 @@ public partial class MainViewModel : ObservableObject
         // Open in default app.
         //await launcher.LaunchFileInfoAsync(new FileInfo(_currentFile));
         
-        // Open in explorer
-        await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(dir));
+        // Open in explorer/file manager.
+        if (await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(dir)))
+        {
+            // ok
+        }
+        else
+        {
+            // TODO: show error message.
+
+            // This failes in Debug session when the app is attached VSCode from Snap packages on Linux. 
+        }
 
         return;
 

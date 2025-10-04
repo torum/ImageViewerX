@@ -51,11 +51,11 @@ public partial class MainWindow : Window
     {
         _mainViewModel = App.GetService<MainViewModel>();
 
+        LoadSettings();
+
         this.DataContext = _mainViewModel;
 
         InitializeComponent();
-
-        LoadSettings();
 
         InitBackground();
 
@@ -88,6 +88,10 @@ public partial class MainWindow : Window
             this.WelcomeMessageGrid.IsVisible = false;
 
             ProcessFiles([.. args]);
+        }
+        else
+        {
+            _mainViewModel.IsWorking = true;
         }
     }
 
@@ -742,8 +746,9 @@ public partial class MainWindow : Window
             Dispatcher.UIThread.Post(() =>
             {
                 _mainViewModel.IsWorking = true;
-                //await Task.Yield();
             });
+
+            //await Task.Yield();
 
             var validExt = _mainViewModel.ValidExtensions;
 
@@ -959,16 +964,22 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _mainViewModel.IsWorking = false;
+                });
+
                 // TODO: log error and show error message.
                 Debug.WriteLine(ex);
             }
             finally
             {
+                /*
                 Dispatcher.UIThread.Post(() =>
                 {
                     _mainViewModel.IsWorking = false;
-                    //await Task.Yield();
                 });
+                */
             }
         });
     } //Avalonia.Platform.Storage.IStorageItem
@@ -1509,6 +1520,8 @@ public partial class MainWindow : Window
 
     public async Task OpenFilePicker()
     {
+        // TODO: Make/Move this to DialogService.
+
         // TODO: remember the last picked folder path.
 
         // Get the IStorageProvider for the current window
