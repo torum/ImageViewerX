@@ -70,7 +70,7 @@
 					<PathIcon Data="{Binding DataStayOnTopIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
 				</MenuItem.Icon>
 			</MenuItem>
-			<MenuItem x:Name="MenuItemStartSlideshow" Header="StartSlideshow">
+			<MenuItem x:Name="MenuItemStartSlideshow" Header="StartSlideshow" Command="{Binding ToggleSlideshowCommand}">
 				<MenuItem.Icon>
 					<PathIcon Data="{Binding DataPlayPauseIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
 						<!--

@@ -407,7 +407,7 @@ public partial class MainWindow : Window
             if ((windowLeft >= 0) && (windowTop >= 0))
             {
                 this.Position = new PixelPoint(windowLeft, windowTop);
-                Debug.WriteLine($"(windowLeft {windowLeft} >= 0) && (windowTop {windowTop} >= 0)");
+                //Debug.WriteLine($"(windowLeft {windowLeft} >= 0) && (windowTop {windowTop} >= 0)");
             }
             else
             {
@@ -545,7 +545,7 @@ public partial class MainWindow : Window
         attrs = doc.CreateAttribute("top");
         if (this.WindowState == WindowState.Normal)
         {
-            Debug.WriteLine("this.Position.Y.ToString() " + this.Position.Y.ToString());
+            //Debug.WriteLine("this.Position.Y.ToString() " + this.Position.Y.ToString());
 
             attrs.Value = this.Position.Y.ToString();
         }
