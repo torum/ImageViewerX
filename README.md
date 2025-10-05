@@ -12,7 +12,7 @@ A new cross-platform Image Viewer. This is a port of [Image-viewer](https://gith
 [x] Multiple images viewing with transitional effects.  
 [x] Showing "Queued" images as a list of thumbnail previews and display original image by selecting it.  
 [x] Fullscreen viewing.  
-[x] Slideshow viewing.  
+[x] Slideshow viewing with transitional effects.   
 [x] Basic keyboard command including,  
 ```
 Space/Pause/P => Play or Pause slideshow
