@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.ViewModels;
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _timerPointerCursorHide;
     private Avalonia.Point _mousePosition;
     private readonly MainViewModel _mainViewModel;
+    private string _lastOpenedDirectory = string.Empty;
 
     private bool _isFullyLoaded;
     // Window position and size
@@ -386,6 +388,23 @@ public partial class MainWindow : Window
 
         #endregion
 
+        #region == Options ==
+
+        var opts = xdoc.Root.Element("Options");
+        if (opts is not null)
+        {
+            var hoge = opts.Attribute("lastOpenedDirectory");
+            if (hoge is not null)
+            {
+                if (!string.IsNullOrEmpty(hoge.Value))
+                {
+                    _lastOpenedDirectory = hoge.Value;
+                }
+            }
+        }
+
+        #endregion
+
         _isFullyLoaded = true;
     }
 
@@ -527,6 +546,26 @@ public partial class MainWindow : Window
 
         // set MainWindow element to root.
         root.AppendChild(mainWindow);
+
+        #endregion
+
+        #region == Options ==
+
+        XmlElement opts = doc.CreateElement(string.Empty, "Options", string.Empty);
+
+        attrs = doc.CreateAttribute("lastOpenedDirectory");
+        if (!string.IsNullOrEmpty(_lastOpenedDirectory))
+        {
+            attrs.Value = _lastOpenedDirectory;
+        }
+        else
+        {
+            attrs.Value = string.Empty;
+        }
+        opts.SetAttributeNode(attrs);
+
+        /// 
+        root.AppendChild(opts);
 
         #endregion
 
@@ -1569,8 +1608,6 @@ public partial class MainWindow : Window
     {
         // TODO: Make/Move this to DialogService.
 
-        // TODO: remember the last picked folder path.
-
         // Get the IStorageProvider for the current window
         var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
 
@@ -1588,9 +1625,32 @@ public partial class MainWindow : Window
             */
             FileTypeFilter =
             [
-                FilePickerFileTypes.ImageAll // All image types
+                new FilePickerFileType("All Supported Images")
+                {
+                    Patterns = ["*.jpg", "*.jpeg", "*.gif", "*.png", "*.webp", "*.bmp"],
+                    AppleUniformTypeIdentifiers = ["public.jpg", "public.jpeg", "public.gif", "public.png", "public.webp", "public.bmp"],
+                    MimeTypes = ["image/jpg", "image/jpeg", "image/gif", "image/png", "image/webp", "image/bmp"]
+                },
+                FilePickerFileTypes.ImagePng,
+                FilePickerFileTypes.ImageJpg,
+                FilePickerFileTypes.ImageWebp,
+                new FilePickerFileType("Other Images")
+                {
+                    Patterns = ["*.gif", "*.bmp"],
+                    AppleUniformTypeIdentifiers = ["public.gif", "public.bmp"],
+                    MimeTypes = ["image/gif", "image/bmp"]
+                }
             ]
         };
+
+        if (!string.IsNullOrEmpty(_lastOpenedDirectory))
+        {
+            var folderUri = new Uri(_lastOpenedDirectory);
+
+            var suggestedFolder = await storageProvider.TryGetFolderFromPathAsync(folderUri);
+
+            options.SuggestedStartLocation = suggestedFolder;
+        }
 
         var files = await storageProvider.OpenFilePickerAsync(options);
 
@@ -1609,6 +1669,12 @@ public partial class MainWindow : Window
             if (droppedFiles.Count > 0)
             {
                 ProcessFiles(droppedFiles);
+
+                string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
+                if (parentFolderPath is not null)
+                {
+                    _lastOpenedDirectory = parentFolderPath;
+                }
             }
         }
     }
@@ -1620,8 +1686,6 @@ public partial class MainWindow : Window
 
     public async Task SelectFolder()
     {
-        // TODO: remember the last picked folder.
-
         // Get the IStorageProvider for the current window
         var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
 
@@ -1633,6 +1697,15 @@ public partial class MainWindow : Window
             Title = "Select Folders",
             AllowMultiple = true // Set to true to allow multiple folders
         };
+
+        if (!string.IsNullOrEmpty(_lastOpenedDirectory))
+        {
+            var folderUri = new Uri(_lastOpenedDirectory);
+
+            var suggestedFolder = await storageProvider.TryGetFolderFromPathAsync(folderUri);
+
+            options.SuggestedStartLocation = suggestedFolder;
+        }
 
         // Display the folder selection dialog
         var folders = await storageProvider.OpenFolderPickerAsync(options);
@@ -1654,6 +1727,8 @@ public partial class MainWindow : Window
             if (droppedFiles.Count > 0)
             {
                 ProcessFiles(droppedFiles);
+
+                _lastOpenedDirectory = droppedFiles[0];
             }
         }
     }

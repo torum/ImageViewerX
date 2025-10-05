@@ -145,7 +145,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp"]; //, ".avif"
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 
     private bool _isFullscreen = false;
