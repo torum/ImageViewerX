@@ -665,11 +665,8 @@ public partial class MainViewModel : ObservableObject
             // Display images in the ListBox.
             OnPropertyChanged(nameof(Queue));
 
-            if (_isShuffleOn)
-            {
-                // Test. No need?
-                //QueueHasBeenChanged?.Invoke(this, 0);
-            }
+            // Need this for trigger UpdateVisibleItems because if only a few images are loaded, scrollviewer does not fire changed events.
+            QueueHasBeenChanged?.Invoke(this, 0);
 
             IsWorking = false;
             await Task.Yield();

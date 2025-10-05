@@ -901,10 +901,6 @@ public partial class MainWindow : Window
                             //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
                             droppedFiles.AddRange(filesInFolder);
                         }
-                        else
-                        {
-                            Debug.WriteLine("else: " + item);//.Path.LocalPath
-                        }
                     }
 
                     // Single file dropped, in that case, get all siblings.
@@ -913,7 +909,6 @@ public partial class MainWindow : Window
                         if (System.IO.File.Exists(droppedFiles[0]))
                         {
                             var originalFile = droppedFiles[0];
-
                             // Get parent dir.
                             string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
                             if (parentFolderPath is not null)
@@ -1299,6 +1294,12 @@ public partial class MainWindow : Window
             scrollViewer.ScrollChanged += (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
             // .. size changed event too.
             scrollViewer.SizeChanged += (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
+
+            scrollViewer.DetachedFromVisualTree += (s, e) =>
+            {
+                scrollViewer.ScrollChanged -= (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
+                scrollViewer.SizeChanged -= (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
+            };
 
             // Call it once initially to set the property.
             UpdateVisibleItems(scrollViewer, virtualPanel);
