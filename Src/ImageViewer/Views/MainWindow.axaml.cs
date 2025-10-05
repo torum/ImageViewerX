@@ -1808,6 +1808,21 @@ public partial class MainWindow : Window
         var newOffset = new Vector(scrollViewer.Offset.X, scrollViewer.Offset.Y + diff);
         scrollViewer.Offset = newOffset;
     }
+
+    private void Window_Activated(object? sender, System.EventArgs e)
+    {
+        // TODO: dim caption button color only when deactivated.
+        //AppTitleBarIcon.Opacity = args.WindowActivationState == WindowActivationState.Deactivated ? 0.4 : 0.8;
+
+        //this.Opacity = 1;
+    }
+
+    private void Window_Deactivated(object? sender, System.EventArgs e)
+    {
+        // TODO: dim caption button color only when deactivated.
+        //this.Opacity = 0.8;
+
+    }
 }
 
 public static partial class NativeMethods
