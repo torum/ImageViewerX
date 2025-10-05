@@ -60,10 +60,13 @@ public partial class MainWindow : Window
 
         InitializeComponent();
 
-        InitBackground();
+        UpdateThemeBackground(ActualThemeVariant);
 
         // Moved to Window_Loaded.
         //this.ContentFrame.Content = App.GetService<MainView>();
+
+        // There is some issue showing sysmenu in AvaloniaUI.
+        //TryRegisterWindowsMenu();
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
@@ -175,62 +178,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitBackground()
+    private void UpdateThemeBackground(ThemeVariant theme)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // There is some issue showing sysmenu in AvaloniaUI.
-            //TryRegisterWindowsMenu();
+        //(App.Current as App)!.RequestedThemeVariant
+        //ActualThemeVariant
 
-            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 1803))
-            {
-                // Get the window's platform handle
-                var handle = this.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
-                if (handle != IntPtr.Zero)
-                {
-                    this.Background = Brushes.Transparent;
-                    this.TransparencyLevelHint = [WindowTransparencyLevel.None];
-
-                    EnableBlurBehind(handle);
-                }
-                else
-                {
-                    this.Background = Brushes.Transparent;
-                    this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
-                    //this.TransparencyLevelHint = [WindowTransparencyLevel.Mica];
-                }
-            }
-            else
-            {
-                this.Background = Brushes.Transparent;
-                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];//"AcrylicBlur"
-                //this.TransparencyLevelHint = [WindowTransparencyLevel.Mica];
-            }
-        }
-        else
-        {
-            //this.Background = new SolidColorBrush(Color.Parse("#131313"));
-
-            this.BackgroundLayerBorder.IsVisible = true;
-            if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Dark)
-            {
-                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#222222"));
-            }
-            else if ((App.Current as App)!.RequestedThemeVariant == ThemeVariant.Light)
-            {
-                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on thie platform.";
-                this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
-            }
-        }
-    }
-
-    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
-    {
+        /*
         var newTheme = ActualThemeVariant;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -249,6 +202,82 @@ public partial class MainWindow : Window
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
             }
         }
+        */
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            this.BackgroundLayerBorder.IsVisible = false;
+            this.BackgroundLayerBorder.Opacity = 0.9;
+
+            if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 1803))
+            {
+                // Get the window's platform handle
+                var handle = this.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+                if (handle != IntPtr.Zero)
+                {
+                    this.Background = Brushes.Transparent;
+                    this.TransparencyLevelHint = [WindowTransparencyLevel.None];
+                    
+                    //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                    EnableBlurBehind(handle);
+                }
+                else
+                {
+                    this.Background = Brushes.Transparent;
+                    this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                    //this.TransparencyLevelHint = [WindowTransparencyLevel.Mica];
+                }
+            }
+            else
+            {
+                this.Background = Brushes.Transparent;
+                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.Mica];
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            this.BackgroundLayerBorder.IsVisible = true;
+            this.BackgroundLayerBorder.Opacity = 0.9;
+
+            if (theme == ThemeVariant.Dark)
+            {
+                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
+            }
+            else if (theme == ThemeVariant.Light)
+            {
+                this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#EEEEEE"));
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on thie platform.";
+                this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
+            }
+        }
+        else
+        {
+            this.BackgroundLayerBorder.IsVisible = true;
+            this.BackgroundLayerBorder.Opacity = 0.9;
+
+            if (theme == ThemeVariant.Dark)
+            {
+                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#222222"));
+            }
+            else if (theme == ThemeVariant.Light)
+            {
+                this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
+            }
+        }
+    }
+
+    private void OnActualThemeVariantChanged(object? sender, EventArgs e)
+    {
+        UpdateThemeBackground(ActualThemeVariant);
     }
 
     private void LoadSettings()
@@ -412,19 +441,29 @@ public partial class MainWindow : Window
     {
         // TODO: more
 
+        // 
         var ToggleSlideshowCommandKeyBinding = new KeyBinding
         {
             Gesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None),
             Command = _mainViewModel.ToggleSlideshowCommand
         };
-
-        // InputGesture only. Command binding is done already in xaml.
-        //this.MenuItemStartSlideshow.KeyBindings.Add(SpaceKeyBinding);
-        this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
-
         // set keybinding here instead of in Window_KeyDown.
         this.KeyBindings.Add(ToggleSlideshowCommandKeyBinding);
 
+        // MenuItemStartSlideshow
+        this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
+        this.MenuItemQuit.KeyBindings.Add(ToggleSlideshowCommandKeyBinding);
+        //
+        var QuitCommandKeyBinding = new KeyBinding
+        {
+            Gesture = new KeyGesture(Avalonia.Input.Key.Q, KeyModifiers.Control),
+            Command = _mainViewModel.QuitCommand
+        };
+        this.KeyBindings.Add(QuitCommandKeyBinding);
+
+        // MenuItemQuit
+        this.MenuItemQuit.InputGesture = new KeyGesture(Avalonia.Input.Key.Q, KeyModifiers.Control);
+        this.MenuItemQuit.KeyBindings.Add(QuitCommandKeyBinding);
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -506,10 +545,14 @@ public partial class MainWindow : Window
         attrs = doc.CreateAttribute("top");
         if (this.WindowState == WindowState.Normal)
         {
+            Debug.WriteLine("this.Position.Y.ToString() " + this.Position.Y.ToString());
+
             attrs.Value = this.Position.Y.ToString();
         }
         else
         {
+            Debug.WriteLine("_winRestoreTop.ToString() " + _winRestoreTop.ToString());
+
             attrs.Value = _winRestoreTop.ToString();
         }
         mainWindow.SetAttributeNode(attrs);
@@ -578,7 +621,6 @@ public partial class MainWindow : Window
 
             doc.Save(App.AppConfigFilePath);
         }
-        //catch (System.IO.FileNotFoundException) { }
         catch (Exception ex)
         {
             Debug.WriteLine("Exception@OnWindowClosing: " + ex);

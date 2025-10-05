@@ -1474,6 +1474,14 @@ public partial class MainViewModel : ObservableObject
         ListBoxItemSelected(img);
     }
 
+    [RelayCommand]
+    public void Quit()
+    {
+        var mainWin = App.GetService<MainWindow>();
+        mainWin.Close();
+    }
+
+
     #endregion
 }
 
