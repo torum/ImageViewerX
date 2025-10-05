@@ -610,7 +610,6 @@ public partial class MainViewModel : ObservableObject
 
 #else
         IsSaveLog = false;
-        IsEnableDebugWindow = false;
 #endif
     }
 

@@ -10,6 +10,7 @@
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
 
 
+	  <PlatformTarget>AnyCPU</PlatformTarget>
 
   </PropertyGroup>
 

@@ -563,13 +563,7 @@ public partial class MainWindow : Window
     {
         UpdateQueueListBoxImages();
 
-        if (this.WindowState == WindowState.Maximized)
-        {
-        }
-        else if (this.WindowState == WindowState.Minimized)
-        {
-        }
-        else
+        if (this.WindowState == WindowState.Normal)
         {
             _winRestoreHeight = (int)this.Height;
             _winRestoreWidth = (int)this.Width;
@@ -996,6 +990,10 @@ public partial class MainWindow : Window
 
                 if (droppedImages.Count < 1)
                 {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _mainViewModel.IsWorking = false;
+                    });
                     return;
                 }
 
