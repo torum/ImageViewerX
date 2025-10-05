@@ -11,7 +11,7 @@
         x:Class="ImageViewer.Views.MainWindow"
 		x:DataType="vm:MainViewModel"
         x:CompileBindings="True"
-        Title="ImageViewer"
+        Title="ImageViewerX"
 		Background="Transparent"
 		Focusable="True"
 		ExtendClientAreaToDecorationsHint="True"

@@ -958,13 +958,25 @@ public partial class MainWindow : Window
                     }
                 }
 
+                if (droppedImages.Count < 1)
+                {
+                    return;
+                }
+
+                //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(() =>
                 {
+                    if (droppedImages.Count == 1)
+                    {
+                        this.QueueListBox.IsVisible = false;
+                    }
+                    else
+                    {
+                        this.QueueListBox.IsVisible = true;
+                    }
+
                     _mainViewModel.DroppedFiles(droppedImages);
                 });
-                
-                //_mainViewModel.DroppedFiles(droppedImages);
-
             }
             catch (Exception ex)
             {
