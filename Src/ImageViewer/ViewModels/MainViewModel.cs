@@ -185,6 +185,21 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private bool _isQueueListBoxVisible = true;
+    public bool IsQueueListBoxVisible
+    {
+        get { return _isQueueListBoxVisible; }
+        set
+        {
+            if (_isQueueListBoxVisible == value)
+                return;
+
+            _isQueueListBoxVisible = value;
+
+            OnPropertyChanged(nameof(IsQueueListBoxVisible));
+        }
+    }
+
     private bool _isSaveLog;
     public bool IsSaveLog
     {
@@ -639,10 +654,12 @@ public partial class MainViewModel : ObservableObject
 
         if (_queue.Count > 0)
         {
-            // hide welcome screen
+            // Hide welcome screen
             QueueLoaded?.Invoke(this, EventArgs.Empty);
 
-            // 
+            // Hide if count = 1
+            IsQueueListBoxVisible = _queue.Count != 1;
+
             if (_isShuffleOn)
             {
                 _queue.Shuffle();

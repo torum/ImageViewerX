@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -51,9 +52,9 @@ public partial class MainWindow : Window
     {
         _mainViewModel = App.GetService<MainViewModel>();
 
-        LoadSettings();
-
         this.DataContext = _mainViewModel;
+
+        LoadSettings();
 
         InitializeComponent();
 
@@ -165,14 +166,6 @@ public partial class MainWindow : Window
         {
             //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
             vm.IsFullscreen = true;
-        }
-        else if (e.NewValue is WindowState.Normal)
-        {
-            vm.IsFullscreen = false;
-        }
-        else if (e.NewValue is WindowState.Minimized)
-        {
-            vm.IsFullscreen = false;
         }
         else
         {
@@ -324,10 +317,14 @@ public partial class MainWindow : Window
             hoge = mainWindow.Attribute("state");
             if (hoge is not null)
             {
-                if (hoge.Value == "Maximized")
+                if (hoge.Value == "FullScreen")
                 {
-                    // Since there is no restorebounds in AvaloniaUI.
-                    windowState = WindowState.Normal;
+                    windowState = WindowState.FullScreen;
+                }
+                else if (hoge.Value == "Maximized")
+                {
+                    // Since there is no restorebounds in AvaloniaUI, .....
+                    windowState = WindowState.Maximized;
                 }
                 else if (hoge.Value == "Normal")
                 {
@@ -335,34 +332,59 @@ public partial class MainWindow : Window
                 }
                 else if (hoge.Value == "Minimized")
                 {
+                    // Ignore minimized.
                     windowState = WindowState.Normal;
                 }
             }
         }
 
-        this.WindowState = windowState;
+        if ((windowState == WindowState.FullScreen) || (windowState == WindowState.Maximized))
+        {
+            // When FullScreen or Maximized, don't set size and pos.
+            // Currently _winRestore** are't used for much. It's a TODO;
 
-        if (windowWidth >= 300)
-        {
-            this.Width = windowWidth;
-        }
-        if (windowHeight >= 300)
-        {
-            this.Height = windowHeight;
-        }
+            if (windowWidth >= 300)
+            {
+                _winRestoreWidth = (int)windowWidth;
+            }
+            if (windowHeight >= 300)
+            {
+                _winRestoreHeight = (int)windowHeight;
+            }
 
-        if ((windowLeft >= 0) && (windowTop >= 0))
-        {
-            this.Position = new PixelPoint(windowLeft, windowTop);
-            //Debug.WriteLine($"(windowLeft{windowLeft} >= 0) && (windowTop{windowTop} >= 0)");
+            if ((windowLeft >= 0) && (windowTop >= 0))
+            {
+                _winRestoreLeft = windowLeft;
+                _winRestoreTop = windowTop;
+            }
+
+            this.WindowState = windowState;
         }
         else
         {
-            //Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
+            this.WindowState = windowState;
+
+            if (windowWidth >= 300)
+            {
+                this.Width = windowWidth;
+            }
+            if (windowHeight >= 300)
+            {
+                this.Height = windowHeight;
+            }
+
+            if ((windowLeft >= 0) && (windowTop >= 0))
+            {
+                this.Position = new PixelPoint(windowLeft, windowTop);
+                Debug.WriteLine($"(windowLeft {windowLeft} >= 0) && (windowTop {windowTop} >= 0)");
+            }
+            else
+            {
+                Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
+            }
         }
 
         #endregion
-
 
         _isFullyLoaded = true;
     }
@@ -396,6 +418,18 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
     {
+        if (this.WindowState == WindowState.Normal)
+        {
+            _winRestoreHeight = (int)this.Height;
+            _winRestoreWidth = (int)this.Width;
+            _winRestoreTop = (int)this.Position.X;
+            _winRestoreLeft = (int)this.Position.X;
+        }
+        else
+        {
+            //this.WindowState = WindowState.Normal;
+        }
+
         SaveSettings();
     }
 
@@ -473,14 +507,17 @@ public partial class MainWindow : Window
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("state");
-        if (this.WindowState == WindowState.Maximized)
+        if (this.WindowState == WindowState.FullScreen)
+        {
+            attrs.Value = "FullScreen";
+        }
+        else if (this.WindowState == WindowState.Maximized)
         {
             attrs.Value = "Maximized";
         }
         else if (this.WindowState == WindowState.Normal)
         {
             attrs.Value = "Normal";
-
         }
         else if (this.WindowState == WindowState.Minimized)
         {
@@ -525,7 +562,6 @@ public partial class MainWindow : Window
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
     {
         UpdateQueueListBoxImages();
-
 
         if (this.WindowState == WindowState.Maximized)
         {
@@ -966,15 +1002,6 @@ public partial class MainWindow : Window
                 //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (droppedImages.Count == 1)
-                    {
-                        this.QueueListBox.IsVisible = false;
-                    }
-                    else
-                    {
-                        this.QueueListBox.IsVisible = true;
-                    }
-
                     _mainViewModel.DroppedFiles(droppedImages);
                 });
             }
