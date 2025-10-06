@@ -31,7 +31,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using static System.Net.WebRequestMethods;
 
 
 namespace ImageViewer.Views;
@@ -1203,7 +1202,8 @@ public partial class MainWindow : Window
             }
         }
 
-        this.QueueListBox.IsVisible = true;
+        //this.QueueListBox.IsVisible = true;
+        _mainViewModel.IsQueueListBoxVisible = _mainViewModel.Queue.Count != 1;
     }
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
