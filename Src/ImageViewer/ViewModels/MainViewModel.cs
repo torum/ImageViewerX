@@ -493,7 +493,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool _isSystemDPIScalingFactorOn = true;
+    private bool _isSystemDPIScalingFactorOn = false;
     public bool IsSystemDPIScalingFactorOn 
     {
         get => _isSystemDPIScalingFactorOn;

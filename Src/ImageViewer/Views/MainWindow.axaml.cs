@@ -50,7 +50,7 @@ public partial class MainWindow : Window
     private int _winRestoreTop = 100;
     private int _winRestoreLeft = 100;
 
-    private double _systemDPIScalingFactor = 1;
+    private readonly double _systemDPIScalingFactor = 1;
 
 #pragma warning disable CS8618 
     public MainWindow() { }
@@ -1956,11 +1956,11 @@ private void TryRegisterWindowsMenu()
 }
 */
 
-public class DpiHelper
+public partial class DpiHelper
 {
     // Define the P/Invoke signature for GetDpiForWindow
-    [DllImport("user32.dll", SetLastError = true)]
-    internal static extern uint GetDpiForWindow(IntPtr hWnd);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    internal static partial uint GetDpiForWindow(IntPtr hWnd);
 
     // Baseline DPI value (100% scale)
     private const uint DpiBase = 96;
