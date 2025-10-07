@@ -42,7 +42,6 @@ public partial class MainWindow : Window
     private Avalonia.Point _mousePosition;
     private readonly MainViewModel _mainViewModel;
     private string _lastOpenedDirectory = string.Empty;
-
     private bool _isFullyLoaded;
     // Window position and size
     private int _winRestoreWidth = 1024;
@@ -50,7 +49,8 @@ public partial class MainWindow : Window
     private int _winRestoreTop = 100;
     private int _winRestoreLeft = 100;
 
-    private readonly double _systemDPIScalingFactor = 1;
+    private Avalonia.Platform.Screen? _currentScreen;
+    private double _systemDPIScalingFactor = 1;
 
 #pragma warning disable CS8618 
     public MainWindow() { }
@@ -102,17 +102,7 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            IPlatformHandle? platformHandle = this.TryGetPlatformHandle();
-            if (platformHandle != null)
-            {
-                _systemDPIScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
-                Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
 
-                _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
-            }
-        }
     }
 
     public void SetStdin(string[] args)
@@ -501,6 +491,31 @@ public partial class MainWindow : Window
         this.MenuItemQuit.KeyBindings.Add(QuitCommandKeyBinding);
     }
 
+    private void UpdateSystemDPIScalingFactor()
+    {
+        // SystemDPIScalingFactor
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            IPlatformHandle? platformHandle = this.TryGetPlatformHandle();
+            if (platformHandle != null)
+            {
+                _systemDPIScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
+                Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
+
+                _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
+
+                this.MenuItemSystemDPIScalingFactor.IsVisible = true;
+                this.MenuItemSystemDPIScalingFactor.Header = $"Apply System DPI Scaling Factor {_systemDPIScalingFactor * 100}%";
+                //
+            }
+        }
+        else
+        {
+            this.MenuItemSystemDPIScalingFactor.IsVisible = false;
+            this.MenuItemSystemDPIScalingFactor.Header = "Apply System DPI Scaling Factor";
+        }
+    }
+
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         // Too late to change window size etc. Move to constructor.
@@ -513,6 +528,80 @@ public partial class MainWindow : Window
             this.BackgroundLayerBorder.IsVisible = true;
             this.BackgroundLayerBorder.StartFadeInAnimation(TimeSpan.FromSeconds(0.8), 0.9f);
         }
+
+        // Initial screen detection upon loading
+        _currentScreen = GetCurrentScreen();
+        System.Diagnostics.Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
+
+        // Subscribe to position changes
+        this.PositionChanged += MainWindow_PositionChanged;
+
+        // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
+        if (this.Screens is { } screens)
+        {
+            screens.Changed += Screens_Changed;
+        }
+
+        UpdateSystemDPIScalingFactor();
+    }
+
+    private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
+    {
+        CheckAndNotifyDisplayChange();
+    }
+    private void Screens_Changed(object? sender, EventArgs e)
+    {
+        // Screen configurations changed, check if the window is still on the same "logical" screen
+        CheckAndNotifyDisplayChange();
+    }
+
+    private void CheckAndNotifyDisplayChange()
+    {
+        var newScreen = GetCurrentScreen();
+
+        if (newScreen != null && _currentScreen != null && newScreen != _currentScreen)
+        {
+            // Compare a unique identifier, like the screen bounds or name if available
+            if (newScreen.Bounds != _currentScreen.Bounds)
+            {
+                //System.Diagnostics.Debug.WriteLine($"Window moved from screen {_currentScreen.Bounds} to {newScreen.Bounds}");
+                // *** Raise your custom event or execute your logic here ***
+                OnDisplayChanged(newScreen);
+                _currentScreen = newScreen;
+            }
+        }
+        else if (_currentScreen == null && newScreen != null)
+        {
+            // Handle case where window was on no screen and moved to one
+            _currentScreen = newScreen;
+            OnDisplayChanged(newScreen);
+        }
+    }
+
+    private Avalonia.Platform.Screen? GetCurrentScreen()
+    {
+        if (this.Screens is not { } screens || screens.All.Count == 0)
+        {
+            return null;
+        }
+
+        // Get the screen that most contains the window
+        // The window's position is its top-left corner in virtual screen coordinates
+        var windowBounds = new PixelRect(Position, new PixelSize((int)Width, (int)Height));
+
+        // Use ScreenFromBounds which is more robust than relying just on top-left pixel
+        return screens.ScreenFromBounds(windowBounds);
+
+        // Alternatively, use ScreenFromVisual (available on TopLevel)
+        // return screens.ScreenFromVisual(this); 
+    }
+
+    private void OnDisplayChanged(Avalonia.Platform.Screen newScreen)
+    {
+        // Add your custom logic here (e.g., adjust DPI specific settings, reload data, etc.)
+        System.Diagnostics.Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
+
+        UpdateSystemDPIScalingFactor();
     }
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
