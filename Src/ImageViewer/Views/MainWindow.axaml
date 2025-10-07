@@ -158,8 +158,8 @@
 	</FlyoutBase.AttachedFlyout>
 
 	<Grid>
+		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0" IsVisible="False"></Border>
 		<Grid IsHitTestVisible="False">
-			<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0.9" IsVisible="False"></Border>
 			<ContentControl x:Name="ContentFrame"/>
 		</Grid>
 

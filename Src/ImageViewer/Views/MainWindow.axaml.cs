@@ -182,27 +182,6 @@ public partial class MainWindow : Window
         //(App.Current as App)!.RequestedThemeVariant
         //ActualThemeVariant
 
-        /*
-        var newTheme = ActualThemeVariant;
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-
-        }
-        else
-        {
-            this.BackgroundLayerBorder.IsVisible = true;
-            if (newTheme == ThemeVariant.Dark)
-            {
-                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#222222"));
-            }
-            else if (newTheme == ThemeVariant.Light)
-            {
-                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
-            }
-        }
-        */
-
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             this.BackgroundLayerBorder.IsVisible = false;
@@ -236,18 +215,20 @@ public partial class MainWindow : Window
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            this.BackgroundLayerBorder.IsVisible = true;
-            this.BackgroundLayerBorder.Opacity = 0.9;
-
             if (theme == ThemeVariant.Dark)
             {
-                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
             else if (theme == ThemeVariant.Light)
             {
-                this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#EEEEEE"));
+            }
+            else if (theme == ThemeVariant.Default)
+            {
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -270,6 +251,11 @@ public partial class MainWindow : Window
             {
                 this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#FFFFFF"));
+            }
+            else if (theme == ThemeVariant.Default)
+            {
+                this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
         }
     }
@@ -471,6 +457,12 @@ public partial class MainWindow : Window
         //LoadSettings();
 
         this.ContentFrame.Content = App.GetService<MainView>();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            this.BackgroundLayerBorder.IsVisible = true;
+            this.BackgroundLayerBorder.StartFadeInAnimation(TimeSpan.FromSeconds(0.8), 0.9f);
+        }
     }
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)

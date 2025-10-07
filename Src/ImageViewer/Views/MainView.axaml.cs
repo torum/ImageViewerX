@@ -213,7 +213,7 @@ public static partial class FadeInFadeOut
         compositionVisual.StartAnimation(nameof(CompositionVisual.Opacity), animation);
     }
 
-    public static void StartFadeInAnimation(this Visual control, TimeSpan duration)
+    public static void StartFadeInAnimation(this Visual control, TimeSpan duration, float finalOpacityValue)
     {
         if (duration == TimeSpan.Zero) return;
 
@@ -225,7 +225,8 @@ public static partial class FadeInFadeOut
 
         animation.InsertKeyFrame(0f, 0f);
         //animation.InsertKeyFrame(0.5f, 0.5f);
-        animation.InsertKeyFrame(1f, 1f);
+        //animation.InsertKeyFrame(1f, 1f);
+        animation.InsertKeyFrame(1f, finalOpacityValue);
         animation.Duration = duration;
         animation.Target = nameof(CompositionVisual.Opacity);
 
