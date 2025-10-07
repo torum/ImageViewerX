@@ -25,7 +25,9 @@
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="mod:ImageInfo">
-					<Image Margin="0" Source="{Binding ImageSource}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+					<Image Margin="0" Source="{Binding ImageSource}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"
+						    MaxWidth="{Binding ImageWidth, Mode=OneWay}" MaxHeight="{Binding ImageHeight, Mode=OneWay}"/>
+					<!-- Width="{Binding ImageWidth, Mode=OneWay}" Height="{Binding ImageHeight, Mode=OneWay}" -->
 				</DataTemplate>
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>

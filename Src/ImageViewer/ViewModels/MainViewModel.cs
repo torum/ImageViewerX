@@ -145,6 +145,20 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private double _systemDPIScalingFactor = 1;
+    public double SystemDPIScalingFactor
+    {
+        get => _systemDPIScalingFactor;
+        set
+        {
+            if (_systemDPIScalingFactor == value)
+                return;
+
+            _systemDPIScalingFactor = value;
+            OnPropertyChanged(nameof(SystemDPIScalingFactor));
+        }
+    }
+
     private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 
@@ -479,6 +493,38 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private bool _isSystemDPIScalingFactorOn = true;
+    public bool IsSystemDPIScalingFactorOn 
+    {
+        get => _isSystemDPIScalingFactorOn;
+        set
+        {
+            if (_isSystemDPIScalingFactorOn == value)
+                return;
+
+            _isSystemDPIScalingFactorOn = value;
+            OnPropertyChanged(nameof(IsSystemDPIScalingFactorOn));
+            OnPropertyChanged(nameof(DataSystemDPIScalingFactorOnIcon));
+
+            if (_queue.Count > 0)
+            {
+                foreach (var item in _queue)
+                {
+                    if (item.ImageSource is not null)
+                    {
+                        item.ImageSource = null;
+                        item.ImageWidth = 0;
+                        item.ImageHeight = 0;
+                        item.IsAcquired = false;
+                        item.IsLoading = false;
+                    }
+                }
+            }
+
+            OnPropertyChanged(nameof(Queue));
+            QueueHasBeenChanged?.Invoke(this, _queueIndex);
+        }
+    }
 
     //private string _playpause = "M10 6.5C10 5.67157 10.6716 5 11.5 5H12.5C13.3284 5 14 5.67157 14 6.5V13.5C14 14.3284 13.3284 15 12.5 15H11.5C10.6716 15 10 14.3284 10 13.5V6.5ZM11.5 6C11.2239 6 11 6.22386 11 6.5V13.5C11 13.7761 11.2239 14 11.5 14H12.5C12.7761 14 13 13.7761 13 13.5V6.5C13 6.22386 12.7761 6 12.5 6H11.5ZM15 6.5C15 5.67157 15.6716 5 16.5 5H17.5C18.3284 5 19 5.67157 19 6.5V13.5C19 14.3284 18.3284 15 17.5 15H16.5C15.6716 15 15 14.3284 15 13.5V6.5ZM16.5 6C16.2239 6 16 6.22386 16 6.5V13.5C16 13.7761 16.2239 14 16.5 14H17.5C17.7761 14 18 13.7761 18 13.5V6.5C18 6.22386 17.7761 6 17.5 6H16.5ZM3 6.50203C3 6.3042 3.21889 6.18475 3.38527 6.29179L8.88147 9.8279C9.03533 9.92689 9.03423 10.1522 8.87943 10.2497L3.38323 13.7111C3.21675 13.8159 3 13.6963 3 13.4995V6.50203ZM3.92633 5.45081C3.09446 4.9156 2 5.51287 2 6.50203V13.4995C2 14.4832 3.08373 15.0815 3.91613 14.5572L9.41233 11.0959C10.1864 10.6084 10.1918 9.48187 9.42253 8.98692L3.92633 5.45081Z";
     private readonly string _play = "M5.74514 3.06445C5.41183 2.87696 5 3.11781 5 3.50023V12.5005C5 12.8829 5.41182 13.1238 5.74512 12.9363L13.7454 8.43631C14.0852 8.24517 14.0852 7.75589 13.7454 7.56474L5.74514 3.06445ZM4 3.50023C4 2.35298 5.2355 1.63041 6.23541 2.19288L14.2357 6.69317C15.2551 7.26664 15.2551 8.73446 14.2356 9.3079L6.23537 13.8079C5.23546 14.3703 4 13.6477 4 12.5005V3.50023Z";
@@ -631,6 +677,21 @@ public partial class MainViewModel : ObservableObject
             else
             {
                 return _fullscreenOff;
+            }
+        }
+    }
+
+    public string DataSystemDPIScalingFactorOnIcon
+    {
+        get
+        {
+            if (IsSystemDPIScalingFactorOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
             }
         }
     }
@@ -1002,6 +1063,19 @@ public partial class MainViewModel : ObservableObject
                     });
                     //Bitmap? bitmap = new(img.ImageFilePath);
                     img.ImageSource = bitmap;
+
+                    //img.ImageSource = img.ImageSource.CreateScaledBitmap(new PixelSize((int)(img.ImageSource.PixelSize.Width / 1.5), (int)(img.ImageSource.PixelSize.Height / 1.5)));
+                    if (IsSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                    {
+                        img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
+                        img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
+                    }
+                    else
+                    {
+                        img.ImageWidth = (img.ImageSource.PixelSize.Width);
+                        img.ImageHeight = (img.ImageSource.PixelSize.Height);
+                    }
+
                     img.IsAcquired = true;
                     img.IsLoading = false;
                 }, DispatcherPriority.Loaded);//Default//.Background
@@ -1204,19 +1278,24 @@ public partial class MainViewModel : ObservableObject
 
             try
             {
-                /*
-                Bitmap? bitmapTmp = await Task.Run(() =>
-                {
-                    return new Bitmap(img.ImageFilePath);
-                });
-                img.ImageSource = bitmapTmp;
-                */
                 img.ImageSource = new(img.ImageFilePath);
+
+                //Debug.WriteLine($"{img.ImageSource.Dpi}");
+                //https://github.com/AvaloniaUI/Avalonia/issues/17235
+
+                if (IsSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                {
+                    img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
+                    img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
+                }
+                else
+                {
+                    img.ImageWidth = (img.ImageSource.PixelSize.Width);
+                    img.ImageHeight = (img.ImageSource.PixelSize.Height);
+                }
+
                 img.IsAcquired = true;
                 img.IsLoading = false;
-
-                // no longer needed
-                //bitmap = img.ImageSource;
             }
             catch (Exception ex)
             {
@@ -1422,6 +1501,12 @@ public partial class MainViewModel : ObservableObject
     public void ToggleFullscreen()
     {
         IsFullscreenOn = !IsFullscreenOn;
+    }
+
+    [RelayCommand]
+    public void ToggleSystemDPIScalingFactor()
+    {
+        IsSystemDPIScalingFactorOn = !IsSystemDPIScalingFactorOn;
     }
 
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]

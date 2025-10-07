@@ -34,6 +34,34 @@ public class ImageInfo : ObservableObject
             OnPropertyChanged(nameof(ImageSource));
         }
     }
+
+    private double _imageWidth;
+    public double ImageWidth
+    {
+        get => _imageWidth;
+        set
+        {
+            if (_imageWidth == value)
+                return;
+
+            _imageWidth = value;
+            OnPropertyChanged(nameof(ImageWidth));
+        }
+    }
+
+    private double _imageHeight;
+    public double ImageHeight
+    {
+        get => _imageHeight;
+        set
+        {
+            if (_imageHeight == value)
+                return;
+
+            _imageHeight = value;
+            OnPropertyChanged(nameof(ImageHeight));
+        }
+    }
 }
 
 

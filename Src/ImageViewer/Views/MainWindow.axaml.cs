@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.Arm;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
@@ -48,6 +49,8 @@ public partial class MainWindow : Window
     private int _winRestoreHeight = 768;
     private int _winRestoreTop = 100;
     private int _winRestoreLeft = 100;
+
+    private double _systemDPIScalingFactor = 1;
 
 #pragma warning disable CS8618 
     public MainWindow() { }
@@ -98,6 +101,18 @@ public partial class MainWindow : Window
 
         // TODO: more
         InitKeyBindigs();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            IPlatformHandle? platformHandle = this.TryGetPlatformHandle();
+            if (platformHandle != null)
+            {
+                _systemDPIScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
+                Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
+
+                _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
+            }
+        }
     }
 
     public void SetStdin(string[] args)
@@ -1940,3 +1955,41 @@ private void TryRegisterWindowsMenu()
     }, RoutingStrategies.Tunnel);
 }
 */
+
+public class DpiHelper
+{
+    // Define the P/Invoke signature for GetDpiForWindow
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern uint GetDpiForWindow(IntPtr hWnd);
+
+    // Baseline DPI value (100% scale)
+    private const uint DpiBase = 96;
+
+    /// <summary>
+    /// Calculates the scaling factor for a given window handle.
+    /// </summary>
+    /// <param name="hWnd">The handle to the window.</param>
+    /// <returns>The scaling factor (e.g., 1.0 for 100%, 1.25 for 125%).</returns>
+    public static double GetWindowScalingFactor(IntPtr hWnd)
+    {
+        if (hWnd == IntPtr.Zero)
+        {
+            // Handle cases where there is no window (e.g., pure console app)
+            // Fallback to system metrics if necessary, or return a default.
+            // Note: This fallback is less accurate for per-monitor scaling.
+            return 1;
+        }
+
+        uint dpi = GetDpiForWindow(hWnd);
+
+        if (dpi == 0)
+        {
+            // Fallback if the API call fails
+            return 1;
+        }
+
+        return (double)dpi / DpiBase;
+    }
+
+
+}
