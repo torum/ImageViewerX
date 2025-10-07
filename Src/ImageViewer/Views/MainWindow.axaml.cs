@@ -49,11 +49,15 @@ public partial class MainWindow : Window
     private int _winRestoreTop = 100;
     private int _winRestoreLeft = 100;
 
-    public MainWindow()
-    {
-        _mainViewModel = App.GetService<MainViewModel>();
+#pragma warning disable CS8618 
+    public MainWindow() { }
+#pragma warning restore CS8618
 
-        this.DataContext = _mainViewModel;
+    public MainWindow(MainViewModel vm)
+    {
+        //_mainViewModel = App.GetService<MainViewModel>();
+        _mainViewModel = vm;
+        this.DataContext = vm;
 
         LoadSettings();
 
@@ -68,18 +72,22 @@ public partial class MainWindow : Window
         //TryRegisterWindowsMenu();
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
+        this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-        this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+        _mainViewModel.Fullscreen += (sender, arg) => { this.OnFullscreen(arg); };
+        _mainViewModel.HideFlyout += OnHideFlyout;
 
         this.DetachedFromVisualTree += (s, e) =>
         {
             this.PropertyChanged -= this.OnWindow_PropertyChanged;
+            this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
             _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
             _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
-            this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+            _mainViewModel.Fullscreen -= (sender, arg) => { this.OnFullscreen(arg); };
+            _mainViewModel.HideFlyout -= OnHideFlyout;
         };
 
         _timerPointerCursorHide = new DispatcherTimer
@@ -263,6 +271,33 @@ public partial class MainWindow : Window
     private void OnActualThemeVariantChanged(object? sender, EventArgs e)
     {
         UpdateThemeBackground(ActualThemeVariant);
+    }
+
+    public void OnFullscreen(bool on)
+    {
+        //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
+
+        if (on)
+        {
+            if (WindowState == WindowState.Normal)
+            {
+                SetWindowStateFullScreen();
+            }
+        }
+        else
+        {
+            if (WindowState == WindowState.FullScreen)
+            {
+                SetWindowStateNormal();
+            }
+        }
+    }
+
+    public void OnHideFlyout(object? sender, EventArgs e)
+    {
+        var flyout = FlyoutBase.GetAttachedFlyout(this);
+
+        flyout?.Hide();
     }
 
     private void LoadSettings()
@@ -1100,7 +1135,7 @@ public partial class MainWindow : Window
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
-
+        /*
         if (WindowState == WindowState.FullScreen)
         {
             SetWindowStateNormal();
@@ -1108,6 +1143,15 @@ public partial class MainWindow : Window
         else if (WindowState == WindowState.Normal)
         {
             SetWindowStateFullScreen();
+        }
+        */
+        if (WindowState == WindowState.FullScreen)
+        {
+            OnFullscreen(false);
+        }
+        else if (WindowState == WindowState.Normal)
+        {
+            OnFullscreen(true);
         }
     }
 

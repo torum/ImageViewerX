@@ -148,6 +148,7 @@ public partial class MainViewModel : ObservableObject
     private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 
+    // internal state.
     private bool _isFullscreen = false;
     public bool IsFullscreen
     {
@@ -158,7 +159,10 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             _isFullscreen = value;
-            OnPropertyChanged(nameof(IsFullscreen));
+            OnPropertyChanged(nameof(IsFullscreenOn));
+
+            // update opts control
+            IsFullscreenOn = _isFullscreen;
         }
     }
 
@@ -177,7 +181,7 @@ public partial class MainViewModel : ObservableObject
 
             _isWorking = value;
 
-            if (!IsFullscreen)
+            if (!_isFullscreen)
             {
                 // Only non fullscreen mode since IsWorking is binding to busy cursor.
                 OnPropertyChanged(nameof(IsWorking));
@@ -336,6 +340,8 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(IsShuffleOn));
             OnPropertyChanged(nameof(DataShuffleIcon));
 
+            HideFlyout?.Invoke(this, EventArgs.Empty);
+
             if (_queue.Count > 0)
             {
                 IsWorking = true;
@@ -409,6 +415,8 @@ public partial class MainViewModel : ObservableObject
             _isRepeatOn = value;
             OnPropertyChanged(nameof(IsRepeatOn));
             OnPropertyChanged(nameof(DataRepeatIcon));
+
+            HideFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -427,6 +435,8 @@ public partial class MainViewModel : ObservableObject
             _isStayOnTop = value;
             OnPropertyChanged(nameof(IsStayOnTop));
             OnPropertyChanged(nameof(DataStayOnTopIcon));
+
+            HideFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -447,8 +457,28 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(DataPlayPauseIcon));
 
             SlideshowStatusChanged?.Invoke(this, EventArgs.Empty);
+            HideFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    private bool _isFullscreenOn = false;
+    public bool IsFullscreenOn
+    {
+        get => _isFullscreenOn;
+        set
+        {
+            if (_isFullscreenOn == value)
+                return;
+
+            _isFullscreenOn = value;
+            OnPropertyChanged(nameof(IsFullscreenOn));
+            OnPropertyChanged(nameof(DataFullscreenOnIcon));
+
+            Fullscreen?.Invoke(this, IsFullscreenOn);
+            HideFlyout?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
 
     //private string _playpause = "M10 6.5C10 5.67157 10.6716 5 11.5 5H12.5C13.3284 5 14 5.67157 14 6.5V13.5C14 14.3284 13.3284 15 12.5 15H11.5C10.6716 15 10 14.3284 10 13.5V6.5ZM11.5 6C11.2239 6 11 6.22386 11 6.5V13.5C11 13.7761 11.2239 14 11.5 14H12.5C12.7761 14 13 13.7761 13 13.5V6.5C13 6.22386 12.7761 6 12.5 6H11.5ZM15 6.5C15 5.67157 15.6716 5 16.5 5H17.5C18.3284 5 19 5.67157 19 6.5V13.5C19 14.3284 18.3284 15 17.5 15H16.5C15.6716 15 15 14.3284 15 13.5V6.5ZM16.5 6C16.2239 6 16 6.22386 16 6.5V13.5C16 13.7761 16.2239 14 16.5 14H17.5C17.7761 14 18 13.7761 18 13.5V6.5C18 6.22386 17.7761 6 17.5 6H16.5ZM3 6.50203C3 6.3042 3.21889 6.18475 3.38527 6.29179L8.88147 9.8279C9.03533 9.92689 9.03423 10.1522 8.87943 10.2497L3.38323 13.7111C3.21675 13.8159 3 13.6963 3 13.4995V6.50203ZM3.92633 5.45081C3.09446 4.9156 2 5.51287 2 6.50203V13.4995C2 14.4832 3.08373 15.0815 3.91613 14.5572L9.41233 11.0959C10.1864 10.6084 10.1918 9.48187 9.42253 8.98692L3.92633 5.45081Z";
     private readonly string _play = "M5.74514 3.06445C5.41183 2.87696 5 3.11781 5 3.50023V12.5005C5 12.8829 5.41182 13.1238 5.74512 12.9363L13.7454 8.43631C14.0852 8.24517 14.0852 7.75589 13.7454 7.56474L5.74514 3.06445ZM4 3.50023C4 2.35298 5.2355 1.63041 6.23541 2.19288L14.2357 6.69317C15.2551 7.26664 15.2551 8.73446 14.2356 9.3079L6.23537 13.8079C5.23546 14.3703 4 13.6477 4 12.5005V3.50023Z";
@@ -587,6 +617,23 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
+
+    private readonly string _fullscreenOn = "M11 4C11 4.55228 11.4477 5 12 5H13.5C13.7761 5 14 5.22386 14 5.5C14 5.77614 13.7761 6 13.5 6H12C10.8954 6 10 5.10457 10 4V2.5C10 2.22386 10.2239 2 10.5 2C10.7761 2 11 2.22386 11 2.5V4ZM11 12C11 11.4477 11.4477 11 12 11H13.5C13.7761 11 14 10.7761 14 10.5C14 10.2239 13.7761 10 13.5 10H12C10.8954 10 10 10.8954 10 12V13.5C10 13.7761 10.2239 14 10.5 14C10.7761 14 11 13.7761 11 13.5V12ZM4 11C4.55228 11 5 11.4477 5 12V13.5C5 13.7761 5.22386 14 5.5 14C5.77614 14 6 13.7761 6 13.5V12C6 10.8954 5.10457 10 4 10H2.5C2.22386 10 2 10.2239 2 10.5C2 10.7761 2.22386 11 2.5 11H4ZM5 4C5 4.55228 4.55228 5 4 5H2.5C2.22386 5 2 5.22386 2 5.5C2 5.77614 2.22386 6 2.5 6H4C5.10457 6 6 5.10457 6 4V2.5C6 2.22386 5.77614 2 5.5 2C5.22386 2 5 2.22386 5 2.5V4Z";
+    private readonly string _fullscreenOff = "M3.75 3C3.33579 3 3 3.33579 3 3.75V5.5C3 5.77614 2.77614 6 2.5 6C2.22386 6 2 5.77614 2 5.5V3.75C2 2.7835 2.7835 2 3.75 2H5.5C5.77614 2 6 2.22386 6 2.5C6 2.77614 5.77614 3 5.5 3H3.75ZM10 2.5C10 2.22386 10.2239 2 10.5 2H12.25C13.2165 2 14 2.7835 14 3.75V5.5C14 5.77614 13.7761 6 13.5 6C13.2239 6 13 5.77614 13 5.5V3.75C13 3.33579 12.6642 3 12.25 3H10.5C10.2239 3 10 2.77614 10 2.5ZM2.5 10C2.77614 10 3 10.2239 3 10.5V12.25C3 12.6642 3.33579 13 3.75 13H5.5C5.77614 13 6 13.2239 6 13.5C6 13.7761 5.77614 14 5.5 14H3.75C2.7835 14 2 13.2165 2 12.25V10.5C2 10.2239 2.22386 10 2.5 10ZM13.5 10C13.7761 10 14 10.2239 14 10.5V12.25C14 13.2165 13.2165 14 12.25 14H10.5C10.2239 14 10 13.7761 10 13.5C10 13.2239 10.2239 13 10.5 13H12.25C12.6642 13 13 12.6642 13 12.25V10.5C13 10.2239 13.2239 10 13.5 10Z";
+    public string DataFullscreenOnIcon
+    {
+        get
+        {
+            if (IsFullscreenOn)
+            {
+                return _fullscreenOn;
+            }
+            else
+            {
+                return _fullscreenOff;
+            }
+        }
+    }
     //
 
     #endregion
@@ -595,7 +642,10 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? TransitionsHasBeenChanged;
     public event EventHandler? SlideshowStatusChanged;
     public event EventHandler? QueueLoaded;
+    public event EventHandler<bool>? Fullscreen;
+    public event EventHandler? HideFlyout;
 
+    //
     public MainViewModel()
     {
         // Init Timer.
@@ -1368,6 +1418,12 @@ public partial class MainViewModel : ObservableObject
         IsRepeatOn = !IsRepeatOn;
     }
 
+    [RelayCommand]
+    public void ToggleFullscreen()
+    {
+        IsFullscreenOn = !IsFullscreenOn;
+    }
+
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]
     public async Task ShowInExplorer()
     {
@@ -1475,7 +1531,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void Quit()
+    public static void Quit()
     {
         var mainWin = App.GetService<MainWindow>();
         mainWin.Close();

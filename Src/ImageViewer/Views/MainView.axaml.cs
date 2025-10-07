@@ -21,11 +21,15 @@ public partial class MainView : UserControl
 {
     readonly MainViewModel _viewModel;
 
-    public MainView()
+#pragma warning disable CS8618
+    public MainView() { }
+#pragma warning restore CS8618
+    public MainView(MainViewModel vm)
     {
-        _viewModel = App.GetService<MainViewModel>();
+        //_viewModel = App.GetService<MainViewModel>();
+        _viewModel = vm;
 
-        InitializeComponent();
+       InitializeComponent();
 
         /*
         var compositeTransition = new CompositePageTransition();
