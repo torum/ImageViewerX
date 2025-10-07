@@ -522,7 +522,14 @@ public partial class MainViewModel : ObservableObject
             }
 
             OnPropertyChanged(nameof(Queue));
-            QueueHasBeenChanged?.Invoke(this, _queueIndex);
+            if ((_queueIndex - 1) >= 0)
+            {
+                QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
+            }
+            else
+            {
+                QueueHasBeenChanged?.Invoke(this, 0);
+            }
         }
     }
 

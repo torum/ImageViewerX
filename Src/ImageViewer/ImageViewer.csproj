@@ -26,7 +26,7 @@
     <PackageReference Include="Egolds.Xaml.Behaviors.Interactions.Animated" Version="11.3.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.9" />
-    <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.6.4" />
+    <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.6.5" />
   </ItemGroup>
 
   <ItemGroup>

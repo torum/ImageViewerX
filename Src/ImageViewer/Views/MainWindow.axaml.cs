@@ -505,14 +505,12 @@ public partial class MainWindow : Window
                 _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
 
                 this.MenuItemSystemDPIScalingFactor.IsVisible = true;
-                this.MenuItemSystemDPIScalingFactor.Header = $"Apply System DPI Scaling Factor {_systemDPIScalingFactor * 100}%";
-                //
+                this.MenuItemSystemDPIScalingFactor.Header = $"Apply DPI Scaling ({_systemDPIScalingFactor * 100}%)"; //Apply System DPI Scaling Factor 
             }
         }
         else
         {
             this.MenuItemSystemDPIScalingFactor.IsVisible = false;
-            this.MenuItemSystemDPIScalingFactor.Header = "Apply System DPI Scaling Factor";
         }
     }
 
@@ -549,6 +547,7 @@ public partial class MainWindow : Window
     {
         CheckAndNotifyDisplayChange();
     }
+    
     private void Screens_Changed(object? sender, EventArgs e)
     {
         // Screen configurations changed, check if the window is still on the same "logical" screen
