@@ -6,6 +6,7 @@
         xmlns:views="clr-namespace:ImageViewer.Views"
         xmlns:helper="clr-namespace:ImageViewer.Helpers"
         xmlns:mod="clr-namespace:ImageViewer.Models"
+		xmlns:assets="clr-namespace:ImageViewer.Assets"
 		xmlns:ia="using:Xaml.Behaviors.Interactions.Animated"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="ImageViewer.Views.MainWindow"
@@ -111,7 +112,7 @@
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataPlayPauseIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
 													</Viewbox>
-													<TextBlock Text="Start"></TextBlock>
+													<TextBlock Text="{Binding SlideshowStartStopString, Mode=OneWay}"></TextBlock>
 												</StackPanel>
 											</Button>
 											<Button Command="{Binding ToggleShuffleCommand}" Width="66" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
@@ -119,7 +120,7 @@
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataShuffleIcon, Mode=OneWay}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
 													</Viewbox>
-													<TextBlock Text="Shuffle"></TextBlock>
+													<TextBlock Text="{x:Static assets:Resources.Label_Shuffle}"></TextBlock>
 												</StackPanel>
 											</Button>
 											<Button Command="{Binding ToggleRepeatCommand}" Width="66" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">

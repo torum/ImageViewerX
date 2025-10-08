@@ -503,7 +503,7 @@ public partial class MainWindow : Window
 
                 if (_systemDPIScalingFactor != 1)
                 {
-                    _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
+                    _mainViewModel.SystemDpiScalingFactor = _systemDPIScalingFactor;
 
                     this.MenuItemSystemDPIScalingFactor.IsVisible = true;
                     this.MenuItemSystemDPIScalingFactor.Header = $"Override DPI Scaling ({_systemDPIScalingFactor * 100}%)"; //Override System DPI Scaling Factor 

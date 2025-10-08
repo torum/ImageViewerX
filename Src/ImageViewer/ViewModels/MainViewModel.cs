@@ -109,25 +109,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    /*
-    private Bitmap? _diplayImage1;
-    public Bitmap? DiplayImage1
-    {
-        get
-        {
-            return _diplayImage1;
-        }
-        set
-        {
-            if (_diplayImage1 == value)
-                return;
-
-            _diplayImage1 = value;
-            OnPropertyChanged(nameof(DiplayImage1));
-        }
-    }
-    */
-
     private ImageInfo? _displayImage;
     public ImageInfo? DiplayImage
     {
@@ -145,17 +126,17 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private double _systemDPIScalingFactor = 1;
-    public double SystemDPIScalingFactor
+    private double _systemDpiScalingFactor = 1;
+    public double SystemDpiScalingFactor
     {
-        get => _systemDPIScalingFactor;
+        get => _systemDpiScalingFactor;
         set
         {
-            if (_systemDPIScalingFactor == value)
+            if (_systemDpiScalingFactor == value)
                 return;
 
-            _systemDPIScalingFactor = value;
-            OnPropertyChanged(nameof(SystemDPIScalingFactor));
+            _systemDpiScalingFactor = value;
+            OnPropertyChanged(nameof(SystemDpiScalingFactor));
         }
     }
 
@@ -469,6 +450,7 @@ public partial class MainViewModel : ObservableObject
             _isSlideshowOn = value;
             OnPropertyChanged(nameof(IsSlideshowOn));
             OnPropertyChanged(nameof(DataPlayPauseIcon));
+            OnPropertyChanged(nameof(SlideshowStartStopString));
 
             SlideshowStatusChanged?.Invoke(this, EventArgs.Empty);
             HideFlyout?.Invoke(this, EventArgs.Empty);
@@ -703,6 +685,25 @@ public partial class MainViewModel : ObservableObject
         }
     }
     //
+
+    #endregion
+
+    #region == String Properties ==
+
+    public string SlideshowStartStopString
+    {
+        get
+        {
+            if (IsSlideshowOn)
+            {
+                return ImageViewer.Assets.Resources.Label_SlideshowStop;
+            }
+            else
+            {
+                return ImageViewer.Assets.Resources.Label_SlideshowStart;
+            }
+        }
+    }
 
     #endregion
 
@@ -1072,10 +1073,10 @@ public partial class MainViewModel : ObservableObject
                     img.ImageSource = bitmap;
 
                     //img.ImageSource = img.ImageSource.CreateScaledBitmap(new PixelSize((int)(img.ImageSource.PixelSize.Width / 1.5), (int)(img.ImageSource.PixelSize.Height / 1.5)));
-                    if (IsOverrideSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                    if (IsOverrideSystemDPIScalingFactorOn && (SystemDpiScalingFactor > 1))
                     {
-                        img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
-                        img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
+                        img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDpiScalingFactor);
+                        img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDpiScalingFactor);
                     }
                     else
                     {
@@ -1287,10 +1288,10 @@ public partial class MainViewModel : ObservableObject
             {
                 img.ImageSource = new(img.ImageFilePath);
 
-                if (IsOverrideSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                if (IsOverrideSystemDPIScalingFactorOn && (SystemDpiScalingFactor > 1))
                 {
-                    img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
-                    img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
+                    img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDpiScalingFactor);
+                    img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDpiScalingFactor);
                 }
                 else
                 {
