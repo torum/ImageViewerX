@@ -475,18 +475,18 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool _isOverrideSystemDPIScalingFactorOn = false;
-    public bool IsOverrideSystemDPIScalingFactorOn
+    private bool _isOverrideSystemDpiScalingFactorOn = false;
+    public bool IsOverrideSystemDpiScalingFactorOn
     {
-        get => _isOverrideSystemDPIScalingFactorOn;
+        get => _isOverrideSystemDpiScalingFactorOn;
         set
         {
-            if (_isOverrideSystemDPIScalingFactorOn == value)
+            if (_isOverrideSystemDpiScalingFactorOn == value)
                 return;
 
-            _isOverrideSystemDPIScalingFactorOn = value;
-            OnPropertyChanged(nameof(IsOverrideSystemDPIScalingFactorOn));
-            OnPropertyChanged(nameof(DataSystemDPIScalingFactorOnIcon));
+            _isOverrideSystemDpiScalingFactorOn = value;
+            OnPropertyChanged(nameof(IsOverrideSystemDpiScalingFactorOn));
+            OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
 
             if (_queue.Count > 0)
             {
@@ -674,11 +674,11 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public string DataSystemDPIScalingFactorOnIcon
+    public string DataSystemDpiScalingFactorOnIcon
     {
         get
         {
-            if (IsOverrideSystemDPIScalingFactorOn)
+            if (IsOverrideSystemDpiScalingFactorOn)
             {
                 return _checkedBox;
             }
@@ -1077,7 +1077,7 @@ public partial class MainViewModel : ObservableObject
                     img.ImageSource = bitmap;
 
                     //img.ImageSource = img.ImageSource.CreateScaledBitmap(new PixelSize((int)(img.ImageSource.PixelSize.Width / 1.5), (int)(img.ImageSource.PixelSize.Height / 1.5)));
-                    if (IsOverrideSystemDPIScalingFactorOn && (SystemDpiScalingFactor > 1))
+                    if (IsOverrideSystemDpiScalingFactorOn && (SystemDpiScalingFactor > 1))
                     {
                         img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDpiScalingFactor);
                         img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDpiScalingFactor);
@@ -1292,7 +1292,7 @@ public partial class MainViewModel : ObservableObject
             {
                 img.ImageSource = new(img.ImageFilePath);
 
-                if (IsOverrideSystemDPIScalingFactorOn && (SystemDpiScalingFactor > 1))
+                if (IsOverrideSystemDpiScalingFactorOn && (SystemDpiScalingFactor > 1))
                 {
                     img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDpiScalingFactor);
                     img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDpiScalingFactor);
@@ -1517,9 +1517,9 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void ToggleSystemDPIScalingFactor()
+    public void ToggleSystemDpiScalingFactor()
     {
-        IsOverrideSystemDPIScalingFactorOn = !IsOverrideSystemDPIScalingFactorOn;
+        IsOverrideSystemDpiScalingFactorOn = !IsOverrideSystemDpiScalingFactorOn;
     }
 
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]

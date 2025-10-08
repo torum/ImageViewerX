@@ -50,7 +50,7 @@ public partial class MainWindow : Window
     private int _winRestoreLeft = 100;
 
     private Avalonia.Platform.Screen? _currentScreen;
-    private double _systemDPIScalingFactor = 1;
+    private double _systemDpiScalingFactor = 1;
 
 #pragma warning disable CS8618 
     public MainWindow() { }
@@ -497,24 +497,24 @@ public partial class MainWindow : Window
             IPlatformHandle? platformHandle = this.TryGetPlatformHandle();
             if (platformHandle != null)
             {
-                _systemDPIScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
+                _systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
                 //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
 
-                if (_systemDPIScalingFactor != 1)
+                if (_systemDpiScalingFactor != 1)
                 {
-                    _mainViewModel.SystemDpiScalingFactor = _systemDPIScalingFactor;
+                    _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
 
-                    this.MenuItemSystemDPIScalingFactor.IsVisible = true;
-                    this.MenuItemSystemDPIScalingFactor.Header = $"Override DPI Scaling ({_systemDPIScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+                    this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+                    this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
 
                     return;
                 }
             }
         }
 
-        _mainViewModel.IsOverrideSystemDPIScalingFactorOn = false;
-        this.MenuItemSystemDPIScalingFactor.IsVisible = false;
+        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
+        this.MenuItemSystemDpiScalingFactor.IsVisible = false;
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
