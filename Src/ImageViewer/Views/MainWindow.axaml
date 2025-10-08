@@ -247,7 +247,7 @@
 				</MenuItem.Icon>
 			</MenuItem>
 			-->
-			<MenuItem Header="Apply DPI Scaling" Command="{Binding ToggleSystemDPIScalingFactorCommand}" x:Name="MenuItemSystemDPIScalingFactor" IsVisible="False">
+			<MenuItem Header="Override DPI Scaling" Command="{Binding ToggleSystemDPIScalingFactorCommand}" x:Name="MenuItemSystemDPIScalingFactor" IsVisible="False">
 				<MenuItem.Icon>
 					<PathIcon Data="{Binding DataSystemDPIScalingFactorOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
 					</PathIcon>

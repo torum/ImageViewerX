@@ -500,18 +500,23 @@ public partial class MainWindow : Window
             if (platformHandle != null)
             {
                 _systemDPIScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
-                Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
 
-                _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
+                //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
 
-                this.MenuItemSystemDPIScalingFactor.IsVisible = true;
-                this.MenuItemSystemDPIScalingFactor.Header = $"Apply DPI Scaling ({_systemDPIScalingFactor * 100}%)"; //Apply System DPI Scaling Factor 
+                if (_systemDPIScalingFactor != 1)
+                {
+                    _mainViewModel.SystemDPIScalingFactor = _systemDPIScalingFactor;
+
+                    this.MenuItemSystemDPIScalingFactor.IsVisible = true;
+                    this.MenuItemSystemDPIScalingFactor.Header = $"Override DPI Scaling ({_systemDPIScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+
+                    return;
+                }
             }
         }
-        else
-        {
-            this.MenuItemSystemDPIScalingFactor.IsVisible = false;
-        }
+
+        _mainViewModel.IsOverrideSystemDPIScalingFactorOn = false;
+        this.MenuItemSystemDPIScalingFactor.IsVisible = false;
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -529,7 +534,8 @@ public partial class MainWindow : Window
 
         // Initial screen detection upon loading
         _currentScreen = GetCurrentScreen();
-        System.Diagnostics.Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
+        
+        //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
 
         // Subscribe to position changes
         this.PositionChanged += MainWindow_PositionChanged;
@@ -598,7 +604,7 @@ public partial class MainWindow : Window
     private void OnDisplayChanged(Avalonia.Platform.Screen newScreen)
     {
         // Add your custom logic here (e.g., adjust DPI specific settings, reload data, etc.)
-        System.Diagnostics.Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
+        Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
 
         UpdateSystemDPIScalingFactor();
     }

@@ -493,17 +493,17 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool _isSystemDPIScalingFactorOn = false;
-    public bool IsSystemDPIScalingFactorOn 
+    private bool _isOverrideSystemDPIScalingFactorOn = false;
+    public bool IsOverrideSystemDPIScalingFactorOn
     {
-        get => _isSystemDPIScalingFactorOn;
+        get => _isOverrideSystemDPIScalingFactorOn;
         set
         {
-            if (_isSystemDPIScalingFactorOn == value)
+            if (_isOverrideSystemDPIScalingFactorOn == value)
                 return;
 
-            _isSystemDPIScalingFactorOn = value;
-            OnPropertyChanged(nameof(IsSystemDPIScalingFactorOn));
+            _isOverrideSystemDPIScalingFactorOn = value;
+            OnPropertyChanged(nameof(IsOverrideSystemDPIScalingFactorOn));
             OnPropertyChanged(nameof(DataSystemDPIScalingFactorOnIcon));
 
             if (_queue.Count > 0)
@@ -692,7 +692,7 @@ public partial class MainViewModel : ObservableObject
     {
         get
         {
-            if (IsSystemDPIScalingFactorOn)
+            if (IsOverrideSystemDPIScalingFactorOn)
             {
                 return _checkedBox;
             }
@@ -1072,7 +1072,7 @@ public partial class MainViewModel : ObservableObject
                     img.ImageSource = bitmap;
 
                     //img.ImageSource = img.ImageSource.CreateScaledBitmap(new PixelSize((int)(img.ImageSource.PixelSize.Width / 1.5), (int)(img.ImageSource.PixelSize.Height / 1.5)));
-                    if (IsSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                    if (IsOverrideSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
                     {
                         img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
                         img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
@@ -1290,7 +1290,7 @@ public partial class MainViewModel : ObservableObject
                 //Debug.WriteLine($"{img.ImageSource.Dpi}");
                 //https://github.com/AvaloniaUI/Avalonia/issues/17235
 
-                if (IsSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
+                if (IsOverrideSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
                 {
                     img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
                     img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDPIScalingFactor);
@@ -1513,7 +1513,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void ToggleSystemDPIScalingFactor()
     {
-        IsSystemDPIScalingFactorOn = !IsSystemDPIScalingFactorOn;
+        IsOverrideSystemDPIScalingFactorOn = !IsOverrideSystemDPIScalingFactorOn;
     }
 
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]
