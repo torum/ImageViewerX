@@ -101,8 +101,6 @@ public partial class MainWindow : Window
 
         // TODO: more
         InitKeyBindigs();
-
-
     }
 
     public void SetStdin(string[] args)
@@ -532,9 +530,15 @@ public partial class MainWindow : Window
             this.BackgroundLayerBorder.StartFadeInAnimation(TimeSpan.FromSeconds(0.8), 0.9f);
         }
 
+        // Windows Only
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Initial screen detection upon loading
         _currentScreen = GetCurrentScreen();
-        
+
         //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
 
         // Subscribe to position changes
@@ -551,17 +555,32 @@ public partial class MainWindow : Window
 
     private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         CheckAndNotifyDisplayChange();
     }
     
     private void Screens_Changed(object? sender, EventArgs e)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Screen configurations changed, check if the window is still on the same "logical" screen
         CheckAndNotifyDisplayChange();
     }
 
     private void CheckAndNotifyDisplayChange()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         var newScreen = GetCurrentScreen();
 
         if (newScreen != null && _currentScreen != null && newScreen != _currentScreen)
@@ -585,6 +604,11 @@ public partial class MainWindow : Window
 
     private Avalonia.Platform.Screen? GetCurrentScreen()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return null;
+        }
+
         if (this.Screens is not { } screens || screens.All.Count == 0)
         {
             return null;
@@ -603,6 +627,11 @@ public partial class MainWindow : Window
 
     private void OnDisplayChanged(Avalonia.Platform.Screen newScreen)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         // Add your custom logic here (e.g., adjust DPI specific settings, reload data, etc.)
         Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
 

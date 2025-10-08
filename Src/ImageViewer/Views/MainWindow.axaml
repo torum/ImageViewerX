@@ -414,7 +414,7 @@
 							<Border Margin="0" Width="120" Height="120" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True" CornerRadius="6">
 
 								<Grid>
-									<TransitioningContentControl Content="{Binding, Mode=OneWay}" >
+									<TransitioningContentControl Content="{Binding Mode=OneWay}" >
 										<TransitioningContentControl.ContentTemplate>
 											<DataTemplate DataType="mod:ImageInfo">
 												<Image Margin="0" Source="{Binding ImageSource}" StretchDirection="DownOnly" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="1"

@@ -1287,9 +1287,6 @@ public partial class MainViewModel : ObservableObject
             {
                 img.ImageSource = new(img.ImageFilePath);
 
-                //Debug.WriteLine($"{img.ImageSource.Dpi}");
-                //https://github.com/AvaloniaUI/Avalonia/issues/17235
-
                 if (IsOverrideSystemDPIScalingFactorOn && (SystemDPIScalingFactor > 1))
                 {
                     img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDPIScalingFactor);
@@ -1338,6 +1335,7 @@ public partial class MainViewModel : ObservableObject
             int i = _queueIndex - 15;
             if (_queue[i].ImageSource is not null)
             {
+                _queue[i].ImageSource?.Dispose();
                 _queue[i].ImageSource = null;
                 _queue[i].IsAcquired = false;
                 _queue[i].IsLoading = false;
@@ -1347,6 +1345,7 @@ public partial class MainViewModel : ObservableObject
             {
                 if (_queue[i].ImageSource is not null)
                 {
+                    _queue[i].ImageSource?.Dispose();
                     _queue[i].ImageSource = null;
                     _queue[i].IsAcquired = false;
                     _queue[i].IsLoading = false;
@@ -1361,6 +1360,7 @@ public partial class MainViewModel : ObservableObject
             int i = _queueIndex + 15;
             if (_queue[i].ImageSource is not null)
             {
+                _queue[i].ImageSource?.Dispose();
                 _queue[i].ImageSource = null;
                 _queue[i].IsAcquired = false;
                 _queue[i].IsLoading = false;
@@ -1370,6 +1370,7 @@ public partial class MainViewModel : ObservableObject
             {
                 if (_queue[i].ImageSource is not null)
                 {
+                    _queue[i].ImageSource?.Dispose();
                     _queue[i].ImageSource = null;
                     _queue[i].IsAcquired = false;
                     _queue[i].IsLoading = false;
