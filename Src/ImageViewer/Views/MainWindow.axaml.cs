@@ -445,12 +445,28 @@ public partial class MainWindow : Window
         var opts = xdoc.Root.Element("Options");
         if (opts is not null)
         {
-            var hoge = opts.Attribute("lastOpenedDirectory");
-            if (hoge is not null)
+            var attrs = opts.Attribute("lastOpenedDirectory");
+            if (attrs is not null)
             {
-                if (!string.IsNullOrEmpty(hoge.Value))
+                if (!string.IsNullOrEmpty(attrs.Value))
                 {
-                    _lastOpenedDirectory = hoge.Value;
+                    _lastOpenedDirectory = attrs.Value;
+                }
+            }
+
+            attrs = opts.Attribute("isShuffleOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsShuffleOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsShuffleOn = false;
+                    }
                 }
             }
         }
@@ -748,6 +764,7 @@ public partial class MainWindow : Window
 
         XmlElement opts = doc.CreateElement(string.Empty, "Options", string.Empty);
 
+        // LastOpenedDirectory
         attrs = doc.CreateAttribute("lastOpenedDirectory");
         if (!string.IsNullOrEmpty(_lastOpenedDirectory))
         {
@@ -756,6 +773,18 @@ public partial class MainWindow : Window
         else
         {
             attrs.Value = string.Empty;
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsShuffleOn
+        attrs = doc.CreateAttribute("isShuffleOn");
+        if (vm.IsShuffleOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
         }
         opts.SetAttributeNode(attrs);
 
