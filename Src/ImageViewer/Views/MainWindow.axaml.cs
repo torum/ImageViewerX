@@ -640,18 +640,6 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
     {
-        if (this.WindowState == WindowState.Normal)
-        {
-            _winRestoreHeight = (int)this.Height;
-            _winRestoreWidth = (int)this.Width;
-            _winRestoreTop = (int)this.Position.X;
-            _winRestoreLeft = (int)this.Position.X;
-        }
-        else
-        {
-            //this.WindowState = WindowState.Normal;
-        }
-
         SaveSettings();
     }
 
