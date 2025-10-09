@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -738,7 +739,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public Methods ==
 
-    public async void DroppedFiles(List<ImageInfo> images)
+    public async void DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
         if ((images is null) || (images.Count < 1))
         {
@@ -760,6 +761,7 @@ public partial class MainViewModel : ObservableObject
             _timerSlideshow.Stop();
         }
 
+        // rest 
         _queueIndex = 0;
 
         // Let's keep the prev image for the sake of fade out effects.
@@ -787,6 +789,15 @@ public partial class MainViewModel : ObservableObject
                 _queue.Shuffle();
             }
 
+            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
+            {
+                var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
+                if (item is not null)
+                {
+                    _queueIndex = _queue.IndexOf(item);
+                }
+            }
+
             // Test -> yap. IsWorking causes await delay 300 mil sec in Show(),
             IsWorking = false;
 
@@ -804,10 +815,19 @@ public partial class MainViewModel : ObservableObject
             // Display images in the ListBox.
             OnPropertyChanged(nameof(Queue));
 
-            // Need this for trigger UpdateVisibleItems because if only a few images are loaded, scrollviewer does not fire changed events.
-            QueueHasBeenChanged?.Invoke(this, 0);
+            // Need this for trigger UpdateVisibleItems because if only a few images are loaded,
+            // scrollviewer does not fire changed events.
+            if (_queueIndex > 0)
+            {   
+                // Shuffled
+                QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
+            }
+            else
+            {
+                QueueHasBeenChanged?.Invoke(this, 0);
+            }
 
-            IsWorking = false;
+                IsWorking = false;
             await Task.Yield();
         }
         else

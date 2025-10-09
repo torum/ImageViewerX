@@ -1082,11 +1082,12 @@ public partial class MainWindow : Window
 
                 // 
                 var droppedImages = new List<ImageInfo>();
+                string singleSelectedOriginalFile = string.Empty;
 
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    string singleSelectedOriginalFile = string.Empty;
+                    
                     List<string> IncludeSiblingsFileNames = [];
 
                     // Single file dropped, in that case, get all siblings.
@@ -1112,8 +1113,15 @@ public partial class MainWindow : Window
 
                                     if (IncludeSiblingsFileNames.Count > 1)
                                     {
+                                        // removes now duplicated image file path.
+                                        IncludeSiblingsFileNames.RemoveAt(0);
+
                                         IComparer<string> _naturalSortComparer = new NaturalSortComparer();
                                         IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
+
+                                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
+                                        // Using `Distinct()` will remove the remaining duplicates.
+                                        //IncludeSiblingsFileNames = IncludeSiblingsFileNames.OrderBy(x => x == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
                                     }
                                 }
                             }
@@ -1165,14 +1173,12 @@ public partial class MainWindow : Window
                     }
 
                     // Sort originaly selected single file to first position.
-                    if ((droppedImages.Count > 0) && (!string.IsNullOrEmpty(singleSelectedOriginalFile)))
-                    {
+                    //if ((droppedImages.Count > 0) && (!string.IsNullOrEmpty(singleSelectedOriginalFile)))
+                    //{
                         // Sort to move the first instance of 'originalFile' to the front, followed by other files.
                         // Using `Distinct()` will remove the remaining duplicates.
-#pragma warning disable IDE0305
-                        droppedImages = droppedImages.OrderBy(x => x.ImageFilePath == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
-#pragma warning restore IDE0305
-                    }
+                        //droppedImages = droppedImages.OrderBy(x => x.ImageFilePath == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
+                    //}
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
                 {
@@ -1200,7 +1206,9 @@ public partial class MainWindow : Window
                     {
                         if (System.IO.File.Exists(droppedFiles[0]))
                         {
-                            var originalFile = droppedFiles[0];
+                            //var originalFile = droppedFiles[0];
+                            singleSelectedOriginalFile = droppedFiles[0];
+
                             // Get parent dir.
                             string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
                             if (parentFolderPath is not null)
@@ -1219,9 +1227,10 @@ public partial class MainWindow : Window
                                     {
                                         // Sort to move the first instance of 'originalFile' to the front, followed by other files.
                                         // Using `Distinct()` will remove the remaining duplicates.
-#pragma warning disable IDE0305
-                                        droppedFiles = droppedFiles.OrderBy(x => x == originalFile ? 0 : 1).Distinct().ToList();
-#pragma warning restore IDE0305
+                                        //droppedFiles = droppedFiles.OrderBy(x => x == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
+
+                                        // removes now duplicated image file path.
+                                        droppedFiles.RemoveAt(0);
                                     }
                                 }
                             }
@@ -1262,7 +1271,7 @@ public partial class MainWindow : Window
                 //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _mainViewModel.DroppedFiles(droppedImages);
+                    _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
                 });
             }
             catch (Exception ex)
