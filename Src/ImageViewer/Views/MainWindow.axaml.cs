@@ -1087,7 +1087,6 @@ public partial class MainWindow : Window
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    
                     List<string> IncludeSiblingsFileNames = [];
 
                     // Single file dropped, in that case, get all siblings.
@@ -1113,17 +1112,19 @@ public partial class MainWindow : Window
 
                                     if (IncludeSiblingsFileNames.Count > 1)
                                     {
-                                        // removes now duplicated image file path.
-                                        IncludeSiblingsFileNames.RemoveAt(0);
-
                                         IComparer<string> _naturalSortComparer = new NaturalSortComparer();
-                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
-
-                                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
-                                        // Using `Distinct()` will remove the remaining duplicates.
-                                        //IncludeSiblingsFileNames = IncludeSiblingsFileNames.OrderBy(x => x == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
+                                        //IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
+                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)]; 
                                     }
                                 }
+                                else
+                                {
+                                    IncludeSiblingsFileNames.Add(singleSelectedOriginalFile);
+                                }
+                            }
+                            else
+                            {
+                                IncludeSiblingsFileNames.Add(singleSelectedOriginalFile);
                             }
                         }
                         else if (System.IO.Directory.Exists(fileNames[0]))
