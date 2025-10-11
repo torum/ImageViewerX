@@ -103,18 +103,18 @@ public partial class MainWindow : Window
         InitKeyBindigs();
     }
 
-    public void SetStdin(string[] args)
+    public async void SetStdin(string[] args)
     {
         if ((args is not null) && args.Length > 0)
         {
             // Too early?
             this.WelcomeMessageGrid.IsVisible = false;
 
-            ProcessFiles([.. args]);
+            await ProcessFiles([.. args]);
         }
         else
         {
-            _mainViewModel.IsWorking = true;
+            //_mainViewModel.IsWorking = false;
         }
     }
 
@@ -933,7 +933,7 @@ public partial class MainWindow : Window
         */
     }
 
-    private void Window_Drop(object sender, DragEventArgs e)
+    private async void Window_Drop(object sender, DragEventArgs e)
     {
         if (_mainViewModel.IsWorking)
         {
@@ -956,19 +956,34 @@ public partial class MainWindow : Window
             e.DragEffects = DragDropEffects.None;
         }
 
+        _mainViewModel.IsWorking = true;
 
+        // awaiting is bad right here.
+        //await Task.Yield();
+
+        var droppedFiles = await GetDroppedItems(e.DataTransfer);
+        if (droppedFiles.Count > 0)
+        {
+            await ProcessFiles(droppedFiles);
+        }
+        else
+        {
+            _mainViewModel.IsWorking = false;
+        }
+
+        /*
         // Check if the dropped data contains file paths
         //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
         if (e.DataTransfer.Contains(DataFormat.File))
         {
-            var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList(); //e.Data.GetFiles()?.ToList(); Deprecated.
+            var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList();
             if (fileNames is not null && fileNames.Count != 0)
             {
                 var droppedFiles = new List<string>();
                 foreach (var file in fileNames)
                 {
                     var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
-                    if (filePath != null) 
+                    if (filePath != null)
                     {
                         droppedFiles.Add(filePath);
                     }
@@ -977,25 +992,50 @@ public partial class MainWindow : Window
                 if (droppedFiles.Count > 0)
                 {
                     //_ = ProcessFiles(droppedFiles);
-                    ProcessFiles(droppedFiles);
+                    await ProcessFiles(droppedFiles);
                 }
-
-                // Fire and forget.
-                //_ = ProcessFiles(fileNames);
-                ////ProcessFiles(fileNames.Select(x => x.Path.LocalPath).ToList);
             }
         }
+        */
+    }
+
+    private static Task<List<string>> GetDroppedItems(IDataTransfer data)
+    {
+        //ATN: Do not await in here.
+        
+        var droppedFiles = new List<string>();
+        // Check if the dropped data contains file paths
+        //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
+        if (data.Contains(DataFormat.File))
+        {
+            var fileNames = data.GetItems(DataFormat.File)?.ToList();
+            if (fileNames is not null && fileNames.Count != 0)
+            {
+                foreach (var file in fileNames)
+                {
+                    var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
+                    if (filePath != null)
+                    {
+                        droppedFiles.Add(filePath);
+                    }
+                }
+
+                if (droppedFiles.Count > 0)
+                {
+                    //ProcessFiles(droppedFiles);
+                }
+            }
+        }
+
+        return Task.FromResult(droppedFiles);
     }
 
     private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
     {
         // On Linux.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            //Sort
-            IComparer<string> _naturalSortComparer = new NaturalSortComparer();
-            fileNames = [.. fileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
-        }
+        //Sort
+        IComparer<string> _naturalSortComparer = new NaturalSortComparer();
+        fileNames = [.. fileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
 
         // File first
         List<FileSystemInfo> files = [];
@@ -1030,27 +1070,18 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ProcessFiles(List<string> fileNames)
+    private async Task ProcessFiles(List<string> fileNames)
     {
-        if (_mainViewModel.IsWorking)
-        {
-            // I'm busy.
-            return;
-        }
-
         _mainViewModel.IsWorking = true;
-        //await Task.Yield();
 
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
         // Don't _ =, nor await = . at all. 
-        Task.Run(() =>
+        await Task.Run(() =>
         {
             Dispatcher.UIThread.Post(() =>
             {
                 _mainViewModel.IsWorking = true;
             });
-
-            //await Task.Yield();
 
             var validExt = _mainViewModel.ValidExtensions;
 
@@ -1085,7 +1116,7 @@ public partial class MainWindow : Window
                 string singleSelectedOriginalFile = string.Empty;
 
                 // Linux for sort
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) //RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || 
                 {
                     List<string> IncludeSiblingsFileNames = [];
 
@@ -1114,7 +1145,7 @@ public partial class MainWindow : Window
                                     {
                                         IComparer<string> _naturalSortComparer = new NaturalSortComparer();
                                         //IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
-                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)]; 
+                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
                                     }
                                 }
                                 else
@@ -1176,12 +1207,12 @@ public partial class MainWindow : Window
                     // Sort originaly selected single file to first position.
                     //if ((droppedImages.Count > 0) && (!string.IsNullOrEmpty(singleSelectedOriginalFile)))
                     //{
-                        // Sort to move the first instance of 'originalFile' to the front, followed by other files.
-                        // Using `Distinct()` will remove the remaining duplicates.
-                        //droppedImages = droppedImages.OrderBy(x => x.ImageFilePath == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
+                    // Sort to move the first instance of 'originalFile' to the front, followed by other files.
+                    // Using `Distinct()` will remove the remaining duplicates.
+                    //droppedImages = droppedImages.OrderBy(x => x.ImageFilePath == singleSelectedOriginalFile ? 0 : 1).Distinct().ToList();
                     //}
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)))
+                else // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
                     var droppedFiles = new List<string>();
 
@@ -1197,7 +1228,7 @@ public partial class MainWindow : Window
                         {
                             // Recursively get all files from a dropped folder
                             var filesInFolder = Directory.GetFiles(item, "*", SearchOption.AllDirectories);//.Path.LocalPath
-                            //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+                                                                                                           //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
                             droppedFiles.AddRange(filesInFolder);
                         }
                     }
@@ -1238,22 +1269,24 @@ public partial class MainWindow : Window
                         }
                     }
 
-                    foreach (var file in droppedFiles)
+                    foreach (var fileFullPath in droppedFiles)
                     {
-                        if (!MainViewModel.HasImageExtension(file, validExt))
+                        if (!MainViewModel.HasImageExtension(fileFullPath, validExt))
                         {
                             continue;
                         }
 
                         // Avoid MacOS's garbage. Use char overload for faster comp if possible.
-                        if ((file.StartsWith('.')) || (file.StartsWith("._")))
+                        string fileName = System.IO.Path.GetFileName(fileFullPath);
+
+                        if (fileName.StartsWith('.') || fileName.StartsWith("._"))
                         {
                             continue;
                         }
 
                         var img = new ImageInfo
                         {
-                            ImageFilePath = file
+                            ImageFilePath = fileFullPath
                         };
 
                         droppedImages.Add(img);
@@ -1281,21 +1314,11 @@ public partial class MainWindow : Window
                 {
                     _mainViewModel.IsWorking = false;
                 });
-
                 // TODO: log error and show error message.
                 Debug.WriteLine(ex);
             }
-            finally
-            {
-                /*
-                Dispatcher.UIThread.Post(() =>
-                {
-                    _mainViewModel.IsWorking = false;
-                });
-                */
-            }
         });
-    } //Avalonia.Platform.Storage.IStorageItem
+    } 
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
@@ -1849,6 +1872,12 @@ public partial class MainWindow : Window
 
     public async Task OpenFilePicker()
     {
+        if (_mainViewModel.IsWorking)
+        {
+            // Already processing. 
+            return;
+        }
+
         // TODO: Make/Move this to DialogService.
 
         // Get the IStorageProvider for the current window
@@ -1911,13 +1940,13 @@ public partial class MainWindow : Window
 
             if (droppedFiles.Count > 0)
             {
-                ProcessFiles(droppedFiles);
-
                 string? parentFolderPath = System.IO.Path.GetDirectoryName(droppedFiles[0]);
                 if (parentFolderPath is not null)
                 {
                     _lastOpenedDirectory = parentFolderPath;
                 }
+
+                await ProcessFiles(droppedFiles);
             }
         }
     }
@@ -1929,6 +1958,12 @@ public partial class MainWindow : Window
 
     public async Task SelectFolder()
     {
+        if (_mainViewModel.IsWorking)
+        {
+            // Already processing. 
+            return;
+        }
+
         // Get the IStorageProvider for the current window
         var storageProvider = TopLevel.GetTopLevel(this)?.StorageProvider;
 
@@ -1969,9 +2004,9 @@ public partial class MainWindow : Window
 
             if (droppedFiles.Count > 0)
             {
-                ProcessFiles(droppedFiles);
-
                 _lastOpenedDirectory = droppedFiles[0];
+
+                await ProcessFiles(droppedFiles);
             }
         }
     }

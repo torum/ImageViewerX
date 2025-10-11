@@ -103,10 +103,8 @@ public partial class MainViewModel : ObservableObject
                 return;
             }
 
-            // Don't await. No _ = either.
-            Task.Run(() => GetPictures(_visibleItemsImageInfo));
-            //_ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
-            //GetPictures(_visibleItemsImageInfo);
+            // Don't await here. Fire and forget. No _ = either.
+            _ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
         }
     }
 
@@ -751,9 +749,9 @@ public partial class MainViewModel : ObservableObject
         Dispatcher.UIThread.Post(async () =>
         {
 
-
         }, DispatcherPriority.Loaded);
         */
+
         IsWorking = true;
 
         if (_timerSlideshow.IsEnabled)
@@ -827,7 +825,7 @@ public partial class MainViewModel : ObservableObject
                 QueueHasBeenChanged?.Invoke(this, 0);
             }
 
-                IsWorking = false;
+            IsWorking = false;
             await Task.Yield();
         }
         else
@@ -951,85 +949,6 @@ public partial class MainViewModel : ObservableObject
         {
             return;
         }
-        /*
-        Dispatcher.UIThread.Post(async () =>
-        {
-            if (imageInfoItems is null)
-            {
-                Debug.WriteLine("imageInfoItems is null");
-                return;
-            }
-
-            if (Queue.Count <= 0)
-            {
-                Debug.WriteLine("Queue.Count <= 0");
-                return;
-            }
-
-            foreach (var item in imageInfoItems)
-            {
-                //await Task.Delay(10);
-
-                if (item is not ImageInfo img)
-                {
-                    Debug.WriteLine("item is not ImageInfo");
-                    continue;
-                }
-
-                if (img is null)
-                {
-                    Debug.WriteLine("img is null");
-                    continue;
-                }
-
-                if (img.IsAcquired)
-                {
-                    //Debug.WriteLine("img.IsAcquired");
-                    continue;
-                }
-
-                if (img.IsLoading)
-                {
-                    Debug.WriteLine("img.IsLoading");
-                    continue;
-                }
-                img.IsLoading = true;
-
-                if (File.Exists(img.ImageFilePath))
-                {
-                    img.IsLoading = true;
-
-                    //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
-
-                    try
-                    {
-                        Bitmap? bitmap = new(img.ImageFilePath);
-                        img.ImageSource = bitmap;
-                        img.IsAcquired = true;
-                        img.IsLoading = false;
-                    }
-                    catch (Exception e)
-                    {
-                        // TODO:
-
-                        img.IsAcquired = false;
-                        img.IsLoading = false;
-                        img.ImageSource = null;
-
-                        Debug.WriteLine("GetPictures: Exception while loading: " + img.ImageFilePath + Environment.NewLine + e.Message);
-
-                        continue;
-                    }
-                    finally
-                    {
-                        img.IsLoading = false;
-                    }
-
-                    await Task.Delay(20);
-                }
-            }
-        });
-        */
 
         if (imageInfoItems is null)
         {
@@ -1091,9 +1010,30 @@ public partial class MainViewModel : ObservableObject
                 {
                     Bitmap? bitmap = await Task.Run(() =>
                     {
-                        return new Bitmap(img.ImageFilePath);
+                        try
+                        {
+                            return new Bitmap(img.ImageFilePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Exception: Failed to load image @GetPictures on new Bitmap {img.ImageFilePath} - {ex}");
+                        }
+                        return null;
                     });
                     //Bitmap? bitmap = new(img.ImageFilePath);
+
+                    if (bitmap is null)
+                    {
+                        // TODO
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            img.IsAcquired = false;
+                            img.IsLoading = false;
+                            img.ImageSource = null;
+                        });
+                        return;
+                    }
+
                     img.ImageSource = bitmap;
 
                     //img.ImageSource = img.ImageSource.CreateScaledBitmap(new PixelSize((int)(img.ImageSource.PixelSize.Width / 1.5), (int)(img.ImageSource.PixelSize.Height / 1.5)));
