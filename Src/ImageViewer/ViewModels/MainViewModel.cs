@@ -739,6 +739,8 @@ public partial class MainViewModel : ObservableObject
 
     public async void DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
+        Debug.WriteLine("DroppedFiles()");
+
         if ((images is null) || (images.Count < 1))
         {
             IsWorking = false;
@@ -784,11 +786,15 @@ public partial class MainViewModel : ObservableObject
 
             if (_isShuffleOn)
             {
+                Debug.WriteLine("Shuffle @DroppedFiles()");
+
                 _queue.Shuffle();
             }
 
             if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
             {
+                Debug.WriteLine("Getting SingleSelectedOriginalFile @DroppedFiles()");
+
                 var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
                 if (item is not null)
                 {
@@ -801,6 +807,8 @@ public partial class MainViewModel : ObservableObject
 
             IsTransitionReversed = false;
 
+            Debug.WriteLine("Calling Show() @DroppedFiles()");
+
             // Show Image.
             await Show();
 
@@ -809,6 +817,8 @@ public partial class MainViewModel : ObservableObject
 
             IsWorking = true;
             await Task.Yield();
+
+            Debug.WriteLine("Updating Queue @DroppedFiles()");
 
             // Display images in the ListBox.
             OnPropertyChanged(nameof(Queue));
@@ -1155,20 +1165,6 @@ public partial class MainViewModel : ObservableObject
         }
 
         /*
-        if (await ShowImage(img))
-        {
-            if (IsSlideshowOn)
-            {
-                _timerSlideshow.Start();
-            }
-
-            //_queueIndex = index;
-
-            QueueHasBeenChanged?.Invoke(this, _queueIndex-1);
-        }
-        */
-
-
 
         if (await ShowImage(img))
         {
@@ -1180,14 +1176,22 @@ public partial class MainViewModel : ObservableObject
             QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
         }
 
-        /*
-        // Little hackkish..
-        _ = Task.Run(async () =>
+        */
+        
+        // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep for example.
+        await Task.Run(async () =>
         {
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsWorking = true;
+            });
+
             if (await ShowImage(img))
             {
                 Dispatcher.UIThread.Post(() =>
                 {
+                    IsWorking = false;
+
                     if (IsSlideshowOn)
                     {
                         _timerSlideshow.Start();
@@ -1199,7 +1203,6 @@ public partial class MainViewModel : ObservableObject
                 });
             }
         });
-        */
     }
 
     private Task<bool> ShowImage(ImageInfo img)

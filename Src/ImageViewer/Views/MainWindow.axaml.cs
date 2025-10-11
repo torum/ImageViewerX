@@ -110,7 +110,8 @@ public partial class MainWindow : Window
             // Too early?
             this.WelcomeMessageGrid.IsVisible = false;
 
-            await ProcessFiles([.. args]);
+            //await ProcessFiles([.. args]);
+            await Task.Run(() => ProcessFiles([.. args]));
         }
         else
         {
@@ -935,6 +936,8 @@ public partial class MainWindow : Window
 
     private async void Window_Drop(object sender, DragEventArgs e)
     {
+        Debug.WriteLine("Window_Drop()");
+
         if (_mainViewModel.IsWorking)
         {
             // Already processing. 
@@ -961,10 +964,15 @@ public partial class MainWindow : Window
         // awaiting is bad right here.
         //await Task.Yield();
 
+        Debug.WriteLine("Getting GetDroppedItems @Window_Drop");
+
         var droppedFiles = await GetDroppedItems(e.DataTransfer);
         if (droppedFiles.Count > 0)
         {
-            await ProcessFiles(droppedFiles);
+            Debug.WriteLine("Starting await ProcessFiles @Window_Drop");
+
+            //await ProcessFiles(droppedFiles);
+            await Task.Run(() => ProcessFiles(droppedFiles));
         }
         else
         {
@@ -1001,8 +1009,10 @@ public partial class MainWindow : Window
 
     private static Task<List<string>> GetDroppedItems(IDataTransfer data)
     {
+        Debug.WriteLine("GetDroppedItems()");
+
         //ATN: Do not await in here.
-        
+
         var droppedFiles = new List<string>();
         // Check if the dropped data contains file paths
         //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
@@ -1072,6 +1082,8 @@ public partial class MainWindow : Window
 
     private async Task ProcessFiles(List<string> fileNames)
     {
+        Debug.WriteLine("ProcessFiles()");
+
         _mainViewModel.IsWorking = true;
 
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
@@ -1118,6 +1130,8 @@ public partial class MainWindow : Window
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) //RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || 
                 {
+                    Debug.WriteLine("Linux sort mode @ProcessFiles()");
+
                     List<string> IncludeSiblingsFileNames = [];
 
                     // Single file dropped, in that case, get all siblings.
@@ -1214,6 +1228,8 @@ public partial class MainWindow : Window
                 }
                 else // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
+                    Debug.WriteLine("None-Linux sort mode @ProcessFiles()");
+
                     var droppedFiles = new List<string>();
 
                     // Get all files recursively.
@@ -1305,6 +1321,7 @@ public partial class MainWindow : Window
                 //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(() =>
                 {
+                    Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
                     _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
                 });
             }
@@ -1946,7 +1963,8 @@ public partial class MainWindow : Window
                     _lastOpenedDirectory = parentFolderPath;
                 }
 
-                await ProcessFiles(droppedFiles);
+                //await ProcessFiles(droppedFiles);
+                await Task.Run(() => ProcessFiles(droppedFiles));
             }
         }
     }
@@ -2006,7 +2024,8 @@ public partial class MainWindow : Window
             {
                 _lastOpenedDirectory = droppedFiles[0];
 
-                await ProcessFiles(droppedFiles);
+                //await ProcessFiles(droppedFiles);
+                await Task.Run(() => ProcessFiles(droppedFiles));
             }
         }
     }
