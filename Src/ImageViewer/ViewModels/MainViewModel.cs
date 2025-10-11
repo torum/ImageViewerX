@@ -29,12 +29,16 @@ public partial class MainViewModel : ObservableObject
 {
     #region == Private ==
 
+    private CancellationTokenSource _cts = new();
+    //private static readonly CancellationToken token = _cts.Token;
+
     private int _queueIndex = 0;
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timerSlideshow;
     //private readonly System.Threading.Lock _lock = new();
     //private bool _isBusy = false;
     private List<ImageInfo> _originalQueue = [];
+
     #endregion
 
     #region == Internal/Bind Properties ==
@@ -739,7 +743,7 @@ public partial class MainViewModel : ObservableObject
 
     public async void DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
-        Debug.WriteLine("DroppedFiles()");
+        //Debug.WriteLine("DroppedFiles()");
 
         if ((images is null) || (images.Count < 1))
         {
@@ -786,14 +790,14 @@ public partial class MainViewModel : ObservableObject
 
             if (_isShuffleOn)
             {
-                Debug.WriteLine("Shuffle @DroppedFiles()");
+                //Debug.WriteLine("Shuffle @DroppedFiles()");
 
                 _queue.Shuffle();
             }
 
             if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
             {
-                Debug.WriteLine("Getting SingleSelectedOriginalFile @DroppedFiles()");
+                //Debug.WriteLine("Getting SingleSelectedOriginalFile @DroppedFiles()");
 
                 var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
                 if (item is not null)
@@ -807,7 +811,7 @@ public partial class MainViewModel : ObservableObject
 
             IsTransitionReversed = false;
 
-            Debug.WriteLine("Calling Show() @DroppedFiles()");
+            //Debug.WriteLine("Calling Show() @DroppedFiles()");
 
             // Show Image.
             await Show();
@@ -818,7 +822,7 @@ public partial class MainViewModel : ObservableObject
             IsWorking = true;
             await Task.Yield();
 
-            Debug.WriteLine("Updating Queue @DroppedFiles()");
+            //Debug.WriteLine("Updating Queue @DroppedFiles()");
 
             // Display images in the ListBox.
             OnPropertyChanged(nameof(Queue));
@@ -949,6 +953,12 @@ public partial class MainViewModel : ObservableObject
         return false;
     }
 
+    public void CleanUp()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     #endregion
 
     #region == Private Methods ==
@@ -975,6 +985,12 @@ public partial class MainViewModel : ObservableObject
         foreach (var item in imageInfoItems)
         {
             await Task.Delay(10);
+
+            if (_cts.IsCancellationRequested)
+            {
+                Debug.WriteLine($"@GetPictures() in foreach IsCancellationRequested");
+                return;
+            }
 
             if (item is not ImageInfo img)
             {
@@ -1020,6 +1036,12 @@ public partial class MainViewModel : ObservableObject
                 {
                     Bitmap? bitmap = await Task.Run(() =>
                     {
+                        if (_cts.IsCancellationRequested)
+                        {
+                            Debug.WriteLine($"@GetPictures() before new Bitmap IsCancellationRequested");
+                            return null;
+                        }
+
                         try
                         {
                             return new Bitmap(img.ImageFilePath);
@@ -1029,7 +1051,7 @@ public partial class MainViewModel : ObservableObject
                             Debug.WriteLine($"Exception: Failed to load image @GetPictures on new Bitmap {img.ImageFilePath} - {ex}");
                         }
                         return null;
-                    });
+                    }, _cts.Token);
                     //Bitmap? bitmap = new(img.ImageFilePath);
 
                     if (bitmap is null)
@@ -1146,7 +1168,13 @@ public partial class MainViewModel : ObservableObject
 
         if (IsWorking)
         {
-            await Task.Delay(500);
+            await Task.Delay(300);
+        }
+
+        if (_cts.IsCancellationRequested)
+        {
+            Debug.WriteLine($"@Show() IsCancellationRequested");
+            return;
         }
 
         var img = _queue[_queueIndex];
@@ -1188,6 +1216,12 @@ public partial class MainViewModel : ObservableObject
 
             if (await ShowImage(img))
             {
+                if (_cts.IsCancellationRequested)
+                {
+                    Debug.WriteLine($"@Show() after ShowImage() IsCancellationRequested");
+                    return;
+                }
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     IsWorking = false;
@@ -1202,11 +1236,17 @@ public partial class MainViewModel : ObservableObject
                     QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
                 });
             }
-        });
+        }, _cts.Token);
     }
 
     private Task<bool> ShowImage(ImageInfo img)
     {
+        if (_cts.IsCancellationRequested)
+        {
+            Debug.WriteLine($"@ShowImage IsCancellationRequested");
+            return Task.FromResult(false);
+        }
+
         if (string.IsNullOrEmpty(img.ImageFilePath))
         {
             return Task.FromResult(false);

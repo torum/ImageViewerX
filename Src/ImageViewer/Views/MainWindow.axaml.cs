@@ -657,6 +657,8 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
     {
+        _mainViewModel.CleanUp();
+
         SaveSettings();
     }
 
@@ -936,7 +938,7 @@ public partial class MainWindow : Window
 
     private async void Window_Drop(object sender, DragEventArgs e)
     {
-        Debug.WriteLine("Window_Drop()");
+        //Debug.WriteLine("Window_Drop()");
 
         if (_mainViewModel.IsWorking)
         {
@@ -964,12 +966,12 @@ public partial class MainWindow : Window
         // awaiting is bad right here.
         //await Task.Yield();
 
-        Debug.WriteLine("Getting GetDroppedItems @Window_Drop");
+        //Debug.WriteLine("Getting GetDroppedItems @Window_Drop");
 
         var droppedFiles = await GetDroppedItems(e.DataTransfer);
         if (droppedFiles.Count > 0)
         {
-            Debug.WriteLine("Starting await ProcessFiles @Window_Drop");
+            //Debug.WriteLine("Starting await ProcessFiles @Window_Drop");
 
             //await ProcessFiles(droppedFiles);
             await Task.Run(() => ProcessFiles(droppedFiles));
@@ -1009,7 +1011,7 @@ public partial class MainWindow : Window
 
     private static Task<List<string>> GetDroppedItems(IDataTransfer data)
     {
-        Debug.WriteLine("GetDroppedItems()");
+        //Debug.WriteLine("GetDroppedItems()");
 
         //ATN: Do not await in here.
 
@@ -1082,7 +1084,7 @@ public partial class MainWindow : Window
 
     private async Task ProcessFiles(List<string> fileNames)
     {
-        Debug.WriteLine("ProcessFiles()");
+        //Debug.WriteLine("ProcessFiles()");
 
         _mainViewModel.IsWorking = true;
 
@@ -1321,7 +1323,8 @@ public partial class MainWindow : Window
                 //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(() =>
                 {
-                    Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
+                    //Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
+
                     _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
                 });
             }
