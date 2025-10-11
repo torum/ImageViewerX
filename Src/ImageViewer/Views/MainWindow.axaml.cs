@@ -1528,7 +1528,7 @@ public partial class MainWindow : Window
         {
             if (this.DataContext is MainViewModel)
             {
-                //vm.NextKeyPressed();
+                //vm.PrevKeyPressed();
 
                 e.Handled = true;
             }
@@ -1605,6 +1605,20 @@ public partial class MainWindow : Window
             this.Focus();
             e.Handled = true;
         }
+        /*
+        else if (e.Key == Key.Right)
+        {
+            _mainViewModel.NextKeyPressed();
+
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Left)
+        {
+            _mainViewModel.PrevKeyPressed();
+
+            e.Handled = true;
+        }
+        */
     }
 
     private void ListBox_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -1613,6 +1627,20 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
         }
+        /*
+        else if (e.Key == Key.Right)
+        {
+            //vm.NextKeyPressed();
+
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Left)
+        {
+            //vm.PrevKeyPressed();
+
+            e.Handled = true;
+        }
+        */
     }
 
     private void ListBox_GotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)

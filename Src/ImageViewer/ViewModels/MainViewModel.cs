@@ -1039,6 +1039,7 @@ public partial class MainViewModel : ObservableObject
                         if (_cts.IsCancellationRequested)
                         {
                             Debug.WriteLine($"@GetPictures() before new Bitmap IsCancellationRequested");
+
                             return null;
                         }
 
@@ -1050,7 +1051,9 @@ public partial class MainViewModel : ObservableObject
                         {
                             Debug.WriteLine($"Exception: Failed to load image @GetPictures on new Bitmap {img.ImageFilePath} - {ex}");
                         }
+                        
                         return null;
+
                     }, _cts.Token);
                     //Bitmap? bitmap = new(img.ImageFilePath);
 
@@ -1206,7 +1209,7 @@ public partial class MainViewModel : ObservableObject
 
         */
         
-        // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep for example.
+        // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep or loading very large file for example.
         await Task.Run(async () =>
         {
             Dispatcher.UIThread.Post(() =>
@@ -1630,6 +1633,23 @@ public partial class MainViewModel : ObservableObject
 
         ListBoxItemSelected(img);
     }
+
+    [RelayCommand]
+    public void GoNext()
+    {
+        Debug.WriteLine("GoNext");
+
+        NextKeyPressed();
+    }
+
+    [RelayCommand]
+    public void GoPrev()
+    {
+        Debug.WriteLine("GoPrev");
+
+        PrevKeyPressed();
+    }
+
 
     [RelayCommand]
     public static void Quit()

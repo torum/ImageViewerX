@@ -326,7 +326,7 @@
 		</Grid>
 
 		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
-			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.1" IsVisible="False"></Border>
+			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
 			
 			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
 				<!--  helper:ListBoxStackPanelBehaviors.VisibleItems="{Binding VisibleItemsImageInfo, Mode=OneWayToSource}" -->
@@ -452,6 +452,10 @@
 				<ListBox.KeyBindings>
 					<!--  Enter  -->
 					<KeyBinding Command="{Binding QueueListviewEnterKeyCommand}" Gesture="Enter" CommandParameter="{Binding SelectedQueueImage}" />
+
+					<KeyBinding Command="{Binding GoNextCommand}" Gesture="Right" />
+					<KeyBinding Command="{Binding GoPrevCommand}" Gesture="Left" />
+					
 				</ListBox.KeyBindings>
 				<ListBox.ItemsPanel>
 					<ItemsPanelTemplate>
