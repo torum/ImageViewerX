@@ -29,7 +29,7 @@ public partial class MainViewModel : ObservableObject
 {
     #region == Private ==
 
-    private CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
     //private static readonly CancellationToken token = _cts.Token;
 
     private int _queueIndex = 0;
@@ -1143,6 +1143,22 @@ public partial class MainViewModel : ObservableObject
 
     private async Task Show()
     {
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
+
+        if (IsWorking)
+        {
+            await Task.Delay(300);
+        }
+
+        if (_cts.IsCancellationRequested)
+        {
+            Debug.WriteLine($"@Show() IsCancellationRequested");
+            return;
+        }
+
         if (_queue.Count <= 0) return;
         if (_queueIndex < 0) return;
         if (_queueIndex > (_queue.Count - 1)) 
@@ -1162,22 +1178,6 @@ public partial class MainViewModel : ObservableObject
 
                 return;
             }
-        }
-
-        if (_timerSlideshow.IsEnabled)
-        {
-            _timerSlideshow.Stop();
-        }
-
-        if (IsWorking)
-        {
-            await Task.Delay(300);
-        }
-
-        if (_cts.IsCancellationRequested)
-        {
-            Debug.WriteLine($"@Show() IsCancellationRequested");
-            return;
         }
 
         var img = _queue[_queueIndex];
