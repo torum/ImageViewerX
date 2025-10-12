@@ -117,7 +117,7 @@ public partial class App : Application
         var dt = DateTime.Now;
         var nowString = dt.ToString("yyyy/MM/dd HH:mm:ss");
 
-        _errortxt.AppendLine(nowString + " - " + errorTxt + " - " + detailedErrorMessageTxt);
+        _errortxt.AppendLine(nowString + " - " + errorTxt + " - " + detailedErrorMessageTxt + Environment.NewLine);
     }
 
     public static void SaveErrorLog()
