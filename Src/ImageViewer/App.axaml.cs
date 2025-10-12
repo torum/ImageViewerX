@@ -96,7 +96,6 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-
     // Log file.
     private static readonly StringBuilder _errortxt = new();
     private static readonly string _logFilePath = System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + System.IO.Path.DirectorySeparatorChar + AppName + "_errors.txt";
@@ -107,18 +106,18 @@ public partial class App : Application
         e.Handled = true;
 
         // Log the exception for debugging
-        //Console.WriteLine($"An unhandled exception occurred: {e.Exception}");
         AppendErrorLog("DispatcherUnhandledException", e.Exception.ToString());
 
-        SaveErrorLog();
+        // Don't save logs unless IsSaveLog is true in vm.
+        //SaveErrorLog();
     }
 
-    public static void AppendErrorLog(string errorTxt, string kindTxt)
+    public static void AppendErrorLog(string errorTxt, string detailedErrorMessageTxt)
     {
         var dt = DateTime.Now;
         var nowString = dt.ToString("yyyy/MM/dd HH:mm:ss");
 
-        _errortxt.AppendLine(nowString + " - " + kindTxt + " - " + errorTxt);
+        _errortxt.AppendLine(nowString + " - " + errorTxt + " - " + detailedErrorMessageTxt);
     }
 
     public static void SaveErrorLog()

@@ -1050,6 +1050,8 @@ public partial class MainViewModel : ObservableObject
                         catch (Exception ex)
                         {
                             Debug.WriteLine($"Exception: Failed to load image @GetPictures on new Bitmap {img.ImageFilePath} - {ex}");
+
+                            App.AppendErrorLog($"Exception @GetPictures on new Bitmap() {img.ImageFilePath}", ex.ToString());
                         }
                         
                         return null;
@@ -1315,11 +1317,11 @@ public partial class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 // TODO: 
-
                 Debug.WriteLine($"{ex} @ShowImage");
-
                 img.IsAcquired = false;
                 img.IsLoading = false;
+
+                App.AppendErrorLog($"Exception @ShowImage on new Bitmap() {img.ImageFilePath}", ex.ToString());
 
                 // no longer needed
                 //bitmap = null;

@@ -807,15 +807,14 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            Debug.WriteLine("Exception@OnWindowClosing: " + ex);
+            Debug.WriteLine("Exception @OnWindowClosing: " + ex);
 
-            if (vm.IsSaveLog)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    App.AppendErrorLog("Exception@OnWindowClosing", ex.Message);
-                });
-            }
+            App.AppendErrorLog("Exception @OnWindowClosing", ex.Message);
+        }
+
+        if (vm.IsSaveLog)
+        {
+            App.SaveErrorLog();
         }
     }
 
