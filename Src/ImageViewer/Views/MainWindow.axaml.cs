@@ -101,6 +101,9 @@ public partial class MainWindow : Window
 
         // TODO: more
         InitKeyBindigs();
+
+        //Debug.WriteLine(TextBlockFileNameFullPath.FontSize.ToString());
+        //Debug.WriteLine(TextBlockFileNameFullPath.FontFamily.ToString());
     }
 
     public async void SetStdin(string[] args)
@@ -962,6 +965,7 @@ public partial class MainWindow : Window
 
         _mainViewModel.IsWorking = true;
 
+        /*
         // awaiting is bad right here.
         //await Task.Yield();
 
@@ -979,8 +983,8 @@ public partial class MainWindow : Window
         {
             _mainViewModel.IsWorking = false;
         }
+        */
 
-        /*
         // Check if the dropped data contains file paths
         //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
         if (e.DataTransfer.Contains(DataFormat.File))
@@ -994,18 +998,39 @@ public partial class MainWindow : Window
                     var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
                     if (filePath != null)
                     {
+                        if (string.IsNullOrEmpty(filePath)){
+                            continue;
+                        }
+
                         droppedFiles.Add(filePath);
+                        //Debug.WriteLine(filePath);
                     }
+                    //Debug.WriteLine(file);
                 }
 
                 if (droppedFiles.Count > 0)
                 {
+                    // Remove dupe. Looks like a bug in Avalonia... when dropped from desktop for the first time.
+                    droppedFiles = [.. droppedFiles.Distinct()];
+
                     //_ = ProcessFiles(droppedFiles);
-                    await ProcessFiles(droppedFiles);
+                    //await ProcessFiles(droppedFiles);
+                    await Task.Run(() => ProcessFiles(droppedFiles));
+                }
+                else
+                {
+                    _mainViewModel.IsWorking = false;
                 }
             }
+            else
+            {
+                _mainViewModel.IsWorking = false;
+            }
         }
-        */
+        else
+        {
+            _mainViewModel.IsWorking = false;
+        }
     }
 
     private static Task<List<string>> GetDroppedItems(IDataTransfer data)
@@ -1131,7 +1156,7 @@ public partial class MainWindow : Window
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) //RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || 
                 {
-                    Debug.WriteLine("Linux sort mode @ProcessFiles()");
+                    //Debug.WriteLine("Linux sort mode @ProcessFiles()");
 
                     List<string> IncludeSiblingsFileNames = [];
 
@@ -1229,7 +1254,7 @@ public partial class MainWindow : Window
                 }
                 else // if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    Debug.WriteLine("None-Linux sort mode @ProcessFiles()");
+                    //Debug.WriteLine("None-Linux sort mode @ProcessFiles()");
 
                     var droppedFiles = new List<string>();
 
@@ -1248,6 +1273,8 @@ public partial class MainWindow : Window
                                                                                                            //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
                             droppedFiles.AddRange(filesInFolder);
                         }
+
+                        //Debug.WriteLine(item);
                     }
 
                     // Single file dropped, in that case, get all siblings.

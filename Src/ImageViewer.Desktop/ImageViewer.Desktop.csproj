@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\ImageViewerX-AppIcon.ico</ApplicationIcon>
 
 
 	  <PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,10 +30,6 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> -->
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Content Include="Assets\AppIcon.ico" />
-	</ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.7" />
   </ItemGroup>
@@ -43,7 +39,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\AppIcon.ico">
+    <AvaloniaResource Remove="Assets\ImageViewerX-AppIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\ImageViewerX-AppIcon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\ImageViewerX-AppIcon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

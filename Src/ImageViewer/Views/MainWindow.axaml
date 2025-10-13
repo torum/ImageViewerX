@@ -542,6 +542,10 @@
 
 		</Grid>
 
+		<Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="24" IsHitTestVisible="False" IsVisible="False">
+			<TextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}"></TextBlock>
+		</Grid>
+
 		<Grid x:Name="WelcomeMessageGrid" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="True">
 			<StackPanel HorizontalAlignment="Center" Spacing="24" Margin="24,36,24,0">
 				<TextBlock x:Name="DragDropTextBlock" Text="Drag &amp; Drop" TextWrapping="Wrap" TextTrimming="WordEllipsis" FontWeight="Bold" FontSize="36" HorizontalAlignment="Center"></TextBlock>

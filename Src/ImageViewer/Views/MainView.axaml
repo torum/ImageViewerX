@@ -22,7 +22,7 @@
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>
 		-->
-		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
+		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="mod:ImageInfo">
 					<Image Margin="0" Source="{Binding ImageSource}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"
