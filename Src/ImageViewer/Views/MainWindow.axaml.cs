@@ -985,7 +985,7 @@ public partial class MainWindow : Window
             }
 
             droppedFiles.Add(filePath);
-            //Debug.WriteLine(filePath);
+            Debug.WriteLine(filePath);
             //Debug.WriteLine(file);
         }
 
@@ -2127,9 +2127,6 @@ public partial class MainWindow : Window
 
     }
 
-    private void Window_Closed_1(object? sender, System.EventArgs e)
-    {
-    }
 }
 
 public static partial class NativeMethods

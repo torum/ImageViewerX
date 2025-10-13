@@ -9,7 +9,6 @@
   </PropertyGroup>
   <PropertyGroup Label="Avalonia">
     <AvaloniaNameGeneratorAttachDevTools>False</AvaloniaNameGeneratorAttachDevTools>
-    <ApplicationIcon>ImageViewerX-AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,10 +18,6 @@
   <ItemGroup>
     <AvaloniaResource Remove="Assets\Resources.ja-JP.resx" />
     <AvaloniaResource Remove="Assets\Resources.resx" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="ImageViewerX-AppIcon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,4 +50,5 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
 </Project>

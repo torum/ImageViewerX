@@ -23,7 +23,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ImageViewer.ViewModels;
 
@@ -120,7 +119,7 @@ public partial class MainViewModel : ObservableObject
             }
 
             // Don't await here. Fire and forget. No _ = either.
-            _ = Task.Run(() => GetPictures(_visibleItemsImageInfo));
+            _ = Task.Run(() => GetPictures(_visibleItemsImageInfo), _cts.Token);
         }
     }
 
@@ -804,10 +803,13 @@ public partial class MainViewModel : ObservableObject
 
         // Let's keep the prev image for the sake of fade out effects.
         //DiplayImage1 = null;
+
         // Just because.
         SelectedQueueImage = null;
 
         _queue.Clear();
+        _originalQueue.Clear();
+
         _queue = new ObservableCollection<ImageInfo>(images);
         _originalQueue = images;//[.. images];
 
@@ -995,6 +997,9 @@ public partial class MainViewModel : ObservableObject
     public void Destroy()
     {
         _cts.Dispose();
+
+        _originalQueue.Clear();
+        Queue.Clear();
     }
 
     #endregion
@@ -1384,7 +1389,7 @@ public partial class MainViewModel : ObservableObject
         if (_queueIndex > 20)
         {
             int i = _queueIndex - 15;
-            if (_queue[i].ImageSource is not null)
+            if ((_queue[i].ImageSource is not null) && _queue[i].IsAcquired)
             {
                 _queue[i].ImageSource?.Dispose();
                 _queue[i].ImageSource = null;
@@ -1409,7 +1414,7 @@ public partial class MainViewModel : ObservableObject
         if (_queueIndex + 20 < c)
         {
             int i = _queueIndex + 15;
-            if (_queue[i].ImageSource is not null)
+            if ((_queue[i].ImageSource is not null) && _queue[i].IsAcquired)
             {
                 _queue[i].ImageSource?.Dispose();
                 _queue[i].ImageSource = null;
@@ -1759,14 +1764,14 @@ public static class PathHelper
         // If filename has no subdirectories, return it
         if (Path.GetDirectoryName(fullPath) == null || Path.GetDirectoryName(fullPath)?.Length == 0)
         {
-            Debug.WriteLine($"MinimizeName1 {fullPath}");
+            //Debug.WriteLine($"MinimizeName1 {fullPath}");
             return fullPath;
         }
 
         // If filename fits, no need to do anything
         if (MeasureTextWidth(fullPath, fontFamily, fontSize, fontStyle, fontWeight) <= maxWidth)
         {
-            Debug.WriteLine($"MinimizeName2 {fullPath}");
+            //Debug.WriteLine($"MinimizeName2 {fullPath}");
             return fullPath;
         }
 
@@ -1776,7 +1781,7 @@ public static class PathHelper
 
         if (string.IsNullOrEmpty(dir) || string.IsNullOrEmpty(drive) || dir == drive)
         {
-            Debug.WriteLine($"MinimizeName3 {fn}");
+            //Debug.WriteLine($"MinimizeName3 {fn}");
             return fn;
         }
 
@@ -1802,12 +1807,12 @@ public static class PathHelper
 
         if (textWidth <= maxWidth)
         {
-            Debug.WriteLine($"MinimizeName4 {composedName}");
+            //Debug.WriteLine($"MinimizeName4 {composedName}");
             return composedName;
         }
         else
         {
-            Debug.WriteLine($"MinimizeName5 {fn}");
+            //Debug.WriteLine($"MinimizeName5 {fn}");
             return fn;
         }
     }
