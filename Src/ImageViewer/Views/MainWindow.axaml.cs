@@ -823,7 +823,7 @@ public partial class MainWindow : Window
 
     private void Window_Closed(object? sender, System.EventArgs e)
     {
-        // Cleanup?
+        _mainViewModel.Destroy();
     }
 
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
@@ -953,6 +953,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Check if the dropped data contains file paths
         // Only allow copy effect for file drops
         if (e.DataTransfer.Contains(DataFormat.File))
         {
@@ -961,9 +962,46 @@ public partial class MainWindow : Window
         else
         {
             e.DragEffects = DragDropEffects.None;
+            
+            return;
         }
 
         _mainViewModel.IsWorking = true;
+
+        var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList();
+        if (fileNames is null || fileNames.Count == 0)
+        {
+            _mainViewModel.IsWorking = false;
+            return;
+        }
+
+        var droppedFiles = new List<string>();
+        foreach (var file in fileNames)
+        {
+            var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
+            if (string.IsNullOrEmpty(filePath))
+            {
+                continue;
+            }
+
+            droppedFiles.Add(filePath);
+            //Debug.WriteLine(filePath);
+            //Debug.WriteLine(file);
+        }
+
+        if (droppedFiles.Count > 0)
+        {
+            // Remove dupe. Looks like a bug in Avalonia... when dropped from desktop for the first time.
+            droppedFiles = [.. droppedFiles.Distinct()];
+
+            //_ = ProcessFiles(droppedFiles);
+            //await ProcessFiles(droppedFiles);
+            await Task.Run(() => ProcessFiles(droppedFiles));
+        }
+        else
+        {
+            _mainViewModel.IsWorking = false;
+        }
 
         /*
         // awaiting is bad right here.
@@ -984,53 +1022,6 @@ public partial class MainWindow : Window
             _mainViewModel.IsWorking = false;
         }
         */
-
-        // Check if the dropped data contains file paths
-        //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
-        if (e.DataTransfer.Contains(DataFormat.File))
-        {
-            var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList();
-            if (fileNames is not null && fileNames.Count != 0)
-            {
-                var droppedFiles = new List<string>();
-                foreach (var file in fileNames)
-                {
-                    var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
-                    if (filePath != null)
-                    {
-                        if (string.IsNullOrEmpty(filePath)){
-                            continue;
-                        }
-
-                        droppedFiles.Add(filePath);
-                        //Debug.WriteLine(filePath);
-                    }
-                    //Debug.WriteLine(file);
-                }
-
-                if (droppedFiles.Count > 0)
-                {
-                    // Remove dupe. Looks like a bug in Avalonia... when dropped from desktop for the first time.
-                    droppedFiles = [.. droppedFiles.Distinct()];
-
-                    //_ = ProcessFiles(droppedFiles);
-                    //await ProcessFiles(droppedFiles);
-                    await Task.Run(() => ProcessFiles(droppedFiles));
-                }
-                else
-                {
-                    _mainViewModel.IsWorking = false;
-                }
-            }
-            else
-            {
-                _mainViewModel.IsWorking = false;
-            }
-        }
-        else
-        {
-            _mainViewModel.IsWorking = false;
-        }
     }
 
     private static Task<List<string>> GetDroppedItems(IDataTransfer data)
@@ -2134,6 +2125,10 @@ public partial class MainWindow : Window
         // TODO: dim caption button color only when deactivated.
         //this.Opacity = 0.8;
 
+    }
+
+    private void Window_Closed_1(object? sender, System.EventArgs e)
+    {
     }
 }
 

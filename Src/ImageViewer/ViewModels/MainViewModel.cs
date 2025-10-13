@@ -990,6 +990,10 @@ public partial class MainViewModel : ObservableObject
     public void CleanUp()
     {
         _cts.Cancel();
+    }
+
+    public void Destroy()
+    {
         _cts.Dispose();
     }
 
