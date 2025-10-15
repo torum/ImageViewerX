@@ -1,34 +1,23 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Generators;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Primitives.PopupPositioning;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.ViewModels;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.Arm;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -80,7 +69,8 @@ public partial class MainWindow : Window
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
         _mainViewModel.Fullscreen += (sender, arg) => { this.OnFullscreen(arg); };
-        _mainViewModel.HideFlyout += OnHideFlyout;
+        _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
+        _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
 
         this.DetachedFromVisualTree += (s, e) =>
         {
@@ -90,14 +80,15 @@ public partial class MainWindow : Window
             _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
             _mainViewModel.Fullscreen -= (sender, arg) => { this.OnFullscreen(arg); };
-            _mainViewModel.HideFlyout -= OnHideFlyout;
+            _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
+            _mainViewModel.SlideshowIntervalChanged -= (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
         };
 
         _timerPointerCursorHide = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(3)
         };
-        _timerPointerCursorHide.Tick += OnTimerTick;
+        _timerPointerCursorHide.Tick += OnPointerCursorHideTimerTick;
 
         // TODO: more
         InitKeyBindigs();
@@ -125,7 +116,7 @@ public partial class MainWindow : Window
         this.WelcomeMessageGrid.IsVisible = false;
     }
 
-    private void OnTimerTick(object? sender, EventArgs e)
+    private void OnPointerCursorHideTimerTick(object? sender, EventArgs e)
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
 
@@ -190,7 +181,7 @@ public partial class MainWindow : Window
 
         if (e.NewValue is WindowState.FullScreen)
         {
-            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
+            Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
             vm.IsFullscreen = true;
         }
         else
@@ -307,7 +298,102 @@ public partial class MainWindow : Window
         }
     }
 
-    public void OnHideFlyout(object? sender, EventArgs e)
+    public void OnSlideshowIntervalChanged(long interval)
+    {
+        this.Interval1SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval2SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval3SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval4SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval5SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval6SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval7SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval8SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval9SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval10SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval15SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval20SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval30SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval60SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval120SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval180SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval300SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval600SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+
+        if (interval <= 1) 
+        {
+            this.Interval1SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 2) 
+        {
+            this.Interval2SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 3)
+        {
+            this.Interval3SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 4)
+        {
+            this.Interval4SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 5)
+        {
+            this.Interval5SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 6)
+        {
+            this.Interval6SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 7)
+        {
+            this.Interval7SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 8)
+        {
+            this.Interval8SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 9)
+        {
+            this.Interval9SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 10)
+        {
+            this.Interval10SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 15)
+        {
+            this.Interval15SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 20)
+        {
+            this.Interval20SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 30)
+        {
+            this.Interval30SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 60)
+        {
+            this.Interval60SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 120)
+        {
+            this.Interval120SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 180)
+        {
+            this.Interval180SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval == 300)
+        {
+            this.Interval300SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+        else if (interval >= 600)
+        {
+            this.Interval600SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+        }
+    }
+
+    public void OnHideMenuFlyout(object? sender, EventArgs e)
     {
         var flyout = FlyoutBase.GetAttachedFlyout(this);
 
@@ -424,6 +510,14 @@ public partial class MainWindow : Window
             }
 
             this.WindowState = windowState;
+
+            if (windowState == WindowState.FullScreen)
+            {
+                // Somehow, initial state change does not get captured by window property changed event.
+                
+                SetWindowStateFullScreen();
+                _mainViewModel.IsFullscreen = true;
+            }
         }
         else
         {
@@ -582,11 +676,6 @@ public partial class MainWindow : Window
                 }
             }
         }
-
-        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
-        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
-        this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
-        this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -602,27 +691,34 @@ public partial class MainWindow : Window
             this.BackgroundLayerBorder.StartFadeInAnimation(TimeSpan.FromSeconds(0.8), 0.9f);
         }
 
+        // set default.
+        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
+        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+        this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
+        this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
+
         // Windows Only
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return;
+            // Initial screen detection upon loading
+            _currentScreen = GetCurrentScreen();
+
+            //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
+
+            // Subscribe to position changes
+            this.PositionChanged += MainWindow_PositionChanged;
+
+            // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
+            if (this.Screens is { } screens)
+            {
+                screens.Changed += Screens_Changed;
+            }
+
+            UpdateSystemDPIScalingFactor();
         }
 
-        // Initial screen detection upon loading
-        _currentScreen = GetCurrentScreen();
-
-        //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
-
-        // Subscribe to position changes
-        this.PositionChanged += MainWindow_PositionChanged;
-
-        // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
-        if (this.Screens is { } screens)
-        {
-            screens.Changed += Screens_Changed;
-        }
-
-        UpdateSystemDPIScalingFactor();
+        // update menu 
+        OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
     }
 
     private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
@@ -1425,11 +1521,11 @@ public partial class MainWindow : Window
                 }
 
                 //_mainViewModel.DroppedFiles(droppedImages);
-                Dispatcher.UIThread.Post(() =>
+                Dispatcher.UIThread.Post(async () =>
                 {
                     //Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
 
-                    _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
+                    await _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
                 });
             }
             catch (Exception ex)
@@ -1552,15 +1648,23 @@ public partial class MainWindow : Window
             }
         }
 
+        // restore visibility
         if (_mainViewModel.IsViewImageListOn)
         {
             // queue count more than one, show image list.
             _mainViewModel.IsQueueListBoxVisible = _mainViewModel.Queue.Count != 1;
         }
-
+        // restore visibility
         if (_mainViewModel.IsViewFilePathPopupOn)
         {
-            _mainViewModel.IsFilePathPopupVisible = true;
+            if (_mainViewModel.Queue.Count > 0)
+            {
+                _mainViewModel.IsFilePathPopupVisible = true;
+            }
+            else
+            {
+                _mainViewModel.IsFilePathPopupVisible = false;
+            }
         }
     }
 
@@ -1583,13 +1687,13 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.Right)
         {
-            _mainViewModel.NextKeyPressed();
+            _ = _mainViewModel.NextKeyPressed();
 
             e.Handled = true;
         }
         else if (e.Key == Avalonia.Input.Key.Left)
         {
-            _mainViewModel.PrevKeyPressed();
+            _ = _mainViewModel.PrevKeyPressed();
 
             e.Handled = true;
         }
@@ -1681,12 +1785,12 @@ public partial class MainWindow : Window
     {
         if (e.Delta.Y > 0) // Scroll up
         {
-            _mainViewModel.PrevKeyPressed();
+            _ = _mainViewModel.PrevKeyPressed();
         }
         else if (e.Delta.Y < 0) // Scroll down
         {
             //
-            _mainViewModel.NextKeyPressed();
+            _ = _mainViewModel.NextKeyPressed();
         }
 
         e.Handled = true;
@@ -1726,7 +1830,7 @@ public partial class MainWindow : Window
 
         lb.SelectedItem = Item;
 
-        _mainViewModel.ListBoxItemSelected(Item);
+        _ = _mainViewModel.ListBoxItemSelected(Item);
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -2270,7 +2374,10 @@ public partial class MainWindow : Window
         {
             if (_mainViewModel.CanToggleViewFilePath())
             {
-                this.PopupFilePath.IsOpen = true;
+                if ((_mainViewModel.Queue.Count > 0) && (!_mainViewModel.IsFullscreen))
+                {
+                    this.PopupFilePath.IsOpen = true;
+                }
             }
         }
     }

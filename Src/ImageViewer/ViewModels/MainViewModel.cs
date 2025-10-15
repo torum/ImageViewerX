@@ -1,28 +1,20 @@
-using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.Platform.Storage;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ImageViewer.Models;
 using ImageViewer.Views;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 
 namespace ImageViewer.ViewModels;
 
@@ -32,7 +24,7 @@ public partial class MainViewModel : ObservableObject
 
     private readonly CancellationTokenSource _cts = new();
 
-    private int _queueIndex = 0;
+    private int _queueIndex;
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timerSlideshow;
     //private bool _isBusy = false;
@@ -73,10 +65,10 @@ public partial class MainViewModel : ObservableObject
             _clientAreaHeight = value;
         }
     }
-    public FontFamily TFontFamily { get; set; } = FontFamily.Default;
-    public double TFontSize { get; set; } = 14;
-    public FontWeight TFontWeight { get; set; } = FontWeight.Regular;
-    public FontStyle TFontStyle { get; set; } = FontStyle.Normal;
+    public FontFamily TextFontFamily { get; set; } = FontFamily.Default;
+    public double TextFontSize { get; set; } = 14;
+    public FontWeight TextFontWeight { get; set; } = FontWeight.Regular;
+    public FontStyle TextFontStyle { get; set; } = FontStyle.Normal;
 
     #endregion
 
@@ -180,7 +172,7 @@ public partial class MainViewModel : ObservableObject
                     return string.Empty;
                 }
 
-                return PathHelper.MinimizeName(_displayImage.ImageFilePath, TFontFamily, TFontSize, TFontStyle, TFontWeight, ClientAreaWidth, 450);
+                return PathHelper.MinimizeName(_displayImage.ImageFilePath, TextFontFamily, TextFontSize, TextFontStyle, TextFontWeight, ClientAreaWidth, 450);
             }
             else
             {
@@ -217,7 +209,13 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             _isFullscreen = value;
-            OnPropertyChanged(nameof(IsFullscreenOn));
+            OnPropertyChanged(nameof(IsFullscreen));
+
+            Fullscreen?.Invoke(this, IsFullscreen);
+            HideMenuFlyout?.Invoke(this, EventArgs.Empty);
+
+            ToggleViewFilePathCommand.NotifyCanExecuteChanged();
+            ToggleViewImageListCommand.NotifyCanExecuteChanged();
 
             // update opts control
             IsFullscreenOn = _isFullscreen;
@@ -330,6 +328,8 @@ public partial class MainViewModel : ObservableObject
             {
                 _timerSlideshow.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
             }
+
+            SlideshowIntervalChanged?.Invoke(this, _slideshowTimerInterval);
         }
     }
 
@@ -438,7 +438,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(IsShuffleOn));
             OnPropertyChanged(nameof(DataShuffleIcon));
 
-            HideFlyout?.Invoke(this, EventArgs.Empty);
+            HideMenuFlyout?.Invoke(this, EventArgs.Empty);
 
             if (_queue.Count > 0)
             {
@@ -515,7 +515,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(IsRepeatOn));
             OnPropertyChanged(nameof(DataRepeatIcon));
 
-            HideFlyout?.Invoke(this, EventArgs.Empty);
+            HideMenuFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -536,7 +536,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(IsStayOnTop));
             OnPropertyChanged(nameof(DataStayOnTopIcon));
 
-            HideFlyout?.Invoke(this, EventArgs.Empty);
+            HideMenuFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -559,7 +559,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(SlideshowStartStopString));
 
             SlideshowStatusChanged?.Invoke(this, EventArgs.Empty);
-            HideFlyout?.Invoke(this, EventArgs.Empty);
+            HideMenuFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -576,9 +576,6 @@ public partial class MainViewModel : ObservableObject
             _isFullscreenOn = value;
             OnPropertyChanged(nameof(IsFullscreenOn));
             OnPropertyChanged(nameof(DataFullscreenOnIcon));
-
-            Fullscreen?.Invoke(this, IsFullscreenOn);
-            HideFlyout?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -594,10 +591,13 @@ public partial class MainViewModel : ObservableObject
 
             _isViewFilePathPopupOn = value;
 
-            IsFilePathPopupVisible = _isViewFilePathPopupOn;
-
             OnPropertyChanged(nameof(IsViewFilePathPopupOn));
             OnPropertyChanged(nameof(DataViewFilePathPopupOnIcon));
+
+            //if (_queue.Count <= 1) return;
+            if (_isFullscreen) return;
+
+            IsFilePathPopupVisible = _isViewFilePathPopupOn;
         }
     }
 
@@ -613,10 +613,13 @@ public partial class MainViewModel : ObservableObject
 
             _isViewImageListOn = value;
 
-            IsQueueListBoxVisible = _isViewImageListOn;
-
             OnPropertyChanged(nameof(IsViewImageListOn));
             OnPropertyChanged(nameof(DataViewImageListOnIcon));
+
+            if (_queue.Count <= 1) return;
+            if (_isFullscreen) return;
+
+            IsQueueListBoxVisible = _isViewImageListOn;
         }
     }
 
@@ -809,7 +812,10 @@ public partial class MainViewModel : ObservableObject
     private readonly string _uncheckedBox = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
 
     private readonly string _checkedCircle = "M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z";
+    public Avalonia.Media.Geometry DataCheckedCircleIcon => Avalonia.Media.Geometry.Parse(_checkedCircle);
+    
     private readonly string _unCheckedCircle = "M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14ZM8 13C5.23858 13 3 10.7614 3 8C3 5.23858 5.23858 3 8 3C10.7614 3 13 5.23858 13 8C13 10.7614 10.7614 13 8 13Z";
+    public Avalonia.Media.Geometry DataUnCheckedCircleIcon => Avalonia.Media.Geometry.Parse(_unCheckedCircle);
 
     public string DataCrossfadeIcon
     {
@@ -992,7 +998,8 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? SlideshowStatusChanged;
     public event EventHandler? QueueLoaded;
     public event EventHandler<bool>? Fullscreen;
-    public event EventHandler? HideFlyout;
+    public event EventHandler? HideMenuFlyout;
+    public event EventHandler<long>? SlideshowIntervalChanged;
 
     //
     public MainViewModel()
@@ -1014,7 +1021,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public Methods ==
 
-    public async void DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
+    public async Task DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
         //Debug.WriteLine("DroppedFiles()");
 
@@ -1061,10 +1068,18 @@ public partial class MainViewModel : ObservableObject
             // Hide welcome screen
             QueueLoaded?.Invoke(this, EventArgs.Empty);
 
-            if (IsViewImageListOn)
+            if (!IsFullscreen)
             {
-                // Hide if count = 1
-                IsQueueListBoxVisible = _queue.Count != 1;
+                // show file path if on.
+                IsFilePathPopupVisible = _isViewFilePathPopupOn;
+                // show listbox if on.
+                IsQueueListBoxVisible = _isViewImageListOn;
+
+                if (IsViewImageListOn)
+                {
+                    // Hide if count = 1
+                    IsQueueListBoxVisible = _queue.Count != 1;
+                }
             }
 
             if (_isShuffleOn)
@@ -1118,9 +1133,6 @@ public partial class MainViewModel : ObservableObject
                 QueueHasBeenChanged?.Invoke(this, 0);
             }
 
-            // show file path if set on.
-            IsFilePathPopupVisible = _isViewFilePathPopupOn;
-
             IsWorking = false;
             await Task.Yield();
         }
@@ -1148,7 +1160,7 @@ public partial class MainViewModel : ObservableObject
         */
     }
 
-    public async void NextKeyPressed()
+    public async Task NextKeyPressed()
     {
         if (_timerSlideshow.IsEnabled)
         {
@@ -1182,7 +1194,7 @@ public partial class MainViewModel : ObservableObject
         await Show();
     }
 
-    public async void PrevKeyPressed()
+    public async Task PrevKeyPressed()
     {
         if (_queue.Count <= 0) return;
 
@@ -1209,7 +1221,7 @@ public partial class MainViewModel : ObservableObject
         await Show();
     }
 
-    public async void ListBoxItemSelected(ImageInfo img)
+    public async Task ListBoxItemSelected(ImageInfo img)
     {
         if (img is null)
         {
@@ -1962,7 +1974,7 @@ public partial class MainViewModel : ObservableObject
     }
     public bool CanToggleViewFilePath()
     {
-        if (_queue.Count <= 0) return false;
+        //if (_queue.Count <= 0) return false;
         if (_isFullscreen) return false;
         return true;
     }
@@ -1974,7 +1986,7 @@ public partial class MainViewModel : ObservableObject
     }
     private bool CanToggleViewImageList()
     {
-        if (_queue.Count <= 1) return false;
+        //if (_queue.Count <= 1) return false;
         if (_isFullscreen) return false;
         return true;
     }
@@ -2078,7 +2090,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        ListBoxItemSelected(img);
+        _ = ListBoxItemSelected(img);
     }
 
     [RelayCommand]
@@ -2086,7 +2098,7 @@ public partial class MainViewModel : ObservableObject
     {
         Debug.WriteLine("GoNext");
 
-        NextKeyPressed();
+        _ = NextKeyPressed();
     }
 
     [RelayCommand]
@@ -2094,7 +2106,7 @@ public partial class MainViewModel : ObservableObject
     {
         Debug.WriteLine("GoPrev");
 
-        PrevKeyPressed();
+        _ = PrevKeyPressed();
     }
 
 
@@ -2139,6 +2151,7 @@ public static class PathHelper
     /// <param name="fontStyle">The font style used for measuring text.</param>
     /// <param name="fontWeight">The font weight used for measuring text.</param>
     /// <param name="maxWidth">The maximum width in device-independent pixels.</param>
+    /// <param name="margin">The margin width in device-independent pixels.</param>
     /// <returns>The minimized file path string.</returns>
     public static string MinimizeName(string fileName, FontFamily fontFamily, double fontSize, FontStyle fontStyle, FontWeight fontWeight, double maxWidth, double margin)
     {

@@ -1,16 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Generators;
-using Avalonia.Controls.Primitives;
-using Avalonia.Interactivity;
 using Avalonia.VisualTree;
-using ImageViewer.Models;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 

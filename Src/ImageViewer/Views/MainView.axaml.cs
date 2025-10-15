@@ -2,7 +2,6 @@
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.Styling;
@@ -10,8 +9,6 @@ using Avalonia.VisualTree;
 using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 

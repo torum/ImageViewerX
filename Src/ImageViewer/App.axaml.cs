@@ -8,7 +8,6 @@ using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
