@@ -8,28 +8,20 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ImageViewer.Views.MainView"
              x:DataType="vm:MainViewModel">
-	
+	<!--
+	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"></ScrollViewer>
+	-->
 	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
-		<!--
-		<Image x:Name="Image1" Margin="0" Source="{Binding DiplayImage1}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
-		-->
-		<!-- 
-		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DiplayImage1, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<TransitioningContentControl.ContentTemplate>
-				<DataTemplate DataType="Bitmap">
-					<Image Margin="0" Source="{Binding}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-				</DataTemplate>
-			</TransitioningContentControl.ContentTemplate>
-		</TransitioningContentControl>
-		-->
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="mod:ImageInfo">
-					<Image Margin="0" Source="{Binding ImageSource}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Center" HorizontalAlignment="Center"
-						    MaxWidth="{Binding ImageWidth, Mode=OneWay}" MaxHeight="{Binding ImageHeight, Mode=OneWay}"/>
+					<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"
+						    MaxWidth="{Binding ImageMaxWidth, Mode=OneWay}" MaxHeight="{Binding ImageMaxHeight, Mode=OneWay}"/>
 					<!-- Width="{Binding ImageWidth, Mode=OneWay}" Height="{Binding ImageHeight, Mode=OneWay}" -->
+					
 				</DataTemplate>
 			</TransitioningContentControl.ContentTemplate>
 		</TransitioningContentControl>
 	</Grid>
+		
 </UserControl>

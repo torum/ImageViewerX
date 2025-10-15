@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Models;
 
-public class ImageInfo : ObservableObject
+public sealed class ImageInfo : ObservableObject
 {
     public bool IsLoading { get; set; } = false;
     
@@ -49,6 +50,20 @@ public class ImageInfo : ObservableObject
         }
     }
 
+    private double _imageMaxWidth;
+    public double ImageMaxWidth
+    {
+        get => _imageMaxWidth;
+        set
+        {
+            if (_imageMaxWidth == value)
+                return;
+
+            _imageMaxWidth = value;
+            OnPropertyChanged(nameof(ImageMaxWidth));
+        }
+    }
+
     private double _imageHeight;
     public double ImageHeight
     {
@@ -60,6 +75,48 @@ public class ImageInfo : ObservableObject
 
             _imageHeight = value;
             OnPropertyChanged(nameof(ImageHeight));
+        }
+    }
+
+    private double _imageMaxHeight;
+    public double ImageMaxHeight
+    {
+        get => _imageMaxHeight;
+        set
+        {
+            if (_imageMaxHeight == value)
+                return;
+
+            _imageMaxHeight = value;
+            OnPropertyChanged(nameof(ImageMaxHeight));
+        }
+    }
+
+    private Avalonia.Media.Stretch _imageStretch = Stretch.Uniform;
+    public Avalonia.Media.Stretch ImageStretch
+    {
+        get => _imageStretch;
+        set
+        {
+            if (_imageStretch == value)
+                return;
+
+            _imageStretch = value;
+            OnPropertyChanged(nameof(ImageStretch));
+        }
+    }
+
+    private Avalonia.Media.StretchDirection _imageStretchDirection = StretchDirection.DownOnly;
+    public Avalonia.Media.StretchDirection ImageStretchDirection
+    {
+        get => _imageStretchDirection;
+        set
+        {
+            if (_imageStretchDirection == value)
+                return;
+
+            _imageStretchDirection = value;
+            OnPropertyChanged(nameof(ImageStretchDirection));
         }
     }
 }

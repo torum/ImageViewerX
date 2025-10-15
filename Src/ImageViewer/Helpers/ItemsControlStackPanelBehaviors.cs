@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 
-public class ItemsControlStackPanelBehaviors
+public sealed class ItemsControlStackPanelBehaviors
 {
     // The target is ScrollViewer(with ItemsControl inside), and the value is an IEnumerable of objects.
     public static readonly AttachedProperty<IEnumerable<object>> VisibleItemsProperty =

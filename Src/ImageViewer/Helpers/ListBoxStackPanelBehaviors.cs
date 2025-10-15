@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 
-public class ListBoxStackPanelBehaviors
+public sealed class ListBoxStackPanelBehaviors
 {
     // The target is ListBox, and the value is an IEnumerable of objects.
     public static readonly AttachedProperty<IEnumerable<object>> VisibleItemsProperty =

@@ -40,7 +40,7 @@ public partial class MainView : UserControl
         */
 
         _viewModel.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
-        
+
         this.DetachedFromVisualTree += (s, e) =>
         {
             _viewModel.TransitionsHasBeenChanged -= OnTransitionsHasBeenChanged;

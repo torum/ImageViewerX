@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 
-public class LinuxFilesComparer : IComparer<FileSystemInfo>
+public sealed class LinuxFilesComparer : IComparer<FileSystemInfo>
 {
     private readonly NaturalSortComparer _nameComparer = new();
 

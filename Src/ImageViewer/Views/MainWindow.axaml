@@ -101,7 +101,7 @@
 										</Grid.RowDefinitions>
 
 										<StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="4">
-											<Button Command="{Binding ToggleSlideshowCommand}" Width="66" Height="48" BorderThickness="0" Margin="4,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleSlideshowCommand}" ToolTip.Tip="Space" Width="66" Height="48" BorderThickness="0" Margin="4,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<Button.Styles>
 													<Style Selector=":disabled /template/ ContentPresenter">
 														<Setter Property="Opacity" Value="0.5"/>
@@ -131,7 +131,7 @@
 													<TextBlock Text="Repeat"></TextBlock>
 												</StackPanel>
 											</Button>
-											<Button Command="{Binding ToggleFullscreenCommand}" Width="66" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="F" Width="66" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataFullscreenOnIcon, Mode=OneWay}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
@@ -192,26 +192,88 @@
 					</MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
-			<MenuItem Header="View" IsVisible="False">
+			<MenuItem Header="View" IsVisible="True">
 				<MenuItem.Icon>
 					<PathIcon Data="M4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H9V3H4.5ZM13 6V4.5C13 3.67157 12.3284 3 11.5 3H10V6H13ZM10 13H11.5C12.3284 13 13 12.3284 13 11.5V10H10V13ZM13 7H10V9H13V7ZM2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4 4.5C4 4.22386 4.22386 4 4.5 4H7.5C7.77614 4 8 4.22386 8 4.5V7.5C8 7.77614 7.77614 8 7.5 8H4.5C4.22386 8 4 7.77614 4 7.5V4.5ZM5 5V7H7V5H5ZM4.5 9C4.22386 9 4 9.22386 4 9.5C4 9.77614 4.22386 10 4.5 10H7.5C7.77614 10 8 9.77614 8 9.5C8 9.22386 7.77614 9 7.5 9H4.5ZM4.5 11C4.22386 11 4 11.2239 4 11.5C4 11.7761 4.22386 12 4.5 12H7.5C7.77614 12 8 11.7761 8 11.5C8 11.2239 7.77614 11 7.5 11H4.5Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
 				</MenuItem.Icon>
-				<MenuItem Header="List">
+				<MenuItem Header="File Location" Command="{Binding ToggleViewFilePathCommand}">
+					<MenuItem.Styles>
+						<Style Selector=":disabled /template/ ContentPresenter">
+							<Setter Property="Opacity" Value="0.5"/>
+							<Setter Property="Background" Value="Transparent"/>
+						</Style>
+					</MenuItem.Styles>
 					<MenuItem.Icon>
-						<PathIcon Data="M4 5.5C4 5.22386 4.22386 5 4.5 5H5.5C5.77614 5 6 5.22386 6 5.5C6 5.77614 5.77614 6 5.5 6H4.5C4.22386 6 4 5.77614 4 5.5ZM4 8C4 7.72386 4.22386 7.5 4.5 7.5H5.5C5.77614 7.5 6 7.72386 6 8C6 8.27614 5.77614 8.5 5.5 8.5H4.5C4.22386 8.5 4 8.27614 4 8ZM4.5 10C4.22386 10 4 10.2239 4 10.5C4 10.7761 4.22386 11 4.5 11H5.5C5.77614 11 6 10.7761 6 10.5C6 10.2239 5.77614 10 5.5 10H4.5ZM4.5 3C3.11929 3 2 4.11929 2 5.5V10.5C2 11.8807 3.11929 13 4.5 13H11.5C12.8807 13 14 11.8807 14 10.5V5.5C14 4.11929 12.8807 3 11.5 3H4.5ZM3 5.5C3 4.67157 3.67157 4 4.5 4H7L7 12H4.5C3.67157 12 3 11.3284 3 10.5V5.5ZM8 12L8 4H11.5C12.3284 4 13 4.67157 13 5.5V10.5C13 11.3284 12.3284 12 11.5 12H8Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
-					</MenuItem.Icon>
-				</MenuItem>
-				<MenuItem Header="Title Bar">
-					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataViewFilePathPopupOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+					<!--
 						<PathIcon Data="M3 3C1.89543 3 1 3.89543 1 5V11C1 12.1046 1.89543 13 3 13H13C14.1046 13 15 12.1046 15 11V5C15 3.89543 14.1046 3 13 3H3ZM2 5C2 4.44772 2.44772 4 3 4H13C13.5523 4 14 4.44772 14 5V11C14 11.5523 13.5523 12 13 12H3C2.44772 12 2 11.5523 2 11V5ZM5 6C4.44772 6 4 6.44772 4 7C4 7.55228 4.44772 8 5 8H11C11.5523 8 12 7.55228 12 7C12 6.44772 11.5523 6 11 6H5Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+					-->
 					</MenuItem.Icon>
 				</MenuItem>
-				<MenuItem Header="Property Panel">
+				<MenuItem Header="Image List" Command="{Binding ToggleViewImageListCommand}">
+					<MenuItem.Styles>
+						<Style Selector=":disabled /template/ ContentPresenter">
+							<Setter Property="Opacity" Value="0.5"/>
+							<Setter Property="Background" Value="Transparent"/>
+						</Style>
+					</MenuItem.Styles>
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataViewImageListOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+					<!--
+						<PathIcon Data="M4 5.5C4 5.22386 4.22386 5 4.5 5H5.5C5.77614 5 6 5.22386 6 5.5C6 5.77614 5.77614 6 5.5 6H4.5C4.22386 6 4 5.77614 4 5.5ZM4 8C4 7.72386 4.22386 7.5 4.5 7.5H5.5C5.77614 7.5 6 7.72386 6 8C6 8.27614 5.77614 8.5 5.5 8.5H4.5C4.22386 8.5 4 8.27614 4 8ZM4.5 10C4.22386 10 4 10.2239 4 10.5C4 10.7761 4.22386 11 4.5 11H5.5C5.77614 11 6 10.7761 6 10.5C6 10.2239 5.77614 10 5.5 10H4.5ZM4.5 3C3.11929 3 2 4.11929 2 5.5V10.5C2 11.8807 3.11929 13 4.5 13H11.5C12.8807 13 14 11.8807 14 10.5V5.5C14 4.11929 12.8807 3 11.5 3H4.5ZM3 5.5C3 4.67157 3.67157 4 4.5 4H7L7 12H4.5C3.67157 12 3 11.3284 3 10.5V5.5ZM8 12L8 4H11.5C12.3284 4 13 4.67157 13 5.5V10.5C13 11.3284 12.3284 12 11.5 12H8Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+					-->
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Image Property" IsVisible="False">
+					<MenuItem.Styles>
+						<Style Selector=":disabled /template/ ContentPresenter">
+							<Setter Property="Opacity" Value="0.5"/>
+							<Setter Property="Background" Value="Transparent"/>
+						</Style>
+					</MenuItem.Styles>
 					<MenuItem.Icon>
 						<!-- close panel 
 						<PathIcon Data="M6.29289 8.50016L5.64645 9.1466C5.45118 9.34187 5.45118 9.65845 5.64645 9.85371C5.84171 10.049 6.15829 10.049 6.35355 9.85371L7.85355 8.35371C8.04882 8.15845 8.04882 7.84187 7.85355 7.6466L6.35355 6.1466C6.15829 5.95134 5.84171 5.95134 5.64645 6.1466C5.45118 6.34187 5.45118 6.65845 5.64645 6.85371L6.29289 7.50016H4.50185C4.2257 7.50016 4.00185 7.72402 4.00185 8.00016C4.00185 8.2763 4.2257 8.50016 4.50185 8.50016L6.29289 8.50016ZM12 13.0014C13.1046 13.0014 14 12.106 14 11.0014L14 4.99902C14 3.89445 13.1046 2.99902 12 2.99902H4C2.89543 2.99902 2 3.89446 2 4.99902V11.0014C2 12.106 2.89543 13.0014 4 13.0014L12 13.0014ZM13 11.0014C13 11.5537 12.5523 12.0014 12 12.0014H9.99847L9.99848 3.99902L12 3.99902C12.5523 3.99902 13 4.44674 13 4.99902L13 11.0014ZM8.99848 3.99902L8.99847 12.0014L4 12.0014C3.44771 12.0014 3 11.5537 3 11.0014L3 4.99902C3 4.44674 3.44772 3.99902 4 3.99902L8.99848 3.99902Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
 						-->
 						<PathIcon Data="M14 5.5C14 4.11929 12.8807 3 11.5 3H4.5C3.11929 3 2 4.11929 2 5.5V10.5C2 11.8807 3.11929 13 4.5 13H11.5C12.8807 13 14 11.8807 14 10.5V5.5ZM9 4V12H4.5C3.67157 12 3 11.3284 3 10.5V5.5C3 4.67157 3.67157 4 4.5 4H9ZM10 4H11.5C12.3284 4 13 4.67157 13 5.5V10.5C13 11.3284 12.3284 12 11.5 12H10V4Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+			<MenuItem Header="Image" IsVisible="True">
+				<MenuItem.Icon>
+					<PathIcon Data="M6.5 3C4.567 3 3 4.567 3 6.5C3 7.8962 3.81753 9.10145 5 9.66318V10.7439C3.25221 10.1262 2 8.45933 2 6.5C2 4.01472 4.01472 2 6.5 2C8.45933 2 10.1262 3.25221 10.7439 5H9.66318C9.10145 3.81753 7.8962 3 6.5 3ZM8 6C6.89543 6 6 6.89543 6 8V12C6 13.1046 6.89543 14 8 14H12C13.1046 14 14 13.1046 14 12V8C14 6.89543 13.1046 6 12 6H8ZM7 8C7 7.44772 7.44772 7 8 7H12C12.5523 7 13 7.44772 13 8V12C13 12.0896 12.9882 12.1764 12.9661 12.259L11.2374 10.5303C10.554 9.84691 9.44598 9.84691 8.76256 10.5303L7.03387 12.259C7.01178 12.1764 7 12.0896 7 12V8ZM7.74098 12.9661L9.46967 11.2374C9.76256 10.9445 10.2374 10.9445 10.5303 11.2374L12.259 12.9661C12.1764 12.9882 12.0896 13 12 13H8C7.91042 13 7.82359 12.9882 7.74098 12.9661ZM12.25 8.5C12.25 8.91421 11.9142 9.25 11.5 9.25C11.0858 9.25 10.75 8.91421 10.75 8.5C10.75 8.08579 11.0858 7.75 11.5 7.75C11.9142 7.75 12.25 8.08579 12.25 8.5Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
+				</MenuItem.Icon>
+				<MenuItem Header="Stretch In" Command="{Binding ToggleStretchInOnCommand}" IsVisible="True">
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataStretchInOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+						<!--
+						<PathIcon Data="M3 6C3 5.44772 3.44772 5 4 5H5C5.27614 5 5.5 5.22386 5.5 5.5C5.5 5.77614 5.27614 6 5 6H4V7C4 7.27614 3.77614 7.5 3.5 7.5C3.22386 7.5 3 7.27614 3 7V6ZM13 6C13 5.44772 12.5523 5 12 5L11 5C10.7239 5 10.5 5.22386 10.5 5.5C10.5 5.77614 10.7239 6 11 6H12V7C12 7.27614 12.2239 7.5 12.5 7.5C12.7761 7.5 13 7.27614 13 7V6ZM13 10C13 10.5523 12.5523 11 12 11H11C10.7239 11 10.5 10.7761 10.5 10.5C10.5 10.2239 10.7239 10 11 10H12V9C12 8.72386 12.2239 8.5 12.5 8.5C12.7761 8.5 13 8.72386 13 9V10ZM3 10C3 10.5523 3.44772 11 4 11H5C5.27614 11 5.5 10.7761 5.5 10.5C5.5 10.2239 5.27614 10 5 10H4V9C4 8.72386 3.77614 8.5 3.5 8.5C3.22386 8.5 3 8.72386 3 9V10ZM3 3C1.89543 3 1 3.89543 1 5V11C1 12.1046 1.89543 13 3 13H13C14.1046 13 15 12.1046 15 11V5C15 3.89543 14.1046 3 13 3H3ZM13 4C13.5523 4 14 4.44772 14 5V11C14 11.5523 13.5523 12 13 12H3C2.44772 12 2 11.5523 2 11V5C2 4.44772 2.44772 4 3 4H13Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+						-->
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Stretch Out" Command="{Binding ToggleStretchOutOnCommand}" IsVisible="True">
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataStretchOutOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+						<!--
+						<PathIcon Data="M6.35178 6.1509C6.54705 6.34616 6.54705 6.66275 6.35178 6.85801L5.71065 7.49915L7.24999 7.50049C7.52613 7.50073 7.74979 7.72478 7.74955 8.00092C7.74931 8.27707 7.52526 8.50073 7.24912 8.50049L5.70002 8.49914L6.35178 9.1509C6.54705 9.34616 6.54705 9.66275 6.35178 9.85801C6.15652 10.0533 5.83994 10.0533 5.64468 9.85801L4.14468 8.35801C3.94941 8.16275 3.94941 7.84616 4.14468 7.6509L5.64468 6.1509C5.83994 5.95564 6.15652 5.95564 6.35178 6.1509ZM10.3005 8.50048L9.65005 9.15096C9.45479 9.34623 9.45479 9.66281 9.65005 9.85807C9.84531 10.0533 10.1619 10.0533 10.3572 9.85807L11.8572 8.35807C12.0524 8.16281 12.0524 7.84623 11.8572 7.65096L10.3572 6.15096C10.1619 5.9557 9.84531 5.9557 9.65005 6.15096C9.45479 6.34622 9.45479 6.66281 9.65005 6.85807L10.2925 7.50048L8.75132 7.50049C8.47517 7.50049 8.25132 7.72435 8.25132 8.00049C8.25132 8.27663 8.47518 8.50049 8.75132 8.50049L10.3005 8.50048ZM2 4.99805C2 3.89348 2.89543 2.99805 4 2.99805H12C13.1046 2.99805 14 3.89348 14 4.99805V10.998C14 12.1026 13.1046 12.998 12 12.998H4C2.89543 12.998 2 12.1026 2 10.998V4.99805ZM4 3.99805C3.44772 3.99805 3 4.44576 3 4.99805V10.998C3 11.5503 3.44772 11.998 4 11.998H12C12.5523 11.998 13 11.5503 13 10.998V4.99805C13 4.44576 12.5523 3.99805 12 3.99805H4Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+						-->
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Stretch Both" IsVisible="False">
+					<MenuItem.Icon>
+						<PathIcon Data="M5.6556 2.63776C5.45592 2.8285 5.44868 3.145 5.63942 3.34468C5.83017 3.54436 6.14667 3.5516 6.34634 3.36086L7.65873 2.1072C7.85231 1.92228 8.15719 1.92264 8.35033 2.10803L9.65474 3.36003C9.85396 3.55125 10.1705 3.54476 10.3617 3.34554C10.5529 3.14632 10.5464 2.8298 10.3472 2.63858L9.0428 1.38658C8.46338 0.830434 7.54872 0.829343 6.96798 1.3841L5.6556 2.63776ZM3.3627 6.34489C3.55345 6.14522 3.54622 5.82872 3.34655 5.63797C3.14688 5.44721 2.83038 5.45444 2.63963 5.65411L1.38873 6.96348C0.83481 7.54329 0.834868 8.45622 1.38886 9.03596L2.64032 10.3456C2.8311 10.5452 3.1476 10.5524 3.34725 10.3616C3.54689 10.1709 3.55408 9.85436 3.3633 9.65471L2.11184 8.34509C1.92717 8.15184 1.92716 7.84753 2.11179 7.65426L3.3627 6.34489ZM6.34644 12.6379C6.14681 12.4471 5.83031 12.4542 5.63951 12.6538C5.44872 12.8535 5.45588 13.17 5.6555 13.3608L6.97 14.6171C7.55157 15.173 8.46806 15.171 9.04731 14.6128L10.3479 13.3593C10.5468 13.1677 10.5526 12.8512 10.361 12.6523C10.1694 12.4535 9.85284 12.4477 9.65401 12.6393L8.35337 13.8928C8.16029 14.0788 7.85479 14.0795 7.66094 13.8942L6.34644 12.6379ZM13.3616 5.65322C13.1704 5.45402 12.8539 5.44758 12.6547 5.63882C12.4555 5.83007 12.449 6.14659 12.6403 6.34578L13.898 7.6558C14.084 7.84952 14.0838 8.15558 13.8974 8.34899L12.6409 9.65324C12.4493 9.85211 12.4552 10.1686 12.6541 10.3602C12.8529 10.5518 13.1695 10.5459 13.3611 10.3471L14.6176 9.0428C15.1766 8.46258 15.1774 7.54441 14.6194 6.96323L13.3616 5.65322ZM6.5 4.99974C5.67157 4.99974 5 5.67131 5 6.49974V9.49973C5 10.3282 5.67157 10.9997 6.5 10.9997H9.5C10.3284 10.9997 11 10.3282 11 9.49973V6.49974C11 5.67131 10.3284 4.99974 9.5 4.99974H6.5ZM6 6.49974C6 6.22359 6.22385 5.99974 6.5 5.99974H9.5C9.77614 5.99974 10 6.22359 10 6.49974V9.49973C10 9.77588 9.77614 9.99973 9.5 9.99973H6.5C6.22385 9.99973 6 9.77588 6 9.49973V6.49974Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
+					</MenuItem.Icon>
+				</MenuItem>
+				<Separator/>
+				<MenuItem x:Name="MenuItemSystemDpiScalingFactor" Header="Override DPI Scaling" Command="{Binding ToggleSystemDpiScalingFactorCommand}" IsVisible="False">
+					<MenuItem.Icon>
+						<PathIcon Data="{Binding DataSystemDpiScalingFactorOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+						</PathIcon>
 					</MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
@@ -222,7 +284,12 @@
 				</MenuItem.Icon>
 			</MenuItem>
 
-			<MenuItem Header="Transitional Effects">
+			<MenuItem Header="Slideshow">
+				<MenuItem.Icon>
+					<PathIcon Data="M2 6.75C2 5.23122 3.23122 4 4.75 4H15.25C16.7688 4 18 5.23122 18 6.75V10.2572C17.6929 10.0035 17.3578 9.78261 17 9.59971V6.75C17 5.7835 16.2165 5 15.25 5H4.75C3.7835 5 3 5.7835 3 6.75V13.25C3 14.2165 3.7835 15 4.75 15H9.02242C9.05337 15.3434 9.11588 15.6777 9.20703 16H4.75C3.23122 16 2 14.7688 2 13.25V6.75ZM12.0652 11.442C12.3685 12.5231 11.7225 13.642 10.6346 13.9199L10.1735 14.0377C10.1586 14.1896 10.1509 14.3438 10.1509 14.4999C10.1509 14.6875 10.162 14.8725 10.1835 15.0541L10.5331 15.1368C11.6525 15.4014 12.3185 16.5536 11.9892 17.6557L11.8628 18.0785C12.12 18.2817 12.3998 18.4559 12.6975 18.5964L13.0225 18.2523C13.8123 17.416 15.1431 17.4167 15.932 18.2538L16.2694 18.6118C16.5618 18.4769 16.8372 18.3095 17.0912 18.1142L16.9351 17.5575C16.6318 16.4764 17.2778 15.3575 18.3657 15.0795L18.8263 14.9619C18.8412 14.81 18.8489 14.6559 18.8489 14.4999C18.8489 14.3121 18.8378 14.127 18.8162 13.9452L18.4672 13.8627C17.3478 13.598 16.6818 12.4459 17.0111 11.3438L17.1373 10.9215C16.8801 10.7182 16.6003 10.5439 16.3025 10.4034L15.9778 10.7472C15.188 11.5835 13.8572 11.5828 13.0683 10.7457L12.7309 10.3877C12.4385 10.5226 12.1631 10.6899 11.909 10.8852L12.0652 11.442ZM14.4999 15.4999C13.9476 15.4999 13.4999 15.0521 13.4999 14.4999C13.4999 13.9476 13.9476 13.4999 14.4999 13.4999C15.0522 13.4999 15.4999 13.9476 15.4999 14.4999C15.4999 15.0521 15.0522 15.4999 14.4999 15.4999Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					</PathIcon>
+				</MenuItem.Icon>
+			<MenuItem Header="Transition Effect">
 				<MenuItem.Icon>
 					<PathIcon Data="M3.29289 3H4.70711L1 6.70711V5.29289L3.29289 3ZM1 8.79289V10.2071L5.15175 6.05536C5.4491 5.15835 6.15835 4.4491 7.05536 4.15175L8.20711 3H6.79289L1 8.79289ZM5.2038 8.08909L1.0861 12.2068C1.21293 12.5297 1.47028 12.7871 1.7932 12.9139L4.02515 10.682C4.16094 9.83212 4.83212 9.16094 5.68196 9.02515L5.73726 8.96984C5.51207 8.71139 5.33044 8.41399 5.2038 8.08909ZM11.7231 9.98402C11.551 9.6928 11.3072 9.44899 11.016 9.27691L15 5.29289V6.70711L11.7231 9.98402ZM12 13H12.2071L15 10.2071V8.79289L12 11.7929V13ZM9.96984 4.73726C9.71139 4.51207 9.41399 4.33044 9.08909 4.2038L10.2929 3H11.7071L9.96984 4.73726ZM10.9924 7.21467C10.9975 7.14376 11 7.07218 11 7C11 6.63933 10.9364 6.29353 10.8197 5.97321L13.7922 3.0007C14.1729 3.01333 14.5106 3.19624 14.7314 3.47572L10.9924 7.21467ZM8 6C7.44772 6 7 6.44772 7 7C7 7.55228 7.44772 8 8 8C8.55228 8 9 7.55228 9 7C9 6.44772 8.55228 6 8 6ZM6 7C6 5.89543 6.89543 5 8 5C9.10457 5 10 5.89543 10 7C10 8.10457 9.10457 9 8 9C6.89543 9 6 8.10457 6 7ZM6 10C5.44772 10 5 10.4477 5 11V13H6V11H10V13H11V11C11 10.4477 10.5523 10 10 10H6Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
 					</PathIcon>
@@ -258,34 +325,30 @@
 					</MenuItem.Icon>
 				</MenuItem>
 			</MenuItem>
-			<!--
-			<MenuItem Header="Slideshow">
-				<MenuItem Header="Repeat" Command="{Binding ToggleRepeatCommand}">
-					<MenuItem.Icon>
-						<PathIcon Data="{Binding DataRepeatIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
-						</PathIcon>
-					</MenuItem.Icon>
-				</MenuItem>	
-			</MenuItem>
-			-->
-			<!--
-			<MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}">
+			<MenuItem Header="Interval">
 				<MenuItem.Icon>
-					<PathIcon Data="{Binding DataShuffleIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
+					<PathIcon Data="M10.3201 2.11589C10.1347 1.96137 9.86533 1.96137 9.67991 2.11589L6.67991 4.61589C6.46777 4.79267 6.43911 5.10795 6.61589 5.32009C6.79267 5.53223 7.10795 5.56089 7.32009 5.38411L10 3.15085L12.6799 5.38411C12.892 5.56089 13.2073 5.53223 13.3841 5.32009C13.5609 5.10795 13.5322 4.79267 13.3201 4.61589L10.3201 2.11589ZM13.3201 15.3841L10.3201 17.8841C10.1347 18.0386 9.86533 18.0386 9.67991 17.8841L6.67991 15.3841C6.46777 15.2073 6.43911 14.892 6.61589 14.6799C6.79267 14.4678 7.10795 14.4391 7.32009 14.6159L10 16.8491L12.6799 14.6159C12.892 14.4391 13.2073 14.4678 13.3841 14.6799C13.5609 14.892 13.5322 15.2073 13.3201 15.3841ZM10.75 8.75C10.75 9.16421 10.4142 9.5 10 9.5C9.58579 9.5 9.25 9.16421 9.25 8.75C9.25 8.33579 9.58579 8 10 8C10.4142 8 10.75 8.33579 10.75 8.75ZM10 12C10.4142 12 10.75 11.6642 10.75 11.25C10.75 10.8358 10.4142 10.5 10 10.5C9.58579 10.5 9.25 10.8358 9.25 11.25C9.25 11.6642 9.58579 12 10 12ZM16 9.5C16 8.67157 16.6716 8 17.5 8C18.3284 8 19 8.67157 19 9.5V10.5C19 11.3284 18.3284 12 17.5 12C16.6716 12 16 11.3284 16 10.5V9.5ZM17.5 9C17.2239 9 17 9.22386 17 9.5V10.5C17 10.7761 17.2239 11 17.5 11C17.7761 11 18 10.7761 18 10.5V9.5C18 9.22386 17.7761 9 17.5 9ZM6.5 8C5.67157 8 5 8.67157 5 9.5V10.5C5 11.3284 5.67157 12 6.5 12C7.32843 12 8 11.3284 8 10.5V9.5C8 8.67157 7.32843 8 6.5 8ZM6 9.5C6 9.22386 6.22386 9 6.5 9C6.77614 9 7 9.22386 7 9.5V10.5C7 10.7761 6.77614 11 6.5 11C6.22386 11 6 10.7761 6 10.5V9.5ZM12 9.5C12 8.67157 12.6716 8 13.5 8C14.3284 8 15 8.67157 15 9.5V10.5C15 11.3284 14.3284 12 13.5 12C12.6716 12 12 11.3284 12 10.5V9.5ZM13.5 9C13.2239 9 13 9.22386 13 9.5V10.5C13 10.7761 13.2239 11 13.5 11C13.7761 11 14 10.7761 14 10.5V9.5C14 9.22386 13.7761 9 13.5 9ZM2.5 8C1.67157 8 1 8.67157 1 9.5V10.5C1 11.3284 1.67157 12 2.5 12C3.32843 12 4 11.3284 4 10.5V9.5C4 8.67157 3.32843 8 2.5 8ZM2 9.5C2 9.22386 2.22386 9 2.5 9C2.77614 9 3 9.22386 3 9.5V10.5C3 10.7761 2.77614 11 2.5 11C2.22386 11 2 10.7761 2 10.5V9.5Z" Width="NaN" Height="NaN" Margin="0" Padding="0">
 					</PathIcon>
 				</MenuItem.Icon>
+				<MenuItem Header="1 Second" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="1"></MenuItem>
+				<MenuItem Header="2 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="2"></MenuItem>
+				<MenuItem Header="3 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="3"></MenuItem>
+				<MenuItem Header="4 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="4"></MenuItem>
+				<MenuItem Header="5 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="5"></MenuItem>
+				<MenuItem Header="6 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="6"></MenuItem>
+				<MenuItem Header="7 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="7"></MenuItem>
+				<MenuItem Header="8 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="8"></MenuItem>
+				<MenuItem Header="9 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="9"></MenuItem>
+				<MenuItem Header="10 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="10"></MenuItem>
+				<MenuItem Header="15 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="15"></MenuItem>
+				<MenuItem Header="20 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="20"></MenuItem>
+				<MenuItem Header="30 Seconds" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="30"></MenuItem>
+				<MenuItem Header="1 minute" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="60"></MenuItem>
+				<MenuItem Header="2 minutes" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="120"></MenuItem>
+				<MenuItem Header="3 minutes" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="180"></MenuItem>
+				<MenuItem Header="5 minutes" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="300"></MenuItem>
+				<MenuItem Header="10 minutes" Command="{Binding SetSlideshowIntervalCommand}" CommandParameter="600"></MenuItem>
 			</MenuItem>
-			-->
-			<MenuItem Header="Display Options" IsVisible="True">
-				<MenuItem.Icon>
-					<PathIcon Data="M6.5 3C4.567 3 3 4.567 3 6.5C3 7.8962 3.81753 9.10145 5 9.66318V10.7439C3.25221 10.1262 2 8.45933 2 6.5C2 4.01472 4.01472 2 6.5 2C8.45933 2 10.1262 3.25221 10.7439 5H9.66318C9.10145 3.81753 7.8962 3 6.5 3ZM8 6C6.89543 6 6 6.89543 6 8V12C6 13.1046 6.89543 14 8 14H12C13.1046 14 14 13.1046 14 12V8C14 6.89543 13.1046 6 12 6H8ZM7 8C7 7.44772 7.44772 7 8 7H12C12.5523 7 13 7.44772 13 8V12C13 12.0896 12.9882 12.1764 12.9661 12.259L11.2374 10.5303C10.554 9.84691 9.44598 9.84691 8.76256 10.5303L7.03387 12.259C7.01178 12.1764 7 12.0896 7 12V8ZM7.74098 12.9661L9.46967 11.2374C9.76256 10.9445 10.2374 10.9445 10.5303 11.2374L12.259 12.9661C12.1764 12.9882 12.0896 13 12 13H8C7.91042 13 7.82359 12.9882 7.74098 12.9661ZM12.25 8.5C12.25 8.91421 11.9142 9.25 11.5 9.25C11.0858 9.25 10.75 8.91421 10.75 8.5C10.75 8.08579 11.0858 7.75 11.5 7.75C11.9142 7.75 12.25 8.08579 12.25 8.5Z" Width="NaN" Height="NaN" Margin="0" Padding="0"/>
-				</MenuItem.Icon>
-				<MenuItem Header="Override DPI Scaling" Command="{Binding ToggleSystemDpiScalingFactorCommand}" x:Name="MenuItemSystemDpiScalingFactor" IsVisible="False">
-					<MenuItem.Icon>
-						<PathIcon Data="{Binding DataSystemDpiScalingFactorOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
-						</PathIcon>
-					</MenuItem.Icon>
-				</MenuItem>
 			</MenuItem>
 			<MenuItem Header="Image Property" IsVisible="False">
 				<MenuItem.Styles>
@@ -320,7 +383,7 @@
 		</MenuFlyout>
 	</FlyoutBase.AttachedFlyout>
 
-	<Grid>
+	<Grid x:Name="ClientAreaGrid" SizeChanged="ClientAreaGrid_SizeChanged">
 		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0" IsVisible="False"></Border>
 		<Grid IsHitTestVisible="False">
 			<ContentControl x:Name="ContentFrame"/>
@@ -329,7 +392,7 @@
 		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
 			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
 			
-			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
+			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="False" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
 				<!--  helper:ListBoxStackPanelBehaviors.VisibleItems="{Binding VisibleItemsImageInfo, Mode=OneWayToSource}" -->
 				<ListBox.Resources>
 					<!-- Edit: VerticalScrollViewerAnimatedBehavior. -->
@@ -543,8 +606,12 @@
 
 		</Grid>
 
-		<Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="24" IsHitTestVisible="False" IsVisible="False">
-			<TextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}"></TextBlock>
+		<Grid x:Name="FilePathGrid" IsHitTestVisible="False" IsVisible="True" VerticalAlignment="Bottom" Height="24">
+			<Popup x:Name="PopupFilePath" IsOpen="{Binding IsFilePathPopupVisible, Mode=TwoWay}" PlacementTarget="{Binding ElementName=FilePathGrid}" Placement="AnchorAndGravity" IsLightDismissEnabled="False" Margin="24" Topmost="False">
+				<Border CornerRadius="12" BorderThickness="1" Padding="12" Background="{DynamicResource MenuFlyoutPresenterBackground}" Opacity="0.8">
+					<SelectableTextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}"></SelectableTextBlock>
+				</Border>
+			</Popup>
 		</Grid>
 
 		<Grid x:Name="WelcomeMessageGrid" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="True">

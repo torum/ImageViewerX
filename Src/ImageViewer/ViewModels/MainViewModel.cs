@@ -31,12 +31,10 @@ public partial class MainViewModel : ObservableObject
     #region == Private ==
 
     private readonly CancellationTokenSource _cts = new();
-    //private static readonly CancellationToken token = _cts.Token;
 
     private int _queueIndex = 0;
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timerSlideshow;
-    //private readonly System.Threading.Lock _lock = new();
     //private bool _isBusy = false;
     private List<ImageInfo> _originalQueue = [];
 
@@ -44,7 +42,37 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public ==
 
-    public double TWidth { get; set; } = 550;
+    private double _clientAreaWidth = 550;
+    public double ClientAreaWidth
+    {
+        get => _clientAreaWidth;
+        set
+        {
+            if (_clientAreaWidth == value)
+                return;
+
+            _clientAreaWidth = value;
+
+            if ((_displayImage is null) || string.IsNullOrEmpty(_displayImage.ImageFilePath))
+            {
+                return;
+            }
+            // Window width is changed, update FilePath textblock width with MinimizeName.
+            OnPropertyChanged(nameof(FileNameFullPath));
+        }
+    }
+    private double _clientAreaHeight = 550;
+    public double ClientAreaHeight
+    {
+        get => _clientAreaHeight;
+        set
+        {
+            if (_clientAreaHeight == value)
+                return;
+
+            _clientAreaHeight = value;
+        }
+    }
     public FontFamily TFontFamily { get; set; } = FontFamily.Default;
     public double TFontSize { get; set; } = 14;
     public FontWeight TFontWeight { get; set; } = FontWeight.Regular;
@@ -68,7 +96,7 @@ public partial class MainViewModel : ObservableObject
 
             _queue = value;
             OnPropertyChanged(nameof(Queue));
-        }
+                    }
     }
 
     private ImageInfo? _selectedQueueImage;
@@ -152,7 +180,7 @@ public partial class MainViewModel : ObservableObject
                     return string.Empty;
                 }
 
-                return PathHelper.MinimizeName(_displayImage.ImageFilePath, TFontFamily, TFontSize, TFontStyle, TFontWeight, TWidth);
+                return PathHelper.MinimizeName(_displayImage.ImageFilePath, TFontFamily, TFontSize, TFontStyle, TFontWeight, ClientAreaWidth, 450);
             }
             else
             {
@@ -160,7 +188,6 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
-    //FileNameFullPath
 
     private double _systemDpiScalingFactor = 1;
     public double SystemDpiScalingFactor
@@ -179,7 +206,7 @@ public partial class MainViewModel : ObservableObject
     private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 
-    // internal state.
+    // actual state.
     private bool _isFullscreen = false;
     public bool IsFullscreen
     {
@@ -219,7 +246,8 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
-
+    
+    // internal state.
     private bool _isQueueListBoxVisible = true;
     public bool IsQueueListBoxVisible
     {
@@ -232,6 +260,34 @@ public partial class MainViewModel : ObservableObject
             _isQueueListBoxVisible = value;
 
             OnPropertyChanged(nameof(IsQueueListBoxVisible));
+
+            if (_isQueueListBoxVisible)
+            {
+                QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
+            }
+        }
+    }
+
+    // internal state.
+    private bool _isFilePathPopupVisible = false;
+    public bool IsFilePathPopupVisible
+    {
+        get { return _isFilePathPopupVisible; }
+        set
+        {
+            if (_isFilePathPopupVisible == value)
+                return;
+
+            if (_queue.Count > 0)
+            {
+                _isFilePathPopupVisible = value;
+            }
+            else
+            {
+                _isFilePathPopupVisible = false;
+            }
+
+            OnPropertyChanged(nameof(IsFilePathPopupVisible));
         }
     }
 
@@ -254,8 +310,9 @@ public partial class MainViewModel : ObservableObject
 
     #region == Properties User Opts ==
 
-    private int _slideshowTimerInterval = 4;
-    public int SlideshowTimerInterval
+    // Both user opt and internal state.
+    private long _slideshowTimerInterval = 4;
+    public long SlideshowTimerInterval
     {
         get
         {
@@ -268,9 +325,15 @@ public partial class MainViewModel : ObservableObject
 
             _slideshowTimerInterval = value;
             OnPropertyChanged(nameof(SlideshowTimerInterval));
+
+            if (_timerSlideshow is not null)
+            {
+                _timerSlideshow.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
+            }
         }
     }
 
+    // Both user opt and internal state.
     private bool _isNoEffectsOn = false;
     public bool IsNoEffectsOn
     {
@@ -294,6 +357,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isEffectCrossfadeOn = true;
     public bool IsEffectCrossfadeOn
     {
@@ -314,6 +378,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isEffectFadeInAndOutOn = true;
     public bool IsEffectFadeInAndOutOn
     {
@@ -334,6 +399,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isEffectPageSlideOn = false;
     public bool IsEffectPageSlideOn
     {
@@ -354,6 +420,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isShuffleOn = false;
     public bool IsShuffleOn
     {
@@ -388,7 +455,7 @@ public partial class MainViewModel : ObservableObject
 
                 if (_isShuffleOn)
                 {
-                    _queue = new ObservableCollection<ImageInfo>(_originalQueue);
+                    //_queue = new ObservableCollection<ImageInfo>(_originalQueue);
                     _queue.Shuffle();
                 }
                 else
@@ -431,6 +498,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isRepeatOn = false;
     public bool IsRepeatOn
     {
@@ -451,6 +519,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isStayOnTop = false;
     public bool IsStayOnTop
     {
@@ -471,6 +540,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Both user opt and internal state.
     private bool _isSlideshowOn = false;
     public bool IsSlideshowOn
     {
@@ -493,6 +563,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Only user opt.
     private bool _isFullscreenOn = false;
     public bool IsFullscreenOn
     {
@@ -511,6 +582,45 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Only user opt.
+    private bool _isViewFilePathPopupOn = false;
+    public bool IsViewFilePathPopupOn
+    {
+        get { return _isViewFilePathPopupOn; }
+        set
+        {
+            if (_isViewFilePathPopupOn == value)
+                return;
+
+            _isViewFilePathPopupOn = value;
+
+            IsFilePathPopupVisible = _isViewFilePathPopupOn;
+
+            OnPropertyChanged(nameof(IsViewFilePathPopupOn));
+            OnPropertyChanged(nameof(DataViewFilePathPopupOnIcon));
+        }
+    }
+
+    // Only user opt.
+    private bool _isViewImageListOn = true;
+    public bool IsViewImageListOn
+    {
+        get { return _isViewImageListOn; }
+        set
+        {
+            if (_isViewImageListOn == value)
+                return;
+
+            _isViewImageListOn = value;
+
+            IsQueueListBoxVisible = _isViewImageListOn;
+
+            OnPropertyChanged(nameof(IsViewImageListOn));
+            OnPropertyChanged(nameof(DataViewImageListOnIcon));
+        }
+    }
+
+    // Both user opt and internal state.
     private bool _isOverrideSystemDpiScalingFactorOn = false;
     public bool IsOverrideSystemDpiScalingFactorOn
     {
@@ -539,6 +649,7 @@ public partial class MainViewModel : ObservableObject
                 }
 
                 // Reload image.
+                _currentFile = string.Empty;
 
                 //OnPropertyChanged(nameof(Queue));
                 if ((_queueIndex - 1) >= 0)
@@ -554,6 +665,74 @@ public partial class MainViewModel : ObservableObject
 
                 _ = Show();
             }
+        }
+    }
+
+    //Stretch in 
+    private bool _isStretchInOn = true;
+    public bool IsStretchInOn
+    {
+        get => _isStretchInOn;
+        set
+        {
+            if (_isStretchInOn == value)
+                return;
+
+            _isStretchInOn = value;
+            OnPropertyChanged(nameof(IsStretchInOn));
+            OnPropertyChanged(nameof(DataStretchInOnIcon));
+
+            if ((IsStretchInOn == false) && (IsStretchOutOn == false))
+            {
+                IsStretchNoneOn = true;
+            }
+            else
+            {
+                IsStretchNoneOn = false;
+            }
+
+            UpdateDisplayImageMaxSizeAndStretchProperty();
+        }
+    }
+
+    //Stretch out
+    private bool _isStretchOutOn = false;
+    public bool IsStretchOutOn
+    {
+        get => _isStretchOutOn;
+        set
+        {
+            if (_isStretchOutOn == value)
+                return;
+            _isStretchOutOn = value;
+            OnPropertyChanged(nameof(IsStretchOutOn));
+            OnPropertyChanged(nameof(DataStretchOutOnIcon));
+
+            if ((IsStretchInOn == false) && (IsStretchOutOn == false))
+            {
+                IsStretchNoneOn = true;
+            }
+            else
+            {
+                IsStretchNoneOn = false;
+            }
+
+            UpdateDisplayImageMaxSizeAndStretchProperty();
+        }
+    }
+
+    //Stretch oboth
+    private bool _isStretchNoneOn = false;
+    public bool IsStretchNoneOn
+    {
+        get => _isStretchNoneOn;
+        set
+        {
+            if (_isStretchNoneOn == value)
+                return;
+
+            _isStretchNoneOn = value;
+            OnPropertyChanged(nameof(IsStretchNoneOn));
         }
     }
 
@@ -631,7 +810,6 @@ public partial class MainViewModel : ObservableObject
 
     private readonly string _checkedCircle = "M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z";
     private readonly string _unCheckedCircle = "M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14ZM8 13C5.23858 13 3 10.7614 3 8C3 5.23858 5.23858 3 8 3C10.7614 3 13 5.23858 13 8C13 10.7614 10.7614 13 8 13Z";
-
 
     public string DataCrossfadeIcon
     {
@@ -724,7 +902,69 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
+
+    public string DataStretchInOnIcon
+    {
+        get
+        {
+            if (IsStretchInOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
+            }
+        }
+    }
+
+    public string DataStretchOutOnIcon
+    {
+        get
+        {
+            if (IsStretchOutOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
+            }
+        }
+    }
+
+    public string DataViewFilePathPopupOnIcon
+    {
+        get
+        {
+            if (IsViewFilePathPopupOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
+            }
+        }
+    }
+
+    public string DataViewImageListOnIcon
+    {
+        get
+        {
+            if (IsViewImageListOn)
+            {
+                return _checkedBox;
+            }
+            else
+            {
+                return _uncheckedBox;
+            }
+        }
+    }
     //
+    //
+
 
     #endregion
 
@@ -821,8 +1061,11 @@ public partial class MainViewModel : ObservableObject
             // Hide welcome screen
             QueueLoaded?.Invoke(this, EventArgs.Empty);
 
-            // Hide if count = 1
-            IsQueueListBoxVisible = _queue.Count != 1;
+            if (IsViewImageListOn)
+            {
+                // Hide if count = 1
+                IsQueueListBoxVisible = _queue.Count != 1;
+            }
 
             if (_isShuffleOn)
             {
@@ -874,6 +1117,9 @@ public partial class MainViewModel : ObservableObject
             {
                 QueueHasBeenChanged?.Invoke(this, 0);
             }
+
+            // show file path if set on.
+            IsFilePathPopupVisible = _isViewFilePathPopupOn;
 
             IsWorking = false;
             await Task.Yield();
@@ -987,6 +1233,13 @@ public partial class MainViewModel : ObservableObject
             }
         }
         return false;
+    }
+
+    public void ClientAreaSizeChanged(double width, double height)
+    {
+        ClientAreaWidth = width;
+        ClientAreaHeight = height;
+        UpdateDisplayImageMaxSizeAndStretchProperty();
     }
 
     public void CleanUp()
@@ -1127,6 +1380,8 @@ public partial class MainViewModel : ObservableObject
                         img.ImageWidth = (img.ImageSource.PixelSize.Width);
                         img.ImageHeight = (img.ImageSource.PixelSize.Height);
                     }
+
+                    AdjustStretchProperty(img);
 
                     img.IsAcquired = true;
                     img.IsLoading = false;
@@ -1279,8 +1534,6 @@ public partial class MainViewModel : ObservableObject
                         _timerSlideshow.Start();
                     }
 
-                    //_queueIndex = index;
-
                     QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
                 });
             }
@@ -1354,6 +1607,8 @@ public partial class MainViewModel : ObservableObject
                     img.ImageHeight = (img.ImageSource.PixelSize.Height);
                 }
 
+                AdjustStretchProperty(img);
+
                 img.IsAcquired = true;
                 img.IsLoading = false;
             }
@@ -1373,7 +1628,6 @@ public partial class MainViewModel : ObservableObject
             {
                 img.IsLoading = false;
             }
-
         }
 
         //DiplayImage1 = bitmap;
@@ -1437,12 +1691,111 @@ public partial class MainViewModel : ObservableObject
 
         #endregion
 
-        if (IsSlideshowOn)
+        return Task.FromResult(true);
+    }
+
+    private void UpdateDisplayImageMaxSizeAndStretchProperty()
+    {
+        if (DisplayImage is null)
         {
-            _timerSlideshow.Start();
+            return;
         }
 
-        return Task.FromResult(true);
+        DisplayImage.ImageMaxWidth = ClientAreaWidth;
+        DisplayImage.ImageMaxHeight = ClientAreaHeight;
+
+        if (_queue.Count > 0)
+        {
+            foreach (var img in _queue)
+            {
+                if ((img.ImageSource is not null) && (img.IsAcquired))
+                {
+                    AdjustStretchProperty(img);
+                    /*
+                    if (IsStretchInOn && IsStretchOutOn)
+                    {
+                        img.ImageMaxWidth = ClientAreaWidth;
+                        img.ImageMaxHeight = ClientAreaHeight;
+                    }
+                    else if (IsStretchInOn)
+                    {
+                        img.ImageMaxWidth = img.ImageWidth;
+                        img.ImageMaxHeight = img.ImageHeight;
+                    }
+                    else
+                    {
+                        img.ImageMaxWidth = ClientAreaWidth;
+                        img.ImageMaxHeight = ClientAreaHeight;
+                    }
+
+                    if (IsStretchNoneOn)
+                    {
+                        img.ImageStretch = Avalonia.Media.Stretch.None;
+                    }
+                    else
+                    {
+                        img.ImageStretch = Avalonia.Media.Stretch.Uniform;
+                    }
+
+                    if (IsStretchInOn && IsStretchOutOn)
+                    {
+                        img.ImageStretchDirection = StretchDirection.Both;
+                    }
+                    else if (IsStretchInOn)
+                    {
+                        img.ImageStretchDirection = StretchDirection.DownOnly;
+                    }
+                    else if (IsStretchOutOn)
+                    {
+                        img.ImageStretchDirection = StretchDirection.UpOnly;
+                    }
+                    */
+                }
+            }
+        }
+
+        OnPropertyChanged(nameof(DisplayImage));
+    }
+
+    private void AdjustStretchProperty(ImageInfo img)
+    {
+        if (IsStretchInOn && IsStretchOutOn)
+        {
+            img.ImageMaxWidth = ClientAreaWidth;
+            img.ImageMaxHeight = ClientAreaHeight;
+        }
+        else if (IsStretchInOn)
+        {
+            img.ImageMaxWidth = img.ImageWidth;
+            img.ImageMaxHeight = img.ImageHeight;
+        }
+        else
+        {
+            img.ImageMaxWidth = ClientAreaWidth;
+            img.ImageMaxHeight = ClientAreaHeight;
+        }
+
+        if (IsStretchNoneOn)
+        {
+            img.ImageStretch = Avalonia.Media.Stretch.None;
+        }
+        else
+        {
+            img.ImageStretch = Avalonia.Media.Stretch.Uniform;
+        }
+
+        if (IsStretchInOn && IsStretchOutOn)
+        {
+            img.ImageStretchDirection = StretchDirection.Both;
+        }
+        else if (IsStretchInOn)
+        {
+            img.ImageStretchDirection = StretchDirection.DownOnly;
+        }
+        else if (IsStretchOutOn)
+        {
+            img.ImageStretchDirection = StretchDirection.UpOnly;
+        }
     }
 
     #endregion
@@ -1568,9 +1921,62 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void SetSlideshowInterval(string strSecond)
+    {
+        if (string.IsNullOrEmpty(strSecond))
+        {
+            return;
+        }
+
+        if (long.TryParse(strSecond, out long number))
+        {
+            if (number >= 0)
+            {
+                SlideshowTimerInterval = number;
+            }
+        }
+    }
+
+    [RelayCommand]
     public void ToggleSystemDpiScalingFactor()
     {
         IsOverrideSystemDpiScalingFactorOn = !IsOverrideSystemDpiScalingFactorOn;
+    }
+
+    [RelayCommand]
+    public void ToggleStretchInOn()
+    {
+        IsStretchInOn = !IsStretchInOn;
+    }
+
+    [RelayCommand]
+    public void ToggleStretchOutOn()
+    {
+        IsStretchOutOn = !IsStretchOutOn;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanToggleViewFilePath))]
+    public void ToggleViewFilePath()
+    {
+        IsViewFilePathPopupOn = !IsViewFilePathPopupOn;
+    }
+    public bool CanToggleViewFilePath()
+    {
+        if (_queue.Count <= 0) return false;
+        if (_isFullscreen) return false;
+        return true;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanToggleViewImageList))]
+    public void ToggleViewImageList()
+    {
+        IsViewImageListOn = !IsViewImageListOn;
+    }
+    private bool CanToggleViewImageList()
+    {
+        if (_queue.Count <= 1) return false;
+        if (_isFullscreen) return false;
+        return true;
     }
 
     [RelayCommand(CanExecute = nameof(CanShowInExplorer))]
@@ -1667,12 +2073,8 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void QueueListviewEnterKey(ImageInfo img)
     {
-        Debug.WriteLine("QueueListviewEnterKey");
-
         if (img is null)
         {
-            Debug.WriteLine("QueueListviewEnterKey img is null");
-
             return;
         }
 
@@ -1738,7 +2140,7 @@ public static class PathHelper
     /// <param name="fontWeight">The font weight used for measuring text.</param>
     /// <param name="maxWidth">The maximum width in device-independent pixels.</param>
     /// <returns>The minimized file path string.</returns>
-    public static string MinimizeName(string fileName, FontFamily fontFamily, double fontSize, FontStyle fontStyle, FontWeight fontWeight, double maxWidth)
+    public static string MinimizeName(string fileName, FontFamily fontFamily, double fontSize, FontStyle fontStyle, FontWeight fontWeight, double maxWidth, double margin)
     {
         // Helper function to measure text width using Avalonia's FormattedText
         static double MeasureTextWidth(string text, FontFamily font, double size, FontStyle style, FontWeight weight)
@@ -1769,7 +2171,7 @@ public static class PathHelper
         }
 
         // If filename fits, no need to do anything
-        if (MeasureTextWidth(fullPath, fontFamily, fontSize, fontStyle, fontWeight) <= maxWidth)
+        if (MeasureTextWidth(fullPath, fontFamily, fontSize, fontStyle, fontWeight) <= (maxWidth - margin))
         {
             //Debug.WriteLine($"MinimizeName2 {fullPath}");
             return fullPath;
@@ -1803,9 +2205,9 @@ public static class PathHelper
             composedName = Path.Combine(drive, "...", middle, fn);
             textWidth = MeasureTextWidth(composedName, fontFamily, fontSize, fontStyle, fontWeight);
 
-        } while (dirParts.Count > 0 && textWidth > maxWidth);
+        } while (dirParts.Count > 0 && textWidth > (maxWidth - margin));
 
-        if (textWidth <= maxWidth)
+        if (textWidth <= (maxWidth - margin))
         {
             //Debug.WriteLine($"MinimizeName4 {composedName}");
             return composedName;

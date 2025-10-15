@@ -102,8 +102,6 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
 
-        //Debug.WriteLine(TextBlockFileNameFullPath.FontSize.ToString());
-        //Debug.WriteLine(TextBlockFileNameFullPath.FontFamily.ToString());
     }
 
     public async void SetStdin(string[] args)
@@ -126,10 +124,19 @@ public partial class MainWindow : Window
     {
         this.WelcomeMessageGrid.IsVisible = false;
     }
-    
+
     private void OnTimerTick(object? sender, EventArgs e)
     {
         // This code runs on the UI thread, so it's safe to update UI elements.
+
+        var flyout = FlyoutBase.GetAttachedFlyout(this);
+        if (flyout is not null)
+        {
+            if (flyout.IsOpen)
+            {
+                return;
+            }
+        }
 
         // TODO: Is there any way to determine current cursor type?
         // Creating new cursor every time is weird.
@@ -210,7 +217,7 @@ public partial class MainWindow : Window
                 {
                     this.Background = Brushes.Transparent;
                     this.TransparencyLevelHint = [WindowTransparencyLevel.None];
-                    
+
                     //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
                     EnableBlurBehind(handle);
                 }
@@ -320,7 +327,7 @@ public partial class MainWindow : Window
             Debug.WriteLine("(!System.IO.File.Exists(App.AppConfigFilePath)");
             return;
         }
-        
+
         var xdoc = XDocument.Load(App.AppConfigFilePath);
 
         if (xdoc.Root is null)
@@ -473,6 +480,48 @@ public partial class MainWindow : Window
                     }
                 }
             }
+
+            attrs = opts.Attribute("isViewImageListOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsViewImageListOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsViewImageListOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isViewFilePathPopupOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsViewFilePathPopupOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsViewFilePathPopupOn = false;
+                    }
+                }
+            }
+
+            //SlideshowTimerInterval
+            attrs = opts.Attribute("slideshowTimerInterval");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    _mainViewModel.SetSlideshowInterval(attrs.Value);
+                }
+            }
         }
 
         #endregion
@@ -526,6 +575,7 @@ public partial class MainWindow : Window
                     _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
 
                     this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+                    this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
                     this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
 
                     return;
@@ -534,7 +584,9 @@ public partial class MainWindow : Window
         }
 
         _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
-        this.MenuItemSystemDpiScalingFactor.IsVisible = false;
+        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+        this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
+        this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -582,7 +634,7 @@ public partial class MainWindow : Window
 
         CheckAndNotifyDisplayChange();
     }
-    
+
     private void Screens_Changed(object? sender, EventArgs e)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -794,6 +846,36 @@ public partial class MainWindow : Window
         }
         opts.SetAttributeNode(attrs);
 
+        //IsViewImageListOn
+        attrs = doc.CreateAttribute("isViewImageListOn");
+        if (vm.IsViewImageListOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsViewFilePathPopupOn
+        attrs = doc.CreateAttribute("isViewFilePathPopupOn");
+        if (vm.IsViewFilePathPopupOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //SlideshowTimerInterval
+        attrs = doc.CreateAttribute("slideshowTimerInterval");
+        attrs.Value = vm.SlideshowTimerInterval.ToString();
+        opts.SetAttributeNode(attrs);
+
+
         /// 
         root.AppendChild(opts);
 
@@ -837,6 +919,8 @@ public partial class MainWindow : Window
             _winRestoreTop = (int)this.Position.X;
             _winRestoreLeft = (int)this.Position.X;
         }
+
+        _mainViewModel.ClientAreaSizeChanged(this.ClientAreaGrid.Bounds.Width, this.ClientAreaGrid.Bounds.Height);
     }
 
     private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
@@ -884,17 +968,20 @@ public partial class MainWindow : Window
             }
             else if (this.WindowState == WindowState.FullScreen)
             {
-                this.Cursor = new Cursor(StandardCursorType.None);
+                //this.Cursor = new Cursor(StandardCursorType.None);
             }
         }
 
         // Right clicked on Window.
         if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
         {
-            if (sender is Control target)
+            if (sender is Window target)
             {
                 var flyout = FlyoutBase.GetAttachedFlyout(target);
-
+                if (flyout is MenuFlyout menuFlyout)
+                {
+                    menuFlyout.Placement = PlacementMode.Pointer;
+                }
                 // Show the flyout using the 'Placement="Pointer"' property.
                 flyout?.ShowAt(target);
 
@@ -962,7 +1049,7 @@ public partial class MainWindow : Window
         else
         {
             e.DragEffects = DragDropEffects.None;
-            
+
             return;
         }
 
@@ -1083,7 +1170,7 @@ public partial class MainWindow : Window
             {
                 DirectoryInfo directory = new(path);
                 var folderFiles = directory.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly).ToList();
-                
+
                 if (folderFiles is not null)
                 {
                     List<string> folderFileNames = [.. folderFiles.Select(x => x.FullName)];
@@ -1355,7 +1442,7 @@ public partial class MainWindow : Window
                 Debug.WriteLine(ex);
             }
         });
-    } 
+    }
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
@@ -1382,7 +1469,9 @@ public partial class MainWindow : Window
 
     private void SetWindowStateFullScreen()
     {
-        this.QueueListBox.IsVisible = false;
+        //this.QueueListBox.IsVisible = false;
+        _mainViewModel.IsQueueListBoxVisible = false;
+        _mainViewModel.IsFilePathPopupVisible = false;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -1463,8 +1552,16 @@ public partial class MainWindow : Window
             }
         }
 
-        //this.QueueListBox.IsVisible = true;
-        _mainViewModel.IsQueueListBoxVisible = _mainViewModel.Queue.Count != 1;
+        if (_mainViewModel.IsViewImageListOn)
+        {
+            // queue count more than one, show image list.
+            _mainViewModel.IsQueueListBoxVisible = _mainViewModel.Queue.Count != 1;
+        }
+
+        if (_mainViewModel.IsViewFilePathPopupOn)
+        {
+            _mainViewModel.IsFilePathPopupVisible = true;
+        }
     }
 
     private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -1513,6 +1610,18 @@ public partial class MainWindow : Window
         {
             //e.Handled = true;
         }
+        else if (e.PhysicalKey == PhysicalKey.ContextMenu)
+        {
+            var flyout = FlyoutBase.GetAttachedFlyout(this);
+
+            if (flyout is MenuFlyout menuFlyout)
+            {
+                menuFlyout.Placement = PlacementMode.Center;
+                flyout?.ShowAt(this);
+            }
+
+            e.Handled = true;
+        }
     }
 
     private void Window_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -1532,7 +1641,8 @@ public partial class MainWindow : Window
 
                 //e.Handled = true;
             }
-        } else if (e.Key == Key.Right)
+        }
+        else if (e.Key == Key.Right)
         {
             if (this.DataContext is MainViewModel)
             {
@@ -1560,6 +1670,10 @@ public partial class MainWindow : Window
         else if (e.Key == Key.Tab)
         {
             //e.Handled = true;
+        }
+        else if (e.PhysicalKey == PhysicalKey.ContextMenu)
+        {
+            e.Handled = true;
         }
     }
 
@@ -1748,62 +1862,79 @@ public partial class MainWindow : Window
 
     private async void UpdateQueueListBoxImages(int selectedIndex)
     {
+        if (this.QueueListBox.IsVisible == false)
+        {
+            return;
+        }
+
         if (DataContext is not MainViewModel vm)
         {
             return;
         }
 
-        var c = vm.Queue.Count;
-
-        if ((selectedIndex > c) && (selectedIndex < 0))
+        if ((selectedIndex > (vm.Queue.Count - 1)) && (selectedIndex < 0))
         {
+            Debug.WriteLine("if ((selectedIndex > c) && (selectedIndex < 0))");
             return;
         }
 
         await Task.Yield();
-        //await Task.Delay(800); // Need to wait for UI to update
+        //await Task.Delay(300); // Need to wait for UI to update
         Dispatcher.UIThread.Post(() =>
         {
-            if (this.QueueListBox is ListBox lb)
+            if (this.QueueListBox is not ListBox lb)
             {
-                if (lb.ItemCount < (selectedIndex + 1))
-                {
-                    return;
-                }
-
-                lb.ScrollIntoView(selectedIndex);
-
-                if (DataContext is not MainViewModel vm)
-                {
-                    return;
-                }
-
-                var test = vm?.Queue[selectedIndex];
-                if (test != null)
-                {
-                    lb.SelectedItem = test;
-                }
-
-                var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-                if (scrollViewer is null)
-                {
-                    return;
-                }
-                var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
-                if (virtualPanel is null)
-                {
-                    return;
-                }
-                UpdateVisibleItems(scrollViewer, virtualPanel);
-
-                // Center selected.
-                if (lb.SelectedItem is not null)
-                {
-                    if (lb.ContainerFromItem(lb.SelectedItem) is not ListBoxItem item) return;
-                    BringIntoViewCenter(item);
-                }
-
+                return;
             }
+
+            if (lb.ItemCount == 0)
+            {
+                return;
+            }
+
+            if (lb.ItemCount < (selectedIndex + 1))
+            {
+                Debug.WriteLine($"if ({lb.ItemCount} < ({selectedIndex + 1}))");
+                return;
+            }
+
+            //lb.ScrollIntoView(selectedIndex);
+
+            if (DataContext is not MainViewModel vm)
+            {
+                return;
+            }
+
+            var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            if (scrollViewer is null)
+            {
+                return;
+            }
+            var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+            if (virtualPanel is null)
+            {
+                return;
+            }
+
+            var test = vm?.Queue[selectedIndex];
+            if (test != null)
+            {
+                lb.SelectedItem = test;
+            }
+
+            lb.ScrollIntoView(selectedIndex);
+
+            // Center selected.
+            if (lb.SelectedItem is not null)
+            {
+                if (lb.ContainerFromItem(lb.SelectedItem) is ListBoxItem item)
+                {
+                    BringIntoViewCenter(item, scrollViewer);
+                }
+            }
+
+            UpdateVisibleItems(scrollViewer, virtualPanel);
+
         }, DispatcherPriority.Loaded);//.Background//.Loaded//.Default
     }
 
@@ -1814,42 +1945,52 @@ public partial class MainWindow : Window
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (this.QueueListBox is ListBox lb)
+            if (this.QueueListBox is not ListBox lb)
             {
-                if (DataContext is not MainViewModel vm)
-                {
-                    return;
-                }
-                var item = lb.SelectedItem;
-                if (item is ImageInfo img)
-                {
-                    var ind = vm.Queue.IndexOf(img);
-                    if (ind > 0)
-                    {
-                        lb.ScrollIntoView(ind);
-
-                        var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-                        if (scrollViewer is null)
-                        {
-                            return;
-                        }
-                        var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
-                        if (virtualPanel is null)
-                        {
-                            return;
-                        }
-                        UpdateVisibleItems(scrollViewer, virtualPanel);
-
-                        // Center selected.
-                        if (lb.SelectedItem is not null)
-                        {
-                            if (lb.ContainerFromItem(item) is not ListBoxItem listitem) return;
-                            BringIntoViewCenter(listitem);
-                        }
-                    }
-                }
-
+                return;
             }
+
+            if (DataContext is not MainViewModel vm)
+            {
+                return;
+            }
+            var item = lb.SelectedItem;
+            if (item is not ImageInfo img)
+            {
+                return;
+            }
+
+            var ind = vm.Queue.IndexOf(img);
+            if (ind < 0)
+            {
+                return;
+            }
+
+            lb.ScrollIntoView(ind);
+
+            var scrollViewer = lb.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            if (scrollViewer is null)
+            {
+                return;
+            }
+
+            var virtualPanel = lb.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
+            if (virtualPanel is null)
+            {
+                return;
+            }
+
+            // Center selected.
+            if (lb.SelectedItem is not null)
+            {
+                if (lb.ContainerFromItem(lb.SelectedItem) is ListBoxItem listitem)
+                {
+                    BringIntoViewCenter(listitem, scrollViewer);
+                }
+            }
+
+            UpdateVisibleItems(scrollViewer, virtualPanel);
+
         }, DispatcherPriority.Loaded);////.Default//.Background
     }
 
@@ -2088,14 +2229,19 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private static void BringIntoViewCenter(Control control)
+    private static void BringIntoViewCenter(Control control, ScrollViewer scrollViewer)
     {
+        /*
         var scrollViewer = control.GetVisualAncestors()
             .OfType<ScrollViewer>()
             .FirstOrDefault();
+        */
 
         if (scrollViewer == null)
+        {
+            Debug.WriteLine("if (scrollViewer == null)");
             return;
+        }
 
         var bounds = control.Bounds;
         var scrollViewerBounds = scrollViewer.Bounds;
@@ -2118,6 +2264,15 @@ public partial class MainWindow : Window
         //AppTitleBarIcon.Opacity = args.WindowActivationState == WindowActivationState.Deactivated ? 0.4 : 0.8;
 
         //this.Opacity = 1;
+
+        // Restore Popup.
+        if (_mainViewModel.IsViewFilePathPopupOn)
+        {
+            if (_mainViewModel.CanToggleViewFilePath())
+            {
+                this.PopupFilePath.IsOpen = true;
+            }
+        }
     }
 
     private void Window_Deactivated(object? sender, System.EventArgs e)
@@ -2125,8 +2280,14 @@ public partial class MainWindow : Window
         // TODO: dim caption button color only when deactivated.
         //this.Opacity = 0.8;
 
+        // Popup stays optop, so hide it.
+        this.PopupFilePath.IsOpen = false;
     }
 
+    private void ClientAreaGrid_SizeChanged(object? sender, SizeChangedEventArgs e)
+    {
+        _mainViewModel.ClientAreaSizeChanged(this.ClientAreaGrid.Bounds.Width, this.ClientAreaGrid.Bounds.Height);
+    }
 }
 
 public static partial class NativeMethods
