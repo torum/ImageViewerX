@@ -29,8 +29,8 @@ Alt+F4/Ctrl+Q => App quit
 Wheel up/down => Next/Previous   
 Double click => Fullscreen on/off
 ```
-[x] Right click popup menu
-[x] Localization (English, Japanese)
+[x] Right click popup menu  
+[x] Localization (English, Japanese)  
 
  ## TODO:
 [ ] Image property dialog.   
