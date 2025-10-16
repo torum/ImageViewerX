@@ -22,16 +22,17 @@ Right => Next
 Left => Previous  
 F => Fullscreen on/off 
 Escape => Fullscreen off 
-Alt+F4 => App quit 
+Alt+F4/Ctrl+Q => App quit 
 ```
 [x] Basic mouse control including,  
 ```
 Wheel up/down => Next/Previous   
 Double click => Fullscreen on/off
 ```
+[x] Right click popup menu
+[x] Localization (English, Japanese)
 
  ## TODO:
-[x] Right click popup menu rework (work in progress)  
-[ ] Detailed image property dialog.   
+[ ] Image property dialog.   
 [ ] More and more options.   
-[ ] Commandline options.  
+[ ] Command-line options.  
