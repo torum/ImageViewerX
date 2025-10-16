@@ -68,7 +68,7 @@ public partial class MainWindow : Window
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-        _mainViewModel.Fullscreen += (sender, arg) => { this.OnFullscreen(arg); };
+        _mainViewModel.UpdateFullscreenState += (sender, arg) => { this.OnUpdateFullscreenState(arg); };
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
 
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
             _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
             _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
-            _mainViewModel.Fullscreen -= (sender, arg) => { this.OnFullscreen(arg); };
+            _mainViewModel.UpdateFullscreenState -= (sender, arg) => { this.OnUpdateFullscreenState(arg); };
             _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
             _mainViewModel.SlideshowIntervalChanged -= (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
         };
@@ -278,7 +278,7 @@ public partial class MainWindow : Window
         UpdateThemeBackground(ActualThemeVariant);
     }
 
-    public void OnFullscreen(bool on)
+    public void OnUpdateFullscreenState(bool on)
     {
         //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
 
@@ -575,6 +575,42 @@ public partial class MainWindow : Window
                 }
             }
 
+            attrs = opts.Attribute("isRepeatOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsRepeatOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsRepeatOn = false;
+                    }
+                }
+            }
+
+            //#IsStayOnTop
+            //#IsSlideshowOn
+            //#IsFullscreenOn
+
+            attrs = opts.Attribute("isOverrideSystemDpiScalingFactorOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
+                    }
+                }
+            }
+
             attrs = opts.Attribute("isViewImageListOn");
             if (attrs is not null)
             {
@@ -616,6 +652,103 @@ public partial class MainWindow : Window
                     _mainViewModel.SetSlideshowInterval(attrs.Value);
                 }
             }
+
+            attrs = opts.Attribute("isStretchInOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsStretchInOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsStretchInOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isStretchOutOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsStretchOutOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsStretchOutOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isEffectFadeInAndOutOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsEffectFadeInAndOutOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsEffectFadeInAndOutOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isEffectPageSlideOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsEffectPageSlideOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsEffectPageSlideOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isNoEffectsOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsNoEffectsOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsNoEffectsOn = false;
+                    }
+                }
+            }
+
+            attrs = opts.Attribute("isEffectCrossfadeOn");
+            if (attrs is not null)
+            {
+                if (!string.IsNullOrEmpty(attrs.Value))
+                {
+                    if (attrs.Value == "True")
+                    {
+                        _mainViewModel.IsEffectCrossfadeOn = true;
+                    }
+                    else
+                    {
+                        _mainViewModel.IsEffectCrossfadeOn = false;
+                    }
+                }
+            }
+
         }
 
         #endregion
@@ -691,13 +824,16 @@ public partial class MainWindow : Window
             this.BackgroundLayerBorder.StartFadeInAnimation(TimeSpan.FromSeconds(0.8), 0.9f);
         }
 
-        // set default.
-        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
+        // Update Slideshow Interval menu 
+        OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
+
+        // SystemDpiScalingFactor - Set default.
+        // don't _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
         this.MenuItemSystemDpiScalingFactor.IsVisible = true;
         this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
         this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
 
-        // Windows Only
+        // SystemDpiScalingFactor - Windows Only
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // Initial screen detection upon loading
@@ -716,9 +852,6 @@ public partial class MainWindow : Window
 
             UpdateSystemDPIScalingFactor();
         }
-
-        // update menu 
-        OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
     }
 
     private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
@@ -942,6 +1075,33 @@ public partial class MainWindow : Window
         }
         opts.SetAttributeNode(attrs);
 
+        //IsRepeatOn
+        attrs = doc.CreateAttribute("isRepeatOn");
+        if (vm.IsRepeatOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //#IsStayOnTop
+        //#IsSlideshowOn
+        //#IsFullscreenOn
+
+        attrs = doc.CreateAttribute("isOverrideSystemDpiScalingFactorOn");
+        if (vm.IsOverrideSystemDpiScalingFactorOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
         //IsViewImageListOn
         attrs = doc.CreateAttribute("isViewImageListOn");
         if (vm.IsViewImageListOn)
@@ -969,6 +1129,78 @@ public partial class MainWindow : Window
         //SlideshowTimerInterval
         attrs = doc.CreateAttribute("slideshowTimerInterval");
         attrs.Value = vm.SlideshowTimerInterval.ToString();
+        opts.SetAttributeNode(attrs);
+
+        //IsStretchInOn
+        attrs = doc.CreateAttribute("isStretchInOn");
+        if (vm.IsStretchInOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsStretchOutOn
+        attrs = doc.CreateAttribute("isStretchOutOn");
+        if (vm.IsStretchOutOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsEffectFadeInAndOutOn
+        attrs = doc.CreateAttribute("isEffectFadeInAndOutOn");
+        if (vm.IsEffectFadeInAndOutOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsEffectPageSlideOn
+        attrs = doc.CreateAttribute("isEffectPageSlideOn");
+        if (vm.IsEffectPageSlideOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsNoEffectsOn
+        attrs = doc.CreateAttribute("isNoEffectsOn");
+        if (vm.IsNoEffectsOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
+        opts.SetAttributeNode(attrs);
+
+        //IsEffectCrossfadeOn
+        attrs = doc.CreateAttribute("isEffectCrossfadeOn");
+        if (vm.IsEffectCrossfadeOn)
+        {
+            attrs.Value = "True";
+        }
+        else
+        {
+            attrs.Value = "False";
+        }
         opts.SetAttributeNode(attrs);
 
 
@@ -1555,11 +1787,11 @@ public partial class MainWindow : Window
         */
         if (WindowState == WindowState.FullScreen)
         {
-            OnFullscreen(false);
+            OnUpdateFullscreenState(false);
         }
         else if (WindowState == WindowState.Normal)
         {
-            OnFullscreen(true);
+            OnUpdateFullscreenState(true);
         }
     }
 

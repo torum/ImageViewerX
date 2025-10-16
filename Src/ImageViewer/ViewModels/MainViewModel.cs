@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -211,7 +212,7 @@ public partial class MainViewModel : ObservableObject
             _isFullscreen = value;
             OnPropertyChanged(nameof(IsFullscreen));
 
-            Fullscreen?.Invoke(this, IsFullscreen);
+            UpdateFullscreenState?.Invoke(this, IsFullscreen);
             HideMenuFlyout?.Invoke(this, EventArgs.Empty);
 
             ToggleViewFilePathCommand.NotifyCanExecuteChanged();
@@ -286,6 +287,21 @@ public partial class MainViewModel : ObservableObject
             }
 
             OnPropertyChanged(nameof(IsFilePathPopupVisible));
+        }
+    }
+
+    // Internal state only
+    private bool _isStretchNone = false;
+    public bool IsStretchNone
+    {
+        get => _isStretchNone;
+        set
+        {
+            if (_isStretchNone == value)
+                return;
+
+            _isStretchNone = value;
+            OnPropertyChanged(nameof(IsStretchNone));
         }
     }
 
@@ -576,6 +592,8 @@ public partial class MainViewModel : ObservableObject
             _isFullscreenOn = value;
             OnPropertyChanged(nameof(IsFullscreenOn));
             OnPropertyChanged(nameof(DataFullscreenOnIcon));
+
+            IsFullscreen = _isFullscreenOn;
         }
     }
 
@@ -633,40 +651,50 @@ public partial class MainViewModel : ObservableObject
             if (_isOverrideSystemDpiScalingFactorOn == value)
                 return;
 
-            _isOverrideSystemDpiScalingFactorOn = value;
-            OnPropertyChanged(nameof(IsOverrideSystemDpiScalingFactorOn));
-            OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
-
-            if (_queue.Count > 0)
+            // SystemDpiScalingFactor - Windows Only
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                foreach (var item in _queue)
+                _isOverrideSystemDpiScalingFactorOn = value;
+                OnPropertyChanged(nameof(IsOverrideSystemDpiScalingFactorOn));
+                OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
+
+                if (_queue.Count > 0)
                 {
-                    if (item.ImageSource is not null)
+                    foreach (var item in _queue)
                     {
-                        item.ImageSource = null;
-                        item.ImageWidth = 0;
-                        item.ImageHeight = 0;
-                        item.IsAcquired = false;
-                        item.IsLoading = false;
+                        if (item.ImageSource is not null)
+                        {
+                            item.ImageSource = null;
+                            item.ImageWidth = 0;
+                            item.ImageHeight = 0;
+                            item.IsAcquired = false;
+                            item.IsLoading = false;
+                        }
                     }
-                }
 
-                // Reload image.
-                _currentFile = string.Empty;
+                    // Reload image.
+                    _currentFile = string.Empty;
 
-                //OnPropertyChanged(nameof(Queue));
-                if ((_queueIndex - 1) >= 0)
-                {
-                    //QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
-                    _queueIndex--;
-                }
-                else
-                {
-                    //QueueHasBeenChanged?.Invoke(this, 0);
-                    _queueIndex = 0;
-                }
+                    //OnPropertyChanged(nameof(Queue));
+                    if ((_queueIndex - 1) >= 0)
+                    {
+                        //QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
+                        _queueIndex--;
+                    }
+                    else
+                    {
+                        //QueueHasBeenChanged?.Invoke(this, 0);
+                        _queueIndex = 0;
+                    }
 
-                _ = Show();
+                    _ = Show();
+                }
+            }
+            else 
+            {
+                _isOverrideSystemDpiScalingFactorOn = false;
+                OnPropertyChanged(nameof(IsOverrideSystemDpiScalingFactorOn));
+                OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
             }
         }
     }
@@ -687,11 +715,11 @@ public partial class MainViewModel : ObservableObject
 
             if ((IsStretchInOn == false) && (IsStretchOutOn == false))
             {
-                IsStretchNoneOn = true;
+                IsStretchNone = true;
             }
             else
             {
-                IsStretchNoneOn = false;
+                IsStretchNone = false;
             }
 
             UpdateDisplayImageMaxSizeAndStretchProperty();
@@ -713,31 +741,18 @@ public partial class MainViewModel : ObservableObject
 
             if ((IsStretchInOn == false) && (IsStretchOutOn == false))
             {
-                IsStretchNoneOn = true;
+                IsStretchNone = true;
             }
             else
             {
-                IsStretchNoneOn = false;
+                IsStretchNone = false;
             }
 
             UpdateDisplayImageMaxSizeAndStretchProperty();
         }
     }
 
-    //Stretch oboth
-    private bool _isStretchNoneOn = false;
-    public bool IsStretchNoneOn
-    {
-        get => _isStretchNoneOn;
-        set
-        {
-            if (_isStretchNoneOn == value)
-                return;
-
-            _isStretchNoneOn = value;
-            OnPropertyChanged(nameof(IsStretchNoneOn));
-        }
-    }
+    #region == User opts menu icons == 
 
     private readonly string _play = "M5.74514 3.06445C5.41183 2.87696 5 3.11781 5 3.50023V12.5005C5 12.8829 5.41182 13.1238 5.74512 12.9363L13.7454 8.43631C14.0852 8.24517 14.0852 7.75589 13.7454 7.56474L5.74514 3.06445ZM4 3.50023C4 2.35298 5.2355 1.63041 6.23541 2.19288L14.2357 6.69317C15.2551 7.26664 15.2551 8.73446 14.2356 9.3079L6.23537 13.8079C5.23546 14.3703 4 13.6477 4 12.5005V3.50023Z";
     private readonly string _pause = "M3.75 2C2.7835 2 2 2.7835 2 3.75V12.25C2 13.2165 2.7835 14 3.75 14H5.25C6.2165 14 7 13.2165 7 12.25V3.75C7 2.7835 6.2165 2 5.25 2H3.75ZM3 3.75C3 3.33579 3.33579 3 3.75 3H5.25C5.66421 3 6 3.33579 6 3.75V12.25C6 12.6642 5.66421 13 5.25 13H3.75C3.33579 13 3 12.6642 3 12.25V3.75ZM10.75 2C9.7835 2 9 2.7835 9 3.75V12.25C9 13.2165 9.7835 14 10.75 14H12.25C13.2165 14 14 13.2165 14 12.25V3.75C14 2.7835 13.2165 2 12.25 2H10.75ZM10 3.75C10 3.33579 10.3358 3 10.75 3H12.25C12.6642 3 13 3.33579 13 3.75V12.25C13 12.6642 12.6642 13 12.25 13H10.75C10.3358 13 10 12.6642 10 12.25V3.75Z";
@@ -968,9 +983,8 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
-    //
-    //
 
+    #endregion
 
     #endregion
 
@@ -997,7 +1011,7 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? TransitionsHasBeenChanged;
     public event EventHandler? SlideshowStatusChanged;
     public event EventHandler? QueueLoaded;
-    public event EventHandler<bool>? Fullscreen;
+    public event EventHandler<bool>? UpdateFullscreenState;
     public event EventHandler? HideMenuFlyout;
     public event EventHandler<long>? SlideshowIntervalChanged;
 
@@ -1787,7 +1801,7 @@ public partial class MainViewModel : ObservableObject
             img.ImageMaxHeight = ClientAreaHeight;
         }
 
-        if (IsStretchNoneOn)
+        if (IsStretchNone)
         {
             img.ImageStretch = Avalonia.Media.Stretch.None;
         }

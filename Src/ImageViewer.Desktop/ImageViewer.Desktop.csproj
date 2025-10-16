@@ -46,6 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="ImageViewer.Desktop.parcel" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Assets\ImageViewerX-AppIcon.ico" />
   </ItemGroup>
 
