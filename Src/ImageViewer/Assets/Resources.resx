@@ -117,13 +117,154 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Button_SELECTFILES" xml:space="preserve">
+    <value>SELECT FILES</value>
+  </data>
+  <data name="Button_SELECTFOLDERS" xml:space="preserve">
+    <value>SELECT FOLDERS</value>
+  </data>
+  <data name="Label_1Minute" xml:space="preserve">
+    <value>1 Minute</value>
+  </data>
+  <data name="Label_1Second" xml:space="preserve">
+    <value>1 Second</value>
+  </data>
+  <data name="Label_2Minutes" xml:space="preserve">
+    <value>2 Minutes</value>
+  </data>
+  <data name="Label_2Seconds" xml:space="preserve">
+    <value>2 Seconds</value>
+  </data>
+  <data name="Label_3Minutes" xml:space="preserve">
+    <value>3 Minutes</value>
+  </data>
+  <data name="Label_3Seconds" xml:space="preserve">
+    <value>3 Seconds</value>
+  </data>
+  <data name="Label_4Seconds" xml:space="preserve">
+    <value>4 Seconds</value>
+  </data>
+  <data name="Label_5Minutes" xml:space="preserve">
+    <value>5 Minutes</value>
+  </data>
+  <data name="Label_5Seconds" xml:space="preserve">
+    <value>5 Seconds</value>
+  </data>
+  <data name="Label_6Seconds" xml:space="preserve">
+    <value>6 Seconds</value>
+  </data>
+  <data name="Label_7Seconds" xml:space="preserve">
+    <value>7 Seconds</value>
+  </data>
+  <data name="Label_8Seconds" xml:space="preserve">
+    <value>8 Seconds</value>
+  </data>
+  <data name="Label_9Seconds" xml:space="preserve">
+    <value>9 Seconds</value>
+  </data>
+  <data name="Label_10Minutes" xml:space="preserve">
+    <value>10 Minutes</value>
+  </data>
+  <data name="Label_10Second" xml:space="preserve">
+    <value>10 Seconds</value>
+  </data>
+  <data name="Label_15Second" xml:space="preserve">
+    <value>15 Seconds</value>
+  </data>
+  <data name="Label_20Second" xml:space="preserve">
+    <value>20 Seconds</value>
+  </data>
+  <data name="Label_30Second" xml:space="preserve">
+    <value>30 Seconds</value>
+  </data>
+  <data name="Label_Crossfade" xml:space="preserve">
+    <value>Crossfade</value>
+  </data>
+  <data name="Label_FadeInAndOut" xml:space="preserve">
+    <value>Fade In &amp;amp; Out</value>
+  </data>
+  <data name="Label_FileLocation" xml:space="preserve">
+    <value>File Location</value>
+  </data>
+  <data name="Label_Fullscreen" xml:space="preserve">
+    <value>Fullscreen</value>
+  </data>
+  <data name="Label_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Label_ImageList" xml:space="preserve">
+    <value>ImageList</value>
+  </data>
+  <data name="Label_ImageProperty" xml:space="preserve">
+    <value>Image Property</value>
+  </data>
+  <data name="Label_Interval" xml:space="preserve">
+    <value>Interval</value>
+  </data>
+  <data name="Label_NoEffect" xml:space="preserve">
+    <value>No Effect</value>
+  </data>
+  <data name="Label_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Label_OverrideDPIScaling" xml:space="preserve">
+    <value>Override DPI Scaling</value>
+  </data>
+  <data name="Label_Quit" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="Label_Repeat" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="Label_SelectFiles" xml:space="preserve">
+    <value>Select Files</value>
+  </data>
+  <data name="Label_SelectFolders" xml:space="preserve">
+    <value>Select Folders</value>
+  </data>
+  <data name="Label_ShowInFileManager" xml:space="preserve">
+    <value>Show in File Manager</value>
+  </data>
   <data name="Label_Shuffle" xml:space="preserve">
     <value>Shuffle</value>
+  </data>
+  <data name="Label_SlideKickInAndOut" xml:space="preserve">
+    <value>Slide Kick In &amp;amp; Out</value>
+  </data>
+  <data name="Label_Slideshow" xml:space="preserve">
+    <value>Slideshow</value>
   </data>
   <data name="Label_SlideshowStart" xml:space="preserve">
     <value>Start</value>
   </data>
   <data name="Label_SlideshowStop" xml:space="preserve">
     <value>Stop</value>
+  </data>
+  <data name="Label_StretchIn" xml:space="preserve">
+    <value>Stretch In</value>
+  </data>
+  <data name="Label_StretchOut" xml:space="preserve">
+    <value>Stretch Out</value>
+  </data>
+  <data name="Label_TopMost" xml:space="preserve">
+    <value>Pin Top</value>
+  </data>
+  <data name="Label_TransitionEffect" xml:space="preserve">
+    <value>Transition Effect</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="String_OverrideDPIScaling" xml:space="preserve">
+    <value>Override DPI Scaling ({0}%)</value>
+  </data>
+  <data name="String_OverrideDPIScaling_Default" xml:space="preserve">
+    <value>Override DPI Scaling (100%)</value>
+  </data>
+  <data name="String_Welcome_DragAndDrop" xml:space="preserve">
+    <value>Drag &amp; Drop</value>
+  </data>
+  <data name="String_Welcome_YourImageHere" xml:space="preserve">
+    <value>Your image files or folder here</value>
   </data>
 </root>

@@ -61,11 +61,353 @@ namespace ImageViewer.Assets {
         }
         
         /// <summary>
+        ///   SELECT FILES に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Button_SELECTFILES {
+            get {
+                return ResourceManager.GetString("Button_SELECTFILES", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   SELECT FOLDERS に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Button_SELECTFOLDERS {
+            get {
+                return ResourceManager.GetString("Button_SELECTFOLDERS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   10 Minutes に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_10Minutes {
+            get {
+                return ResourceManager.GetString("Label_10Minutes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   10 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_10Second {
+            get {
+                return ResourceManager.GetString("Label_10Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   15 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_15Second {
+            get {
+                return ResourceManager.GetString("Label_15Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   1 Minute に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_1Minute {
+            get {
+                return ResourceManager.GetString("Label_1Minute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   1 Second に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_1Second {
+            get {
+                return ResourceManager.GetString("Label_1Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   20 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_20Second {
+            get {
+                return ResourceManager.GetString("Label_20Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   2 Minutes に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_2Minutes {
+            get {
+                return ResourceManager.GetString("Label_2Minutes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   2 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_2Seconds {
+            get {
+                return ResourceManager.GetString("Label_2Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   30 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_30Second {
+            get {
+                return ResourceManager.GetString("Label_30Second", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   3 Minutes に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_3Minutes {
+            get {
+                return ResourceManager.GetString("Label_3Minutes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   3 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_3Seconds {
+            get {
+                return ResourceManager.GetString("Label_3Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   4 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_4Seconds {
+            get {
+                return ResourceManager.GetString("Label_4Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   5 Minutes に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_5Minutes {
+            get {
+                return ResourceManager.GetString("Label_5Minutes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   5 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_5Seconds {
+            get {
+                return ResourceManager.GetString("Label_5Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   6 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_6Seconds {
+            get {
+                return ResourceManager.GetString("Label_6Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   7 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_7Seconds {
+            get {
+                return ResourceManager.GetString("Label_7Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   8 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_8Seconds {
+            get {
+                return ResourceManager.GetString("Label_8Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   9 Seconds に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_9Seconds {
+            get {
+                return ResourceManager.GetString("Label_9Seconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Crossfade に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Crossfade {
+            get {
+                return ResourceManager.GetString("Label_Crossfade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Fade In &amp;amp; Out に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_FadeInAndOut {
+            get {
+                return ResourceManager.GetString("Label_FadeInAndOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   File Location に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_FileLocation {
+            get {
+                return ResourceManager.GetString("Label_FileLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Fullscreen に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Fullscreen {
+            get {
+                return ResourceManager.GetString("Label_Fullscreen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Image に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Image {
+            get {
+                return ResourceManager.GetString("Label_Image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   ImageList に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_ImageList {
+            get {
+                return ResourceManager.GetString("Label_ImageList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Image Property に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_ImageProperty {
+            get {
+                return ResourceManager.GetString("Label_ImageProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Interval に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Interval {
+            get {
+                return ResourceManager.GetString("Label_Interval", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   No Effect に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_NoEffect {
+            get {
+                return ResourceManager.GetString("Label_NoEffect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Open に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Open {
+            get {
+                return ResourceManager.GetString("Label_Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Override DPI Scaling に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_OverrideDPIScaling {
+            get {
+                return ResourceManager.GetString("Label_OverrideDPIScaling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Quit に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Quit {
+            get {
+                return ResourceManager.GetString("Label_Quit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Repeat に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Repeat {
+            get {
+                return ResourceManager.GetString("Label_Repeat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Select Files に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_SelectFiles {
+            get {
+                return ResourceManager.GetString("Label_SelectFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Select Folders に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_SelectFolders {
+            get {
+                return ResourceManager.GetString("Label_SelectFolders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Show in File Manager に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_ShowInFileManager {
+            get {
+                return ResourceManager.GetString("Label_ShowInFileManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Shuffle に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string Label_Shuffle {
             get {
                 return ResourceManager.GetString("Label_Shuffle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Slide Kick In &amp;amp; Out に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_SlideKickInAndOut {
+            get {
+                return ResourceManager.GetString("Label_SlideKickInAndOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Slideshow に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_Slideshow {
+            get {
+                return ResourceManager.GetString("Label_Slideshow", resourceCulture);
             }
         }
         
@@ -84,6 +426,87 @@ namespace ImageViewer.Assets {
         public static string Label_SlideshowStop {
             get {
                 return ResourceManager.GetString("Label_SlideshowStop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Stretch In に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_StretchIn {
+            get {
+                return ResourceManager.GetString("Label_StretchIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Stretch Out に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_StretchOut {
+            get {
+                return ResourceManager.GetString("Label_StretchOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Pin Top に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_TopMost {
+            get {
+                return ResourceManager.GetString("Label_TopMost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Transition Effect に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_TransitionEffect {
+            get {
+                return ResourceManager.GetString("Label_TransitionEffect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   View に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string Label_View {
+            get {
+                return ResourceManager.GetString("Label_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Override DPI Scaling ({0}%) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string String_OverrideDPIScaling {
+            get {
+                return ResourceManager.GetString("String_OverrideDPIScaling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Override DPI Scaling (100%) に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string String_OverrideDPIScaling_Default {
+            get {
+                return ResourceManager.GetString("String_OverrideDPIScaling_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Drag &amp; Drop に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string String_Welcome_DragAndDrop {
+            get {
+                return ResourceManager.GetString("String_Welcome_DragAndDrop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Your image files or folder here に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string String_Welcome_YourImageHere {
+            get {
+                return ResourceManager.GetString("String_Welcome_YourImageHere", resourceCulture);
             }
         }
     }

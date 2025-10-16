@@ -803,7 +803,7 @@ public partial class MainWindow : Window
 
                     this.MenuItemSystemDpiScalingFactor.IsVisible = true;
                     this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
-                    this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+                    this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Assets.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
 
                     return;
                 }
@@ -828,10 +828,10 @@ public partial class MainWindow : Window
         OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
 
         // SystemDpiScalingFactor - Set default.
-        // don't _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
-        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+        this.MenuItemSystemDpiScalingFactor.IsVisible = false;
+        this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
         this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
-        this.MenuItemSystemDpiScalingFactor.Header = $"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
+        this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Assets.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
 
         // SystemDpiScalingFactor - Windows Only
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

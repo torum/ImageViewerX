@@ -117,13 +117,154 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Button_SELECTFILES" xml:space="preserve">
+    <value>ファイルの選択</value>
+  </data>
+  <data name="Button_SELECTFOLDERS" xml:space="preserve">
+    <value>フォルダの選択</value>
+  </data>
+  <data name="Label_1Minute" xml:space="preserve">
+    <value>１分</value>
+  </data>
+  <data name="Label_1Second" xml:space="preserve">
+    <value>１秒</value>
+  </data>
+  <data name="Label_2Minutes" xml:space="preserve">
+    <value>２分</value>
+  </data>
+  <data name="Label_2Seconds" xml:space="preserve">
+    <value>２秒</value>
+  </data>
+  <data name="Label_3Minutes" xml:space="preserve">
+    <value>３分</value>
+  </data>
+  <data name="Label_3Seconds" xml:space="preserve">
+    <value>３秒</value>
+  </data>
+  <data name="Label_4Seconds" xml:space="preserve">
+    <value>４秒</value>
+  </data>
+  <data name="Label_5Minutes" xml:space="preserve">
+    <value>５分</value>
+  </data>
+  <data name="Label_5Seconds" xml:space="preserve">
+    <value>５秒</value>
+  </data>
+  <data name="Label_6Seconds" xml:space="preserve">
+    <value>６秒</value>
+  </data>
+  <data name="Label_7Seconds" xml:space="preserve">
+    <value>７秒</value>
+  </data>
+  <data name="Label_8Seconds" xml:space="preserve">
+    <value>８秒</value>
+  </data>
+  <data name="Label_9Seconds" xml:space="preserve">
+    <value>９秒</value>
+  </data>
+  <data name="Label_10Minutes" xml:space="preserve">
+    <value>１０分</value>
+  </data>
+  <data name="Label_10Second" xml:space="preserve">
+    <value>１０秒</value>
+  </data>
+  <data name="Label_15Second" xml:space="preserve">
+    <value>１５秒</value>
+  </data>
+  <data name="Label_20Second" xml:space="preserve">
+    <value>２０秒</value>
+  </data>
+  <data name="Label_30Second" xml:space="preserve">
+    <value>３０秒</value>
+  </data>
+  <data name="Label_Crossfade" xml:space="preserve">
+    <value>クロスフェード</value>
+  </data>
+  <data name="Label_FadeInAndOut" xml:space="preserve">
+    <value>フェードインアウト</value>
+  </data>
+  <data name="Label_FileLocation" xml:space="preserve">
+    <value>ファイルの場所</value>
+  </data>
+  <data name="Label_Fullscreen" xml:space="preserve">
+    <value>全画面</value>
+  </data>
+  <data name="Label_Image" xml:space="preserve">
+    <value>画像</value>
+  </data>
+  <data name="Label_ImageList" xml:space="preserve">
+    <value>画像リスト</value>
+  </data>
+  <data name="Label_ImageProperty" xml:space="preserve">
+    <value>画像のプロパティ</value>
+  </data>
+  <data name="Label_Interval" xml:space="preserve">
+    <value>インターバル</value>
+  </data>
+  <data name="Label_NoEffect" xml:space="preserve">
+    <value>効果なし</value>
+  </data>
+  <data name="Label_Open" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="Label_OverrideDPIScaling" xml:space="preserve">
+    <value>DPI スケーリングを上書き</value>
+  </data>
+  <data name="Label_Quit" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="Label_Repeat" xml:space="preserve">
+    <value>リピート</value>
+  </data>
+  <data name="Label_SelectFiles" xml:space="preserve">
+    <value>ファイルの選択</value>
+  </data>
+  <data name="Label_SelectFolders" xml:space="preserve">
+    <value>フォルダの選択</value>
+  </data>
+  <data name="Label_ShowInFileManager" xml:space="preserve">
+    <value>ファイルマネージャーで表示</value>
+  </data>
   <data name="Label_Shuffle" xml:space="preserve">
     <value>シャッフル</value>
+  </data>
+  <data name="Label_SlideKickInAndOut" xml:space="preserve">
+    <value>スライドキックインアウト</value>
+  </data>
+  <data name="Label_Slideshow" xml:space="preserve">
+    <value>スライドショー</value>
   </data>
   <data name="Label_SlideshowStart" xml:space="preserve">
     <value>開始</value>
   </data>
   <data name="Label_SlideshowStop" xml:space="preserve">
     <value>停止</value>
+  </data>
+  <data name="Label_StretchIn" xml:space="preserve">
+    <value>ストレッチイン</value>
+  </data>
+  <data name="Label_StretchOut" xml:space="preserve">
+    <value>ストレッチアウト</value>
+  </data>
+  <data name="Label_TopMost" xml:space="preserve">
+    <value>最前面</value>
+  </data>
+  <data name="Label_TransitionEffect" xml:space="preserve">
+    <value>切り替わり効果</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="String_OverrideDPIScaling" xml:space="preserve">
+    <value>DPIスケーリングの上書き（{0}%）</value>
+  </data>
+  <data name="String_OverrideDPIScaling_Default" xml:space="preserve">
+    <value>DPIスケーリングの上書き（100%）</value>
+  </data>
+  <data name="String_Welcome_DragAndDrop" xml:space="preserve">
+    <value>ドラッグ &amp; ドロップ</value>
+  </data>
+  <data name="String_Welcome_YourImageHere" xml:space="preserve">
+    <value>画像またはフォルダをここにドロップして開く</value>
   </data>
 </root>
