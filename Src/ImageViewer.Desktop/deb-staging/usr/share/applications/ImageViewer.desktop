@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=ImageViewerX
+Comment=
+Icon=ImageViewer.Desktop
+Exec=ImageViewer.Desktop
+StartupWMClass=ImageViewer.Desktop
+Terminal=false
+Type=Application
+Categories=Graphics
+GenericName=ImageViewer.Desktop
+Keywords=Image

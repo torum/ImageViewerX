@@ -1,0 +1,24 @@
+# Build and publish
+
+ImageViewerX/Src/ImageViewer.Desktop$ dotnet publish ImageViewer.Desktop.csproj -c Release -r linux-x64 -f net9.0 -p:PublishAot=true
+
+# Grab published binaries
+
+ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/libHarfBuzzSharp.so
+ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/libSkiaSharp.so
+ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/MPDCtrlX.Desktop
+ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/Assets
+
+# Put them in ...
+
+ImageViewerX/Src/deb-staging/usr/lib/ImageViewerX.Desktop/
+
+# Create a deb package
+
+ImageViewerX/Src/ImageViewerX.Desktop$ dpkg-deb --root-owner-group --build ../deb-staging ./ImageViewerX_1.0.0_amd64.deb
+
+# Test it
+
+ImageViewerX/Src/ImageViewerX.Desktop$ sudo apt install ./ImageViewerX_1.0.0_amd64.deb
+
+
