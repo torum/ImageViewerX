@@ -246,7 +246,7 @@ public partial class MainWindow : Window
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on thie platform.";
+                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on this platform.";
                 this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
             }
         }

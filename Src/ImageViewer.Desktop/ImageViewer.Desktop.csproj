@@ -33,6 +33,13 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> -->
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <AvaloniaXaml Remove="deb-staging\**" />
+	  <Compile Remove="deb-staging\**" />
+	  <EmbeddedResource Remove="deb-staging\**" />
+	  <None Remove="deb-staging\**" />
+	</ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.3.7" />
   </ItemGroup>
