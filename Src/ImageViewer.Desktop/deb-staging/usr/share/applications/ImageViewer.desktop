@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=ImageViewerX
 Comment=
-Icon=ImageViewer.Desktop
+Icon=ImageViewer.Desktop.png
 Exec=ImageViewer.Desktop
 StartupWMClass=ImageViewer.Desktop
 Terminal=false
