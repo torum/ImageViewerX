@@ -6,12 +6,12 @@ ImageViewerX/Src/ImageViewer.Desktop$ dotnet publish ImageViewer.Desktop.csproj 
 
 ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/libHarfBuzzSharp.so
 ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/libSkiaSharp.so
-ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/MPDCtrlX.Desktop
+ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/ImageViewerX
 ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/Assets
 
 # Put them in ...
 
-ImageViewerX/Src/deb-staging/usr/lib/ImageViewerX.Desktop/
+ImageViewerX/Src/deb-staging/usr/lib/ImageViewerX/
 
 # Create a deb package
 

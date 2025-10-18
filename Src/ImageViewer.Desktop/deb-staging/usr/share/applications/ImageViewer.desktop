@@ -1,12 +1,12 @@
 [Desktop Entry]
 Name=ImageViewerX
 Comment=
-Icon=ImageViewer.Desktop.png
-Exec=ImageViewer.Desktop
-StartupWMClass=ImageViewer.Desktop
+Icon=ImageViewerX.png
+Exec=ImageViewerX
+StartupWMClass=ImageViewerX
 Terminal=false
 Type=Application
 Categories=Graphics;
 MimeType=image/bmp;image/jpeg;image/jpg;image/png;image/webp;
-GenericName=ImageViewer.Desktop
+GenericName=ImageViewerX
 Keywords=Image

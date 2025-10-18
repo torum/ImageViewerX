@@ -1,6 +1,6 @@
-Package: ImageViewer.Desktop
+Package: ImageViewerX
 Version: 1.0.0
-Section: graphics
+Section: Graphics
 Priority: optional
 Architecture: amd64
 Installed-Size: 33596,520
