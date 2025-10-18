@@ -25,7 +25,6 @@ public partial class MainViewModel : ObservableObject
     #region == Private ==
 
     private readonly CancellationTokenSource _cts = new();
-
     private int _queueIndex;
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timerSlideshow;
@@ -36,6 +35,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public ==
 
+    // TODO: Make user editable.
     private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
     public string[] ValidExtensions => _validExtensions;
 

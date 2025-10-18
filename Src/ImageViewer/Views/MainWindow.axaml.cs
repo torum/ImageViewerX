@@ -802,6 +802,7 @@ public partial class MainWindow : Window
                     _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
 
                     this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+                    this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
                     this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
                     this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Assets.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
 
