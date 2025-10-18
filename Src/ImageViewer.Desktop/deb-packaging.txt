@@ -15,7 +15,7 @@ ImageViewerX/Src/deb-staging/usr/lib/ImageViewerX/
 
 # Create a deb package
 
-ImageViewerX/Src/ImageViewerX.Desktop$ dpkg-deb --root-owner-group --build ../deb-staging ./ImageViewerX_1.0.0_amd64.deb
+ImageViewerX/Src/ImageViewerX.Desktop$ dpkg-deb --root-owner-group --build ./deb-staging ./ImageViewerX_1.0.0_amd64.deb
 
 # Test it
 
