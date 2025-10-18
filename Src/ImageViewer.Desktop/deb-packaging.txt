@@ -13,6 +13,9 @@ ImageViewerX/Src/ImageViewer.Desktop/bin/Release/net9.0/linux-x64/publish/Assets
 
 ImageViewerX/Src/deb-staging/usr/lib/ImageViewerX/
 
+
+(Make sure "ImageViewerX/Src/deb-staging/usr/bin/ImageViewerX" shell script has "Executable as Program" permission)
+
 # Create a deb package
 
 ImageViewerX/Src/ImageViewerX.Desktop$ dpkg-deb --root-owner-group --build ./deb-staging ./ImageViewerX_1.0.0_amd64.deb
