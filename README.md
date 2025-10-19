@@ -36,3 +36,10 @@ Double click => Fullscreen on/off
 [ ] Image property dialog.   
 [ ] More and more options.   
 [ ] Command-line options.  
+
+## Limitation
+On Linux, backdrop can not be blured. (only opacity level can be changed)  
+On Linux, file and folder drag and drop not working due to AvaloniaUI's limitation. (though should be fixed soon)  
+On Linux, unlike Windows, content area can not extend to window's titlebar area. (due to a lot of reasons.) 
+For Mac, I throw away my iPac, MacBook, and iPad a few years back. So I can't test or create install package.  
+Currently, only following image types(file ext) are supported ".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp".  
