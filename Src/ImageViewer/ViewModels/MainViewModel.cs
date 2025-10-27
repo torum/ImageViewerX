@@ -36,7 +36,9 @@ public partial class MainViewModel : ObservableObject
     #region == Public ==
 
     // TODO: Make user editable.
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; //, ".avif"
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; 
+    // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
+    //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif"]; //
     public string[] ValidExtensions => _validExtensions;
 
     private double _clientAreaWidth = 550;

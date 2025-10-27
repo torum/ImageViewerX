@@ -181,7 +181,7 @@ public partial class MainWindow : Window
 
         if (e.NewValue is WindowState.FullScreen)
         {
-            Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
+            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
             vm.IsFullscreen = true;
         }
         else
@@ -1408,7 +1408,9 @@ public partial class MainWindow : Window
         if (droppedFiles.Count > 0)
         {
             // Remove dupe. Looks like a bug in Avalonia... when dropped from desktop for the first time.
-            droppedFiles = [.. droppedFiles.Distinct()];
+            // https://github.com/AvaloniaUI/Avalonia/pull/19864
+            // We can remove this line after Above PR is merged and released.
+            //droppedFiles = [.. droppedFiles.Distinct()];
 
             //_ = ProcessFiles(droppedFiles);
             //await ProcessFiles(droppedFiles);
