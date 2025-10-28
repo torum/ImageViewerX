@@ -1380,7 +1380,7 @@ public partial class MainViewModel : ObservableObject
                     if (bitmap is null)
                     {
                         // TODO
-                        Dispatcher.UIThread.Post(() =>
+                        await Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             img.IsAcquired = false;
                             img.IsLoading = false;
@@ -1413,7 +1413,7 @@ public partial class MainViewModel : ObservableObject
             catch (Exception e)
             {
                 // TODO:
-                Dispatcher.UIThread.Post(() =>
+                await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     img.IsAcquired = false;
                     img.IsLoading = false;
@@ -1534,7 +1534,7 @@ public partial class MainViewModel : ObservableObject
         // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep or loading very large file for example.
         await Task.Run(async () =>
         {
-            Dispatcher.UIThread.Post(() =>
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsWorking = true;
             });
@@ -1547,7 +1547,7 @@ public partial class MainViewModel : ObservableObject
                     return;
                 }
 
-                Dispatcher.UIThread.Post(() =>
+                await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     IsWorking = false;
 
