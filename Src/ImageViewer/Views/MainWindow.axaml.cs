@@ -2259,9 +2259,12 @@ public partial class MainWindow : Window
             if (test != null)
             {
                 lb.SelectedItem = test;
+
+                // 
+                lb.ScrollIntoView(selectedIndex);
             }
 
-            lb.ScrollIntoView(selectedIndex);
+            //
 
             // Center selected.
             if (lb.SelectedItem is not null)
