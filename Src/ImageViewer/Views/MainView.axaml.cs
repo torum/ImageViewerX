@@ -9,6 +9,7 @@ using Avalonia.VisualTree;
 using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -112,6 +113,7 @@ public partial class MainView : UserControl
         }
         else
         {
+            Debug.WriteLine("This shouldn't be happening @UpdatePageTransition().");
             // shouldn't be happening.
             var compositeTransition = new CompositePageTransition();
             compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));

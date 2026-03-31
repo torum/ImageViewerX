@@ -18,6 +18,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+#pragma warning disable IDE0028
+
 namespace ImageViewer.ViewModels;
 
 public partial class MainViewModel : ObservableObject
@@ -343,10 +345,7 @@ public partial class MainViewModel : ObservableObject
             _slideshowTimerInterval = value;
             OnPropertyChanged(nameof(SlideshowTimerInterval));
 
-            if (_timerSlideshow is not null)
-            {
-                _timerSlideshow.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
-            }
+            _timerSlideshow?.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
 
             SlideshowIntervalChanged?.Invoke(this, _slideshowTimerInterval);
         }
