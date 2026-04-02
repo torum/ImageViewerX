@@ -421,3 +421,8 @@ FodyWeavers.xsd
 
 
 !Src/ImageViewer.Desktop/deb-staging/usr/bin/*
+
+
+
+**/.idea
+

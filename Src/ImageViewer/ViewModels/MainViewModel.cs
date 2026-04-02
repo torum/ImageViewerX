@@ -1040,6 +1040,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Public Methods ==
 
+    // Dropped or Open with.
     public async Task DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
         //Debug.WriteLine("DroppedFiles()");
@@ -1079,7 +1080,7 @@ public partial class MainViewModel : ObservableObject
         _queue = new ObservableCollection<ImageInfo>(images);
         _originalQueue = images;//[.. images];
 
-        // When the same files dropped. The same file won't reload due to "dup". So clear it.
+        // When the same files dropped, the file won't reload due to "dup". So clear it.
         _currentFile = string.Empty;
 
         if (_queue.Count > 0)
@@ -1106,16 +1107,29 @@ public partial class MainViewModel : ObservableObject
                 //Debug.WriteLine("Shuffle @DroppedFiles()");
 
                 _queue.Shuffle();
-            }
 
-            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
-            {
-                //Debug.WriteLine("Getting SingleSelectedOriginalFile @DroppedFiles()");
-
-                var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
-                if (item is not null)
+                // Move the single selected image file to top/ 0 index if exist for easier viewing when shuffled. This is for the case when user select a file and drag and drop to the app.
+                if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
                 {
-                    _queueIndex = _queue.IndexOf(item);
+                    var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
+                    if (item is not null)
+                    {
+                        _queue.Remove(item);
+                        _queue.Insert(0, item);
+                        _queueIndex = 0;
+                    }
+                }
+            }
+            else
+            {
+                // Move index to the single selected file if exist. This is for the case when user select a file and drag and drop to the app.
+                if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
+                {
+                    var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
+                    if (item is not null)
+                    {
+                        _queueIndex = _queue.IndexOf(item);
+                    }
                 }
             }
 
