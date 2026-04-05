@@ -181,7 +181,7 @@
     <value>Crossfade</value>
   </data>
   <data name="Label_FadeInAndOut" xml:space="preserve">
-    <value>Fade In &amp;amp; Out</value>
+    <value>Fade In &amp; Out</value>
   </data>
   <data name="Label_FileLocation" xml:space="preserve">
     <value>File Location</value>
@@ -229,7 +229,7 @@
     <value>Shuffle</value>
   </data>
   <data name="Label_SlideKickInAndOut" xml:space="preserve">
-    <value>Slide Kick In &amp;amp; Out</value>
+    <value>Slide Kick In &amp; Out</value>
   </data>
   <data name="Label_Slideshow" xml:space="preserve">
     <value>Slideshow</value>

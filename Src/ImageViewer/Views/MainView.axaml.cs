@@ -71,18 +71,6 @@ public partial class MainView : UserControl
             var compositeTransition = new CompositePageTransition();
             compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-            /*
-            if (_viewModel.IsEffectCrossfadeOn)
-            {
-                compositeTransition.PageTransitions.Add(new CrossFade(TimeSpan.FromMilliseconds(1000)));
-                this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-            }
-            else
-            {
-                compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
-                this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-            }
-            */
         }
         else if (_viewModel.IsEffectPageSlideOn)
         {
@@ -287,7 +275,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         {
             var fromAnimation = new Avalonia.Animation.Animation
             {
-                Easing = new CubicEaseInOut(),
+                //Easing = new CubicEaseInOut(),
                 Duration = _duration,
                 FillMode = FillMode.Forward,
                 Children =
@@ -304,6 +292,16 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
                     }
                 }
             };
+
+            if (_crossFade)
+            {
+                fromAnimation.Easing = new CubicEaseInOut();
+            } 
+            else
+            {
+                fromAnimation.Easing = new CubicEaseIn();
+            }
+
             fromAnimTask = fromAnimation.RunAsync(from, cancellationToken);
         }
 
@@ -338,6 +336,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
                     }
                 }
             };
+
             toAnimTask = toAnimation.RunAsync(to, cancellationToken);
         }
 

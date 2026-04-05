@@ -8,25 +8,17 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ImageViewer.Views.MainView"
              x:DataType="vm:MainViewModel">
-	<!--
-	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"></ScrollViewer>
-	-->
-	<!--
-	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
-
-	</Grid>
-	-->
-		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<TransitioningContentControl.ContentTemplate>
-				<DataTemplate DataType="mod:ImageInfo">
-					<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"
-						    MaxWidth="{Binding ImageMaxWidth, Mode=OneWay}" MaxHeight="{Binding ImageMaxHeight, Mode=OneWay}"/>
-				</DataTemplate>
-			</TransitioningContentControl.ContentTemplate>
-			<!-- 
-			<TransitioningContentControl.PageTransition>
-				<CrossFade Duration="0:0:1.0" />
-			</TransitioningContentControl.PageTransition>
-			-->
-		</TransitioningContentControl>
+	<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+		<TransitioningContentControl.ContentTemplate>
+			<DataTemplate DataType="mod:ImageInfo">
+				<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"
+						MaxWidth="{Binding ImageMaxWidth, Mode=OneWay}" MaxHeight="{Binding ImageMaxHeight, Mode=OneWay}"/>
+			</DataTemplate>
+		</TransitioningContentControl.ContentTemplate>
+		<!-- 
+		<TransitioningContentControl.PageTransition>
+			<CrossFade Duration="0:0:1.0" />
+		</TransitioningContentControl.PageTransition>
+		-->
+	</TransitioningContentControl>
 </UserControl>
