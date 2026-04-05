@@ -33,14 +33,24 @@ public partial class MainViewModel : ObservableObject
     //private bool _isBusy = false;
     private List<ImageInfo> _originalQueue = [];
 
+    // Font info used for culculating displaying text width.
+
+    private FontFamily TextFontFamily { get; set; } = FontFamily.Default;
+
+    private double TextFontSize { get; set; } = 14;
+
+    private FontWeight TextFontWeight { get; set; } = FontWeight.Regular;
+
+    private FontStyle TextFontStyle { get; set; } = FontStyle.Normal;
+
     #endregion
 
-    #region == Public ==
+    #region == Public Properties ==
 
     // TODO: Make user editable.
-    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"]; 
+    private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"];
     // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
-    //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif"]; //
+    //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif", ".jxl"]; //
     public string[] ValidExtensions => _validExtensions;
 
     private double _clientAreaWidth = 550;
@@ -62,6 +72,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(FileNameFullPath));
         }
     }
+
     private double _clientAreaHeight = 550;
     public double ClientAreaHeight
     {
@@ -74,14 +85,8 @@ public partial class MainViewModel : ObservableObject
             _clientAreaHeight = value;
         }
     }
-    public FontFamily TextFontFamily { get; set; } = FontFamily.Default;
-    public double TextFontSize { get; set; } = 14;
-    public FontWeight TextFontWeight { get; set; } = FontWeight.Regular;
-    public FontStyle TextFontStyle { get; set; } = FontStyle.Normal;
 
-    #endregion
-
-    #region == Internal/Bind Properties ==
+    #region == Binding properties ==
 
     private ObservableCollection<ImageInfo> _queue = [];
     public ObservableCollection<ImageInfo> Queue
@@ -327,7 +332,7 @@ public partial class MainViewModel : ObservableObject
 
     #endregion
 
-    #region == Properties User Opts ==
+    #region == User Opts ==
 
     // Both user opt and internal state.
     private long _slideshowTimerInterval = 4;
@@ -692,7 +697,7 @@ public partial class MainViewModel : ObservableObject
                     _ = Show();
                 }
             }
-            else 
+            else
             {
                 _isOverrideSystemDpiScalingFactorOn = false;
                 OnPropertyChanged(nameof(IsOverrideSystemDpiScalingFactorOn));
@@ -830,7 +835,7 @@ public partial class MainViewModel : ObservableObject
 
     private readonly string _checkedCircle = "M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z";
     public Avalonia.Media.Geometry DataCheckedCircleIcon => Avalonia.Media.Geometry.Parse(_checkedCircle);
-    
+
     private readonly string _unCheckedCircle = "M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14ZM8 13C5.23858 13 3 10.7614 3 8C3 5.23858 5.23858 3 8 3C10.7614 3 13 5.23858 13 8C13 10.7614 10.7614 13 8 13Z";
     public Avalonia.Media.Geometry DataUnCheckedCircleIcon => Avalonia.Media.Geometry.Parse(_unCheckedCircle);
 
@@ -855,7 +860,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (IsNoEffectsOn)
             {
-                return _checkedCircle; 
+                return _checkedCircle;
             }
             else
             {
@@ -879,7 +884,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-   public string DataFadeInFadeOutIcon
+    public string DataFadeInFadeOutIcon
     {
         get
         {
@@ -990,7 +995,7 @@ public partial class MainViewModel : ObservableObject
 
     #endregion
 
-    #region == String Properties ==
+    #region == Strings ==
 
     public string SlideshowStartStopString
     {
@@ -1006,6 +1011,8 @@ public partial class MainViewModel : ObservableObject
             }
         }
     }
+
+    #endregion
 
     #endregion
 
@@ -1638,8 +1645,8 @@ public partial class MainViewModel : ObservableObject
                 }
                 else
                 {
-                    img.ImageWidth = (img.ImageSource.PixelSize.Width);
-                    img.ImageHeight = (img.ImageSource.PixelSize.Height);
+                    img.ImageWidth = img.ImageSource.PixelSize.Width;//img.ImageSource.Size.Width;
+                    img.ImageHeight = img.ImageSource.PixelSize.Height;//img.ImageSource.Size.Height;
                 }
 
                 AdjustStretchProperty(img);
@@ -1665,8 +1672,6 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        //DiplayImage1 = bitmap;
-        // Testing
         DisplayImage = img;
 
         //_queueIndex++;

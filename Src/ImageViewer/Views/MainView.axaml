@@ -11,17 +11,22 @@
 	<!--
 	<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"></ScrollViewer>
 	-->
+	<!--
 	<Grid x:Name="ImageGrid" VerticalAlignment="Center" HorizontalAlignment="Center">
+
+	</Grid>
+	-->
 		<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Center" VerticalAlignment="Center">
 			<TransitioningContentControl.ContentTemplate>
 				<DataTemplate DataType="mod:ImageInfo">
 					<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"
 						    MaxWidth="{Binding ImageMaxWidth, Mode=OneWay}" MaxHeight="{Binding ImageMaxHeight, Mode=OneWay}"/>
-					<!-- Width="{Binding ImageWidth, Mode=OneWay}" Height="{Binding ImageHeight, Mode=OneWay}" -->
-					
 				</DataTemplate>
 			</TransitioningContentControl.ContentTemplate>
+			<!-- 
+			<TransitioningContentControl.PageTransition>
+				<CrossFade Duration="0:0:1.0" />
+			</TransitioningContentControl.PageTransition>
+			-->
 		</TransitioningContentControl>
-	</Grid>
-		
 </UserControl>

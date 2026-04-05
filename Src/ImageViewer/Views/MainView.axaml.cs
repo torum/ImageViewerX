@@ -71,6 +71,18 @@ public partial class MainView : UserControl
             var compositeTransition = new CompositePageTransition();
             compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+            /*
+            if (_viewModel.IsEffectCrossfadeOn)
+            {
+                compositeTransition.PageTransitions.Add(new CrossFade(TimeSpan.FromMilliseconds(1000)));
+                this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+            }
+            else
+            {
+                compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+                this.ImageTransitioningContentControl.PageTransition = compositeTransition;
+            }
+            */
         }
         else if (_viewModel.IsEffectPageSlideOn)
         {
@@ -123,7 +135,7 @@ public partial class MainView : UserControl
 
     public void ToggleSlideshowAnimation(bool isOn, TimeSpan duration)
     {
-        var image = this.ImageGrid;
+        var image = this.ImageTransitioningContentControl;//this.ImageGrid;
 
         if (isOn)
         {
@@ -275,7 +287,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         {
             var fromAnimation = new Avalonia.Animation.Animation
             {
-                Easing = new CubicEaseIn(),
+                Easing = new CubicEaseInOut(),
                 Duration = _duration,
                 FillMode = FillMode.Forward,
                 Children =
@@ -309,7 +321,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
 
             var toAnimation = new Avalonia.Animation.Animation
             {
-                //Easing = new CubicEaseOut(),
+                Easing = new CubicEaseIn(),
                 Duration = _duration,
                 FillMode = FillMode.Forward,
                 Children =
@@ -329,9 +341,9 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             toAnimTask = toAnimation.RunAsync(to, cancellationToken);
         }
 
-        await fromAnimTask;
-        await toAnimTask;
-        //await Task.WhenAll(fromAnimTask, toAnimTask);
+        //await fromAnimTask;
+        //await toAnimTask;
+        await Task.WhenAll(fromAnimTask, toAnimTask);
 
         _first = false;
     }
