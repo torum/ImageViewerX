@@ -236,8 +236,6 @@
   </ControlTheme>
 </ResourceDictionary>
 
-
-
 				<ResourceDictionary>
 					<ControlTheme x:Key="{x:Type MenuFlyoutPresenter}" TargetType="MenuFlyoutPresenter">
 						<Setter Property="Background" Value="{DynamicResource MenuFlyoutPresenterBackground}" />

@@ -150,12 +150,12 @@ public partial class MainWindow : Window
         {
             if (_mainViewModel.IsSlideshowOn)
             {
-                Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
+                //Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
             }
             else
             {
-                Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
+                //Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
             }
         }
@@ -1856,7 +1856,7 @@ public partial class MainWindow : Window
         {
             if (WindowState == WindowState.FullScreen)
             {
-                SetWindowStateNormal();
+                this.WindowState = WindowState.Normal;
 
                 e.Handled = true;
             }
@@ -2400,6 +2400,23 @@ public partial class MainWindow : Window
                     AppleUniformTypeIdentifiers = ["public.gif", "public.bmp"],
                     MimeTypes = ["image/gif", "image/bmp"]
                 }
+                /*
+                new FilePickerFileType("All Supported Images")
+                {
+                    Patterns = ["*.jpg", "*.jpeg", "*.gif", "*.png", "*.webp", "*.bmp", "*.ico", "*.avif", "*.jxl"],
+                    AppleUniformTypeIdentifiers = ["public.jpg", "public.jpeg", "public.gif", "public.png", "public.webp", "public.bmp", "public.ico", "public.avif", "public.jxl"],
+                    MimeTypes = ["image/jpg", "image/jpeg", "image/gif", "image/png", "image/webp", "image/bmp", "image/ico", "image/avif", "image/jxl"]
+                },
+                FilePickerFileTypes.ImagePng,
+                FilePickerFileTypes.ImageJpg,
+                FilePickerFileTypes.ImageWebp,
+                new FilePickerFileType("Other Images")
+                {
+                    Patterns = ["*.gif", "*.bmp", "image/ico", "image/avif", "image/jxl"],
+                    AppleUniformTypeIdentifiers = ["public.gif", "public.bmp", "public.ico", "public.avif", "public.jxl"],
+                    MimeTypes = ["image/gif", "image/bmp", "image/ico", "image/avif", "image/jxl"]
+                }
+                */
             ]
         };
 

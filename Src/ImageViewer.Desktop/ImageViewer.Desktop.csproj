@@ -9,9 +9,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\ImageViewerX-AppIcon.ico</ApplicationIcon>
 
-	  <VersionPrefix>1.0.0.0</VersionPrefix>
-	  <VersionSuffix>RC2</VersionSuffix>
-	  <FileVersion>1.0.0.0</FileVersion>
+	  <VersionPrefix>1.0.0.3</VersionPrefix>
+	  <VersionSuffix>RC3</VersionSuffix>
+	  <FileVersion>1.0.0.3</FileVersion>
 	  
 	  <PlatformTarget>AnyCPU</PlatformTarget>
 
