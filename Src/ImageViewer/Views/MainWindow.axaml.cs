@@ -68,7 +68,7 @@ public partial class MainWindow : Window
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-        _mainViewModel.UpdateFullscreenState += (sender, arg) => { this.OnUpdateFullscreenState(arg); };
+        _mainViewModel.ToggleFullscreenState += (sender, arg) => { this.OnToggleFullscreenState(arg); };
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
 
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
             _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
             _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
-            _mainViewModel.UpdateFullscreenState -= (sender, arg) => { this.OnUpdateFullscreenState(arg); };
+            _mainViewModel.ToggleFullscreenState -= (sender, arg) => { this.OnToggleFullscreenState(arg); };
             _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
             _mainViewModel.SlideshowIntervalChanged -= (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
         };
@@ -177,16 +177,19 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Let vm know WindowState changed.
+        //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
 
         if (e.NewValue is WindowState.FullScreen)
         {
-            //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
             vm.IsFullscreen = true;
+
+            SetWindowStateFullScreen();
         }
         else
         {
             vm.IsFullscreen = false;
+
+            SetWindowStateNormal();
         }
     }
 
@@ -278,24 +281,11 @@ public partial class MainWindow : Window
         UpdateThemeBackground(ActualThemeVariant);
     }
 
-    public void OnUpdateFullscreenState(bool on)
+    public void OnToggleFullscreenState(bool on)
     {
-        //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
+        //Debug.WriteLine($"OnUpdateFullscreenState {on}");
 
-        if (on)
-        {
-            if (WindowState == WindowState.Normal)
-            {
-                SetWindowStateFullScreen();
-            }
-        }
-        else
-        {
-            if (WindowState == WindowState.FullScreen)
-            {
-                SetWindowStateNormal();
-            }
-        }
+        ToggleFullScreen();
     }
 
     public void OnSlideshowIntervalChanged(long interval)
@@ -319,11 +309,11 @@ public partial class MainWindow : Window
         this.Interval300SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
         this.Interval600SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
 
-        if (interval <= 1) 
+        if (interval <= 1)
         {
             this.Interval1SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
         }
-        else if (interval == 2) 
+        else if (interval == 2)
         {
             this.Interval2SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
         }
@@ -514,7 +504,6 @@ public partial class MainWindow : Window
             if (windowState == WindowState.FullScreen)
             {
                 // Somehow, initial state change does not get captured by window property changed event.
-                
                 SetWindowStateFullScreen();
                 _mainViewModel.IsFullscreen = true;
             }
@@ -1479,7 +1468,7 @@ public partial class MainWindow : Window
     {
         // On Linux.
         //Sort
-        IComparer<string> _naturalSortComparer = new NaturalSortComparer();
+        IComparer<string> _naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
         fileNames = [.. fileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
 
         // File first
@@ -1592,8 +1581,7 @@ public partial class MainWindow : Window
 
                                     if (IncludeSiblingsFileNames.Count > 1)
                                     {
-                                        IComparer<string> _naturalSortComparer = new NaturalSortComparer();
-                                        //IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
+                                        IComparer<string> _naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
                                         IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
                                     }
                                 }
@@ -1679,11 +1667,13 @@ public partial class MainWindow : Window
                         {
                             // Recursively get all files from a dropped folder
                             var filesInFolder = Directory.GetFiles(item, "*", SearchOption.AllDirectories);//.Path.LocalPath
-                                                                                                           //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+
+                            // Sort
+                            //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+                            //filesInFolder = [.. filesInFolder.OrderBy(f => f, StringComparison.CurrentCultureIgnoreCase.WithNaturalSort())];
+
                             droppedFiles.AddRange(filesInFolder);
                         }
-
-                        //Debug.WriteLine(item);
                     }
 
                     // Single file dropped, in that case, get all siblings.
@@ -1705,6 +1695,7 @@ public partial class MainWindow : Window
 
                                     // Sort
                                     //filesInFolder = [.. filesInFolder.OrderBy(f => f)];
+                                    //filesInFolder = [.. filesInFolder.OrderBy(f => f, StringComparison.CurrentCultureIgnoreCase.WithNaturalSort())];
 
                                     droppedFiles.AddRange(filesInFolder);
 
@@ -1777,83 +1768,43 @@ public partial class MainWindow : Window
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
-        //WindowState = (WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
-        /*
-        if (WindowState == WindowState.FullScreen)
-        {
-            SetWindowStateNormal();
-        }
-        else if (WindowState == WindowState.Normal)
-        {
-            SetWindowStateFullScreen();
-        }
-        */
-        if (WindowState == WindowState.FullScreen)
-        {
-            OnUpdateFullscreenState(false);
-        }
-        else if (WindowState == WindowState.Normal)
-        {
-            OnUpdateFullscreenState(true);
-        }
+        ToggleFullScreen();
+    }
+
+    private void ToggleFullScreen()
+    {
+        this.WindowState = (this.WindowState == WindowState.FullScreen) ? WindowState.Normal : WindowState.FullScreen;
     }
 
     private void SetWindowStateFullScreen()
     {
-        //this.QueueListBox.IsVisible = false;
+        //Debug.WriteLine("SetWindowStateFullScreen()");
         _mainViewModel.IsQueueListBoxVisible = false;
         _mainViewModel.IsFilePathPopupVisible = false;
 
+        //this.WindowState = WindowState.FullScreen;
+
+        //this.Cursor = new Cursor(StandardCursorType.None);
+        if (_timerPointerCursorHide.IsEnabled)
+        {
+            _timerPointerCursorHide.Stop();
+        }
+        _timerPointerCursorHide.Start();
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // hack for CaptionButtons not dissapearing fast enough problem.
-            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
-
-            Dispatcher.UIThread.Post(async () =>
+            if (_mainViewModel.IsSlideshowOn)
             {
-                await Task.Delay(20);
-                //await Task.Yield();
-
-                this.WindowState = WindowState.FullScreen;
-
-                //this.Cursor = new Cursor(StandardCursorType.None);
-                if (_timerPointerCursorHide.IsEnabled)
-                {
-                    _timerPointerCursorHide.Stop();
-                }
-                _timerPointerCursorHide.Start();
-
-                if (_mainViewModel.IsSlideshowOn)
-                {
-                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-                }
-            });
-        }
-        else
-        {
-            this.WindowState = WindowState.FullScreen;
-
-            //this.Cursor = new Cursor(StandardCursorType.None);
-            if (_timerPointerCursorHide.IsEnabled)
-            {
-                _timerPointerCursorHide.Stop();
-            }
-            _timerPointerCursorHide.Start();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (_mainViewModel.IsSlideshowOn)
-                {
-                    Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                    NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-                }
+                //Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
+                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
             }
         }
     }
 
     private void SetWindowStateNormal()
     {
+        //Debug.WriteLine("SetWindowStateNormal()");
+
         if (_mainViewModel.IsWorking)
         {
             this.Cursor = new Cursor(StandardCursorType.AppStarting);
@@ -1863,11 +1814,7 @@ public partial class MainWindow : Window
             this.Cursor = Cursor.Default;
         }
 
-        this.WindowState = WindowState.Normal;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
-        }
+        //this.WindowState = WindowState.Normal;
 
         if (_timerPointerCursorHide.IsEnabled)
         {
@@ -1878,7 +1825,7 @@ public partial class MainWindow : Window
         {
             if (_mainViewModel.IsSlideshowOn)
             {
-                Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
+                //Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
                 NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
             }
         }
@@ -1934,14 +1881,7 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.F)
         {
-            if (WindowState == WindowState.FullScreen)
-            {
-                SetWindowStateNormal();
-            }
-            else if (WindowState == WindowState.Normal)
-            {
-                SetWindowStateFullScreen();
-            }
+            ToggleFullScreen();
 
             e.Handled = true;
         }
@@ -2113,7 +2053,7 @@ public partial class MainWindow : Window
         */
     }
 
-    private void ListBox_GotFocus(object? sender, Avalonia.Input.GotFocusEventArgs e)
+    private void ListBox_GotFocus(object? sender, Avalonia.Input.FocusChangedEventArgs e)
     {
         this.ListBoxBackgroundLayerBorder.IsVisible = true;
     }
@@ -2123,7 +2063,7 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void ListBox_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ListBox_LostFocus(object? sender, FocusChangedEventArgs e)
     {
         this.ListBoxBackgroundLayerBorder.IsVisible = false;
     }

@@ -16,9 +16,8 @@
 		Background="Transparent"
 		Focusable="True"
 		ExtendClientAreaToDecorationsHint="True"
-		ExtendClientAreaChromeHints="PreferSystemChrome"
 	    TransparencyBackgroundFallback="#131313"
-		TransparencyLevelHint="None"
+		TransparencyLevelHint="Transparent"
 		WindowStartupLocation="Manual"
 		DragDrop.AllowDrop="True"
         DragDrop.Drop="Window_Drop"
@@ -35,6 +34,9 @@
 		PointerMoved="Window_PointerMoved"
 		Activated="Window_Activated"
 		Deactivated="Window_Deactivated">
+		<!-- v12 
+		ExtendClientAreaChromeHints="PreferSystemChrome"
+		-->
 	<!--
 	    TransparencyBackgroundFallback="Transparent"
 		TransparencyLevelHint="Transparent"
@@ -51,12 +53,15 @@
 	<Window.Resources>
 
 	</Window.Resources>
+	
+	<!-- A separate style that targets CaptionButtons when the Window is active -->
+	<!-- v12
 	<Window.Styles>
-		<!-- A separate style that targets CaptionButtons when the Window is active -->
 		<Style Selector="Window:isActive CaptionButtons">
 			<Setter Property="Opacity" Value="1.0" />
 		</Style>
 	</Window.Styles>
+	-->
 	<Interaction.Behaviors>
 		<DataTriggerBehavior Binding="{Binding IsWorking}" ComparisonCondition="Equal" Value="True">
 			<ChangePropertyAction PropertyName="Cursor" Value="AppStarting" />
@@ -480,11 +485,9 @@
 										<ItemsPresenter Name="PART_ItemsPresenter"
 														ItemsPanel="{TemplateBinding ItemsPanel}"
 														Margin="{TemplateBinding Padding}"/>
-
 										<Interaction.Behaviors>
 											<ia:VerticalScrollViewerAnimatedBehavior ScrollStepSize="60"/>
 										</Interaction.Behaviors>
-										
 									</ScrollViewer>
 								</Border>
 							</ControlTemplate>

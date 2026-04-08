@@ -209,7 +209,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // actual state.
+    // Reflects actual state.
     private bool _isFullscreen = false;
     public bool IsFullscreen
     {
@@ -222,13 +222,12 @@ public partial class MainViewModel : ObservableObject
             _isFullscreen = value;
             OnPropertyChanged(nameof(IsFullscreen));
 
-            UpdateFullscreenState?.Invoke(this, IsFullscreen);
             HideMenuFlyout?.Invoke(this, EventArgs.Empty);
 
             ToggleViewFilePathCommand.NotifyCanExecuteChanged();
             ToggleViewImageListCommand.NotifyCanExecuteChanged();
 
-            // update opts control
+            // Update opts control
             IsFullscreenOn = _isFullscreen;
         }
     }
@@ -375,7 +374,6 @@ public partial class MainViewModel : ObservableObject
 
             TransitionsHasBeenChanged?.Invoke(this, EventArgs.Empty);
 
-            //
             ToggleCrossfadeCommand.NotifyCanExecuteChanged();
         }
     }
@@ -600,7 +598,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(IsFullscreenOn));
             OnPropertyChanged(nameof(DataFullscreenOnIcon));
 
-            IsFullscreen = _isFullscreenOn;
+            //IsFullscreen = _isFullscreenOn;
         }
     }
 
@@ -1022,7 +1020,7 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? TransitionsHasBeenChanged;
     public event EventHandler? SlideshowStatusChanged;
     public event EventHandler? QueueLoaded;
-    public event EventHandler<bool>? UpdateFullscreenState;
+    public event EventHandler<bool>? ToggleFullscreenState;
     public event EventHandler? HideMenuFlyout;
     public event EventHandler<long>? SlideshowIntervalChanged;
 
@@ -1957,7 +1955,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void ToggleFullscreen()
     {
-        IsFullscreenOn = !IsFullscreenOn;
+        ToggleFullscreenState?.Invoke(this, !IsFullscreen);
     }
 
     [RelayCommand]
@@ -2124,7 +2122,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void GoNext()
     {
-        Debug.WriteLine("GoNext");
+        //Debug.WriteLine("GoNext");
 
         _ = NextKeyPressed();
     }
@@ -2132,7 +2130,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void GoPrev()
     {
-        Debug.WriteLine("GoPrev");
+        //Debug.WriteLine("GoPrev");
 
         _ = PrevKeyPressed();
     }
