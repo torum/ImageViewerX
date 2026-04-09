@@ -32,7 +32,8 @@ public partial class MainWindow : Window
     private readonly MainViewModel _mainViewModel;
     private string _lastOpenedDirectory = string.Empty;
     private bool _isFullyLoaded;
-    // Window position and size
+
+    // Currently _winRestore** are't used for much. It's a TODO;
     private int _winRestoreWidth = 1024;
     private int _winRestoreHeight = 768;
     private int _winRestoreTop = 100;
@@ -68,7 +69,7 @@ public partial class MainWindow : Window
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-        _mainViewModel.ToggleFullscreenState += (sender, arg) => { this.OnToggleFullscreenState(arg); };
+        _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState; 
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
 
@@ -79,7 +80,7 @@ public partial class MainWindow : Window
             _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
             _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
-            _mainViewModel.ToggleFullscreenState -= (sender, arg) => { this.OnToggleFullscreenState(arg); };
+            _mainViewModel.ToggleFullscreenState -= OnToggleFullscreenState;
             _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
             _mainViewModel.SlideshowIntervalChanged -= (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
         };
@@ -281,10 +282,8 @@ public partial class MainWindow : Window
         UpdateThemeBackground(ActualThemeVariant);
     }
 
-    public void OnToggleFullscreenState(bool on)
+    public void OnToggleFullscreenState(object? sender, EventArgs e)
     {
-        //Debug.WriteLine($"OnUpdateFullscreenState {on}");
-
         ToggleFullScreen();
     }
 
@@ -493,23 +492,18 @@ public partial class MainWindow : Window
                 _winRestoreHeight = (int)windowHeight;
             }
 
-            if ((windowLeft >= 0) && (windowTop >= 0))
+            if ((windowLeft >= -9) && (windowTop >= 0))
             {
                 _winRestoreLeft = windowLeft;
                 _winRestoreTop = windowTop;
             }
 
             this.WindowState = windowState;
-
-            if (windowState == WindowState.FullScreen)
-            {
-                // Somehow, initial state change does not get captured by window property changed event.
-                SetWindowStateFullScreen();
-                _mainViewModel.IsFullscreen = true;
-            }
         }
         else
         {
+            //Debug.WriteLine($"windowTop = {windowTop}, windowLeft = {windowLeft}, windowWidth = {windowWidth}, windowHeight = {windowHeight}");
+
             this.WindowState = windowState;
 
             if (windowWidth >= 300)
@@ -521,14 +515,17 @@ public partial class MainWindow : Window
                 this.Height = windowHeight;
             }
 
-            if ((windowLeft >= 0) && (windowTop >= 0))
+            // TODO: Consider multi-monitor setups. Validate if the position is actually visible on any of the screens.
+            // Needed negative number (-9 for now) for some reason.
+            // https://github.com/AvaloniaUI/Avalonia/discussions/21103
+            if ((windowLeft >= -9) && (windowTop >= 0))
             {
                 this.Position = new PixelPoint(windowLeft, windowTop);
-                //Debug.WriteLine($"(windowLeft {windowLeft} >= 0) && (windowTop {windowTop} >= 0)");
             }
             else
             {
-                Debug.WriteLine("Oops. (windowLeft >= 0) && (windowTop >= 0)");
+                Debug.WriteLine("Oops. !(windowLeft >= -9) && (windowTop >= 0)");
+                this.Position = new PixelPoint(0, 0);
             }
         }
 

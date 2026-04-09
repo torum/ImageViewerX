@@ -42,7 +42,7 @@
     <PackageReference Include="Egolds.Xaml.Behaviors.Interactions.Animated" Version="11.3.3" />
 	-->
 	<PackageReference Include="Egolds.Xaml.Behaviors.Interactions.Animated" Version="11.3.3" />
-	<PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0-rc1" />
+	<PackageReference Include="Xaml.Behaviors.Avalonia" Version="12.0.0" />
 	<!--
 	<PackageReference Include="MetadataExtractor" Version="2.9.2" />
 	-->

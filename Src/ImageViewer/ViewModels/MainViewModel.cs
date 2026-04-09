@@ -1020,7 +1020,7 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? TransitionsHasBeenChanged;
     public event EventHandler? SlideshowStatusChanged;
     public event EventHandler? QueueLoaded;
-    public event EventHandler<bool>? ToggleFullscreenState;
+    public event EventHandler? ToggleFullscreenState;
     public event EventHandler? HideMenuFlyout;
     public event EventHandler<long>? SlideshowIntervalChanged;
 
@@ -1672,9 +1672,7 @@ public partial class MainViewModel : ObservableObject
 
         DisplayImage = img;
 
-        //_queueIndex++;
         _queueIndex = idx + 1;
-        //Debug.WriteLine($"{idx} Exit critical section.");
 
         #region == Unload some of the images from memory ==
 
@@ -1688,18 +1686,6 @@ public partial class MainViewModel : ObservableObject
                 _queue[i].IsAcquired = false;
                 _queue[i].IsLoading = false;
             }
-            /*
-            for (int i = 0; i < (_queueIndex - 10); i++)
-            {
-                if (_queue[i].ImageSource is not null)
-                {
-                    _queue[i].ImageSource?.Dispose();
-                    _queue[i].ImageSource = null;
-                    _queue[i].IsAcquired = false;
-                    _queue[i].IsLoading = false;
-                }
-            }
-            */
         }
 
         var c = _queue.Count;
@@ -1713,18 +1699,6 @@ public partial class MainViewModel : ObservableObject
                 _queue[i].IsAcquired = false;
                 _queue[i].IsLoading = false;
             }
-            /*
-            for (int i = (c-1); i > (_queueIndex + 10); i--)
-            {
-                if (_queue[i].ImageSource is not null)
-                {
-                    _queue[i].ImageSource?.Dispose();
-                    _queue[i].ImageSource = null;
-                    _queue[i].IsAcquired = false;
-                    _queue[i].IsLoading = false;
-                }
-            }
-            */
         }
 
         #endregion
@@ -1955,7 +1929,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void ToggleFullscreen()
     {
-        ToggleFullscreenState?.Invoke(this, !IsFullscreen);
+        ToggleFullscreenState?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
