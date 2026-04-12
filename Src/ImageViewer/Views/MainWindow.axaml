@@ -33,7 +33,8 @@
 		Resized="Window_Resized"
 		PointerMoved="Window_PointerMoved"
 		Activated="Window_Activated"
-		Deactivated="Window_Deactivated">
+		Deactivated="Window_Deactivated"
+		WindowDecorations="Full">
 		<!-- v12 
 		ExtendClientAreaChromeHints="PreferSystemChrome"
 		-->

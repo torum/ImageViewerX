@@ -14,6 +14,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -326,6 +327,21 @@ public partial class MainViewModel : ObservableObject
             _isSaveLog = value;
 
             OnPropertyChanged(nameof(IsSaveLog));
+        }
+    }
+
+    private string _appVersion = string.Empty;
+    public string AppVersion
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(_appVersion)) return _appVersion;
+
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            var version = assembly.Version;
+            _appVersion = $"{version?.Major}.{version?.Minor}.{version?.Build}.{version?.Revision}";
+
+            return _appVersion;
         }
     }
 

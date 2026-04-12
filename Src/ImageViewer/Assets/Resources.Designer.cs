@@ -19,7 +19,7 @@ namespace ImageViewer.Assets {
     // または Visual Studio のようなツールを使用して自動生成されました。
     // メンバーを追加または削除するには、.ResX ファイルを編集して、/str オプションと共に
     // ResGen を実行し直すか、または VS プロジェクトをビルドし直します。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -57,6 +57,15 @@ namespace ImageViewer.Assets {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   ImageViewerX に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        public static string AppTitle {
+            get {
+                return ResourceManager.GetString("AppTitle", resourceCulture);
             }
         }
         
@@ -250,7 +259,7 @@ namespace ImageViewer.Assets {
         }
         
         /// <summary>
-        ///   Fade In &amp;amp; Out に類似しているローカライズされた文字列を検索します。
+        ///   Fade In &amp; Out に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string Label_FadeInAndOut {
             get {
@@ -394,7 +403,7 @@ namespace ImageViewer.Assets {
         }
         
         /// <summary>
-        ///   Slide Kick In &amp;amp; Out に類似しているローカライズされた文字列を検索します。
+        ///   Slide Kick In &amp; Out に類似しているローカライズされた文字列を検索します。
         /// </summary>
         public static string Label_SlideKickInAndOut {
             get {

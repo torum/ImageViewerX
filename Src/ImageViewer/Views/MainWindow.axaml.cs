@@ -58,6 +58,8 @@ public partial class MainWindow : Window
 
         UpdateThemeBackground(ActualThemeVariant);
 
+        this.Title = ImageViewer.Assets.Resources.AppTitle + " " + _mainViewModel.AppVersion;
+
         // Moved to Window_Loaded.
         //this.ContentFrame.Content = App.GetService<MainView>();
 

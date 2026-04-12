@@ -7,6 +7,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  <IncludeSymbols>True</IncludeSymbols>
 
+	  <VersionPrefix>1.0.0.0</VersionPrefix>
+	  <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Label="Avalonia">
@@ -27,11 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Remove="Assets\Resources.ja-JP.resx" />
-    <AvaloniaResource Remove="Assets\Resources.resx" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.0.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.0" />
@@ -49,11 +46,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaResource Update="Assets\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </AvaloniaResource>
     <Compile Update="Assets\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
