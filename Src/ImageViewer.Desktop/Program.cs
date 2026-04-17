@@ -1,6 +1,6 @@
-﻿using System;
-
-using Avalonia;
+﻿using Avalonia;
+using Avalonia.Logging;
+using System;
 
 namespace ImageViewer.Desktop;
 
@@ -17,6 +17,7 @@ class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .LogToTrace(LogEventLevel.Warning)
             .WithInterFont();
 
 }

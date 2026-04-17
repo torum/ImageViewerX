@@ -10,7 +10,6 @@
     <ApplicationIcon>Assets\ImageViewerX-AppIcon.ico</ApplicationIcon>
 
 	  <VersionPrefix>1.0.0.3</VersionPrefix>
-	  <VersionSuffix>RC3</VersionSuffix>
 	  <FileVersion>1.0.0.3</FileVersion>
 	  
 	  <PlatformTarget>AnyCPU</PlatformTarget>
@@ -43,7 +42,7 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.92.0" />
   </ItemGroup>
 

@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using ImageViewer.ViewModels;
@@ -13,14 +12,14 @@ using System.Text;
 
 namespace ImageViewer;
 
-public partial class App : Application
+public class App : Application
 {
     public static readonly string AppName = "ImageViewer2";
-    private static readonly string _appDeveloper = "torum";
+    private const string AppDeveloper = "torum";
 
     // Data folder and Config file path.
-    private static readonly string _envDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(_envDataFolder, _appDeveloper), AppName);
+    private static readonly string EnvDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(EnvDataFolder, AppDeveloper), AppName);
     public static string AppConfigFilePath { get; } = System.IO.Path.Combine(AppDataFolder, AppName + ".config");
 
     public IHost AppHost { get; private set; }
@@ -97,8 +96,8 @@ public partial class App : Application
     }
 
     // Log file.
-    private static readonly StringBuilder _errortxt = new();
-    private static readonly string _logFilePath = System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + System.IO.Path.DirectorySeparatorChar + AppName + "_errors.txt";
+    private static readonly StringBuilder Errortxt = new();
+    private static readonly string LogFilePath = System.Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + System.IO.Path.DirectorySeparatorChar + AppName + "_errors.txt";
 
     private void OnUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
     {
@@ -117,16 +116,16 @@ public partial class App : Application
         var dt = DateTime.Now;
         var nowString = dt.ToString("yyyy/MM/dd HH:mm:ss");
 
-        _errortxt.AppendLine(nowString + " - " + errorTxt + " - " + detailedErrorMessageTxt + Environment.NewLine);
+        Errortxt.AppendLine(nowString + " - " + errorTxt + " - " + detailedErrorMessageTxt + Environment.NewLine);
     }
 
     public static void SaveErrorLog()
     {
-        if (string.IsNullOrEmpty(_logFilePath))
+        if (string.IsNullOrEmpty(LogFilePath))
             return;
 
-        var s = _errortxt.ToString();
+        var s = Errortxt.ToString();
         if (!string.IsNullOrEmpty(s))
-            File.WriteAllText(_logFilePath, s);
+            File.WriteAllText(LogFilePath, s);
     }
 }

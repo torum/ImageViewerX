@@ -1485,20 +1485,18 @@ public partial class MainWindow : Window
         // Dir next.
         foreach (var path in fileNames)
         {
-            if (Directory.Exists(path))
+            if (!Directory.Exists(path)) continue;
+
+            DirectoryInfo directory = new(path);
+            var folderFiles = directory.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly).ToList();
+
+            if (folderFiles is null) continue;
+
+            List<string> folderFileNames = [.. folderFiles.Select(x => x.FullName)];
+
+            if (folderFileNames.Count > 0)
             {
-                DirectoryInfo directory = new(path);
-                var folderFiles = directory.GetFileSystemInfos("*", SearchOption.TopDirectoryOnly).ToList();
-
-                if (folderFiles is not null)
-                {
-                    List<string> folderFileNames = [.. folderFiles.Select(x => x.FullName)];
-
-                    if (folderFileNames.Count > 0)
-                    {
-                        RecursivelyProcessFiles(folderFileNames, allItems);
-                    }
-                }
+                RecursivelyProcessFiles(folderFileNames, allItems);
             }
         }
     }
@@ -1528,7 +1526,7 @@ public partial class MainWindow : Window
                     {
                         Dispatcher.UIThread.Post(() =>
                         {
-                            string? parentFolderPath = System.IO.Path.GetDirectoryName(fileNames[0]);
+                            var parentFolderPath = System.IO.Path.GetDirectoryName(fileNames[0]);
                             if (parentFolderPath is not null)
                             {
                                 // Writes to Window title bar.
@@ -1548,7 +1546,7 @@ public partial class MainWindow : Window
 
                 // 
                 var droppedImages = new List<ImageInfo>();
-                string singleSelectedOriginalFile = string.Empty;
+                var singleSelectedOriginalFile = string.Empty;
 
                 // Linux for sort
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) //RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || 

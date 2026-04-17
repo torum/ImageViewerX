@@ -85,7 +85,7 @@
 					<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
 					<Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
 					<Setter Property="CornerRadius" Value="{DynamicResource OverlayCornerRadius}" />
-					<Setter Property="Width" Value="356" />
+					<Setter Property="Width" Value="280" />
 					<Setter Property="Opacity" Value="0.95" />
 					<Setter Property="Template">
 						<ControlTemplate>
@@ -101,6 +101,8 @@
 
 									<Grid>
 										<Grid.RowDefinitions>
+											<RowDefinition Height="52"></RowDefinition>
+											<RowDefinition Height="Auto"></RowDefinition>
 											<RowDefinition Height="52"></RowDefinition>
 											<RowDefinition Height="Auto"></RowDefinition>
 											<RowDefinition Height="*"></RowDefinition>
@@ -137,6 +139,11 @@
 													<TextBlock Text="{x:Static assets:Resources.Label_Repeat}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"></TextBlock>
 												</StackPanel>
 											</Button>
+										</StackPanel>
+										
+										<Separator Grid.Row="1" Margin="0,6,0,6" Padding="0" Opacity="0.4"/>
+
+										<StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
 											<Button Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="F" Width="66" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
@@ -155,10 +162,10 @@
 											</Button>
 										</StackPanel>
 
-										<Separator Grid.Row="1" Margin="0,6,0,6" Padding="0" Opacity="0.4"/>
+										<Separator Grid.Row="3" Margin="0,6,0,6" Padding="0" Opacity="0.4"/>
 										
 										<ItemsPresenter Name="PART_ItemsPresenter"
-														Grid.Row="2"
+														Grid.Row="4"
 														ItemsPanel="{TemplateBinding ItemsPanel}"
 														Margin="{DynamicResource MenuFlyoutScrollerMargin}"
 														KeyboardNavigation.TabNavigation="Continue"

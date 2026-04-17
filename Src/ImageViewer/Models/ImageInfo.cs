@@ -12,108 +12,98 @@ public sealed class ImageInfo : ObservableObject
 
     public string? ImageFilePath { get; set; } = string.Empty;
 
-    public int BinarySize { get; set; }
+    //public int BinarySize { get; set; }
 
-    private Bitmap? _imageSource;
     public Bitmap? ImageSource
     {
-        get
-        {
-            return _imageSource;
-        }
+        get;
         set
         {
-            if (_imageSource == value)
+            if (field == value)
                 return;
 
-            _imageSource = value;
-            OnPropertyChanged(nameof(ImageSource));
+            field = value;
+            OnPropertyChanged();
         }
     }
 
-    private double _imageWidth;
     public double ImageWidth
     {
-        get => _imageWidth;
+        get;
         set
         {
-            if (_imageWidth == value)
+            if (field == value)
                 return;
 
-            _imageWidth = value;
-            OnPropertyChanged(nameof(ImageWidth));
+            field = value;
+            OnPropertyChanged();
         }
     }
 
-    private double _imageMaxWidth;
     public double ImageMaxWidth
     {
-        get => _imageMaxWidth;
+        get;
         set
         {
-            if (_imageMaxWidth == value)
+            if (field == value)
                 return;
 
-            _imageMaxWidth = value;
-            OnPropertyChanged(nameof(ImageMaxWidth));
+            field = value;
+            OnPropertyChanged();
         }
     }
 
-    private double _imageHeight;
     public double ImageHeight
     {
-        get => _imageHeight;
+        get;
         set
         {
-            if (_imageHeight == value)
+            if (field == value)
                 return;
 
-            _imageHeight = value;
-            OnPropertyChanged(nameof(ImageHeight));
+            field = value;
+            OnPropertyChanged();
         }
     }
 
-    private double _imageMaxHeight;
     public double ImageMaxHeight
     {
-        get => _imageMaxHeight;
+        get;
         set
         {
-            if (_imageMaxHeight == value)
+            if (field == value)
                 return;
 
-            _imageMaxHeight = value;
-            OnPropertyChanged(nameof(ImageMaxHeight));
+            field = value;
+            OnPropertyChanged();
         }
     }
 
-    private Avalonia.Media.Stretch _imageStretch = Stretch.Uniform;
     public Avalonia.Media.Stretch ImageStretch
     {
-        get => _imageStretch;
+        get;
         set
         {
-            if (_imageStretch == value)
+            if (field == value)
                 return;
 
-            _imageStretch = value;
-            OnPropertyChanged(nameof(ImageStretch));
+            field = value;
+            OnPropertyChanged();
         }
-    }
+    } = Stretch.Uniform;
 
-    private Avalonia.Media.StretchDirection _imageStretchDirection = StretchDirection.DownOnly;
     public Avalonia.Media.StretchDirection ImageStretchDirection
     {
-        get => _imageStretchDirection;
+        get;
         set
         {
-            if (_imageStretchDirection == value)
+            if (field == value)
                 return;
 
-            _imageStretchDirection = value;
-            OnPropertyChanged(nameof(ImageStretchDirection));
+            field = value;
+            OnPropertyChanged();
         }
-    }
+    } = StretchDirection.DownOnly;
 }
 
 
