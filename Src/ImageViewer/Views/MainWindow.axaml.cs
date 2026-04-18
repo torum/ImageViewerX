@@ -8,7 +8,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.ViewModels;
 using System;
@@ -73,7 +72,7 @@ public partial class MainWindow : Window
         _mainViewModel.QueueLoaded += OnQueueLoaded;
         _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState; 
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
-        _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
+        _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { OnSlideshowIntervalChanged(arg); };
 
         this.DetachedFromVisualTree += (s, e) =>
         {
@@ -84,7 +83,7 @@ public partial class MainWindow : Window
             _mainViewModel.QueueLoaded -= OnQueueLoaded;
             _mainViewModel.ToggleFullscreenState -= OnToggleFullscreenState;
             _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
-            _mainViewModel.SlideshowIntervalChanged -= (sender, arg) => { this.OnSlideshowIntervalChanged(arg); };
+            _mainViewModel.SlideshowIntervalChanged -= (_, arg) => { OnSlideshowIntervalChanged(arg); };
         };
 
         _timerPointerCursorHide = new DispatcherTimer
@@ -100,17 +99,13 @@ public partial class MainWindow : Window
 
     public async void SetStdin(string[] args)
     {
-        if ((args is not null) && args.Length > 0)
+        if (args.Length > 0)
         {
             // Too early?
             this.WelcomeMessageGrid.IsVisible = false;
 
             //await ProcessFiles([.. args]);
             await Task.Run(() => ProcessFiles([.. args]));
-        }
-        else
-        {
-            //_mainViewModel.IsWorking = false;
         }
     }
 
@@ -393,11 +388,11 @@ public partial class MainWindow : Window
 
     private void LoadSettings()
     {
-        int windowTop = 0;
-        int windowLeft = 0;
+        var windowTop = 0;
+        var windowLeft = 0;
         double windowHeight = 300;
         double windowWidth = 300;
-        WindowState windowState = WindowState.Normal;
+        var windowState = WindowState.Normal;
 
         if (!System.IO.File.Exists(App.AppConfigFilePath))
         {
@@ -431,7 +426,7 @@ public partial class MainWindow : Window
             hoge = mainWindow.Attribute("left");
             if (hoge is not null)
             {
-                if (Int32.TryParse(hoge.Value, out var wX))
+                if (int.TryParse(hoge.Value, out var wX))
                 {
                     windowLeft = wX;
                 }
@@ -459,23 +454,20 @@ public partial class MainWindow : Window
             hoge = mainWindow.Attribute("state");
             if (hoge is not null)
             {
-                if (hoge.Value == "FullScreen")
+                switch (hoge.Value)
                 {
-                    windowState = WindowState.FullScreen;
-                }
-                else if (hoge.Value == "Maximized")
-                {
-                    // Since there is no restorebounds in AvaloniaUI, .....
-                    windowState = WindowState.Maximized;
-                }
-                else if (hoge.Value == "Normal")
-                {
-                    windowState = WindowState.Normal;
-                }
-                else if (hoge.Value == "Minimized")
-                {
+                    case "FullScreen":
+                        windowState = WindowState.FullScreen;
+                        break;
+                    case "Maximized":
+                        // Since there is no restorebounds in AvaloniaUI, .....
+                        windowState = WindowState.Maximized;
+                        break;
+                    case "Normal":
                     // Ignore minimized.
-                    windowState = WindowState.Normal;
+                    case "Minimized":
+                        windowState = WindowState.Normal;
+                        break;
                 }
             }
         }
@@ -776,28 +768,23 @@ public partial class MainWindow : Window
     private void UpdateSystemDPIScalingFactor()
     {
         // SystemDPIScalingFactor
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            IPlatformHandle? platformHandle = this.TryGetPlatformHandle();
-            if (platformHandle != null)
-            {
-                _systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+        
+        var platformHandle = TryGetPlatformHandle();
+        if (platformHandle == null) return;
 
-                //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
+        _systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
-                if (_systemDpiScalingFactor != 1)
-                {
-                    _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+        //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
 
-                    this.MenuItemSystemDpiScalingFactor.IsVisible = true;
-                    this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
-                    this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
-                    this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Assets.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+        if (_systemDpiScalingFactor == 1) return;
 
-                    return;
-                }
-            }
-        }
+        _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+
+        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+        this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
+        this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
+        this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Assets.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -948,11 +935,11 @@ public partial class MainWindow : Window
 
         // Config xml file
         XmlDocument doc = new();
-        XmlDeclaration xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
+        var xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
         doc.InsertBefore(xmlDeclaration, doc.DocumentElement);
 
         // Root Document Element
-        XmlElement root = doc.CreateElement(string.Empty, "App", string.Empty);
+        var root = doc.CreateElement(string.Empty, "App", string.Empty);
         doc.AppendChild(root);
 
         XmlAttribute attrs;
@@ -960,75 +947,35 @@ public partial class MainWindow : Window
         #region == Window settings ==
 
         // Main Window element
-        XmlElement mainWindow = doc.CreateElement(string.Empty, "MainWindow", string.Empty);
+        var mainWindow = doc.CreateElement(string.Empty, "MainWindow", string.Empty);
 
         //Window w = (sender as Window);
         // Main Window attributes
         attrs = doc.CreateAttribute("height");
-        if (this.WindowState == WindowState.Normal)
-        {
-            attrs.Value = this.Height.ToString();
-        }
-        else
-        {
-            attrs.Value = _winRestoreHeight.ToString();
-        }
+        attrs.Value = this.WindowState == WindowState.Normal ? this.Height.ToString() : _winRestoreHeight.ToString();
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("width");
-        if (this.WindowState == WindowState.Normal)
-        {
-            attrs.Value = this.Width.ToString();
-        }
-        else
-        {
-            attrs.Value = _winRestoreWidth.ToString();
-        }
+        attrs.Value = this.WindowState == WindowState.Normal ? this.Width.ToString() : _winRestoreWidth.ToString();
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("top");
-        if (this.WindowState == WindowState.Normal)
-        {
-            //Debug.WriteLine("this.Position.Y.ToString() " + this.Position.Y.ToString());
-
-            attrs.Value = this.Position.Y.ToString();
-        }
-        else
-        {
-            Debug.WriteLine("_winRestoreTop.ToString() " + _winRestoreTop.ToString());
-
-            attrs.Value = _winRestoreTop.ToString();
-        }
+        attrs.Value = this.WindowState == WindowState.Normal ? this.Position.Y.ToString() : _winRestoreTop.ToString();
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("left");
-        if (this.WindowState == WindowState.Normal)
-        {
-            attrs.Value = this.Position.X.ToString();
-        }
-        else
-        {
-            attrs.Value = _winRestoreLeft.ToString();
-        }
+        attrs.Value = this.WindowState == WindowState.Normal ? this.Position.X.ToString() : _winRestoreLeft.ToString();
         mainWindow.SetAttributeNode(attrs);
 
         attrs = doc.CreateAttribute("state");
-        if (this.WindowState == WindowState.FullScreen)
+        attrs.Value = this.WindowState switch
         {
-            attrs.Value = "FullScreen";
-        }
-        else if (this.WindowState == WindowState.Maximized)
-        {
-            attrs.Value = "Maximized";
-        }
-        else if (this.WindowState == WindowState.Normal)
-        {
-            attrs.Value = "Normal";
-        }
-        else if (this.WindowState == WindowState.Minimized)
-        {
-            attrs.Value = "Minimized";
-        }
+            WindowState.FullScreen => "FullScreen",
+            WindowState.Maximized => "Maximized",
+            WindowState.Normal => "Normal",
+            WindowState.Minimized => "Minimized",
+            _ => attrs.Value
+        };
         mainWindow.SetAttributeNode(attrs);
 
         // set MainWindow element to root.
@@ -1038,42 +985,21 @@ public partial class MainWindow : Window
 
         #region == Options ==
 
-        XmlElement opts = doc.CreateElement(string.Empty, "Options", string.Empty);
+        var opts = doc.CreateElement(string.Empty, "Options", string.Empty);
 
         // LastOpenedDirectory
         attrs = doc.CreateAttribute("lastOpenedDirectory");
-        if (!string.IsNullOrEmpty(_lastOpenedDirectory))
-        {
-            attrs.Value = _lastOpenedDirectory;
-        }
-        else
-        {
-            attrs.Value = string.Empty;
-        }
+        attrs.Value = !string.IsNullOrEmpty(_lastOpenedDirectory) ? _lastOpenedDirectory : string.Empty;
         opts.SetAttributeNode(attrs);
 
         //IsShuffleOn
         attrs = doc.CreateAttribute("isShuffleOn");
-        if (vm.IsShuffleOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsShuffleOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsRepeatOn
         attrs = doc.CreateAttribute("isRepeatOn");
-        if (vm.IsRepeatOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsRepeatOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //#IsStayOnTop
@@ -1081,38 +1007,17 @@ public partial class MainWindow : Window
         //#IsFullscreenOn
 
         attrs = doc.CreateAttribute("isOverrideSystemDpiScalingFactorOn");
-        if (vm.IsOverrideSystemDpiScalingFactorOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsOverrideSystemDpiScalingFactorOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsViewImageListOn
         attrs = doc.CreateAttribute("isViewImageListOn");
-        if (vm.IsViewImageListOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsViewImageListOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsViewFilePathPopupOn
         attrs = doc.CreateAttribute("isViewFilePathPopupOn");
-        if (vm.IsViewFilePathPopupOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsViewFilePathPopupOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //SlideshowTimerInterval
@@ -1122,74 +1027,32 @@ public partial class MainWindow : Window
 
         //IsStretchInOn
         attrs = doc.CreateAttribute("isStretchInOn");
-        if (vm.IsStretchInOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsStretchInOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsStretchOutOn
         attrs = doc.CreateAttribute("isStretchOutOn");
-        if (vm.IsStretchOutOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsStretchOutOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsEffectFadeInAndOutOn
         attrs = doc.CreateAttribute("isEffectFadeInAndOutOn");
-        if (vm.IsEffectFadeInAndOutOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsEffectFadeInAndOutOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsEffectPageSlideOn
         attrs = doc.CreateAttribute("isEffectPageSlideOn");
-        if (vm.IsEffectPageSlideOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsEffectPageSlideOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsNoEffectsOn
         attrs = doc.CreateAttribute("isNoEffectsOn");
-        if (vm.IsNoEffectsOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsNoEffectsOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
         //IsEffectCrossfadeOn
         attrs = doc.CreateAttribute("isEffectCrossfadeOn");
-        if (vm.IsEffectCrossfadeOn)
-        {
-            attrs.Value = "True";
-        }
-        else
-        {
-            attrs.Value = "False";
-        }
+        attrs.Value = vm.IsEffectCrossfadeOn ? "True" : "False";
         opts.SetAttributeNode(attrs);
 
 
@@ -1233,8 +1096,8 @@ public partial class MainWindow : Window
         {
             _winRestoreHeight = (int)this.Height;
             _winRestoreWidth = (int)this.Width;
-            _winRestoreTop = (int)this.Position.X;
-            _winRestoreLeft = (int)this.Position.X;
+            _winRestoreTop = this.Position.X;
+            _winRestoreLeft = this.Position.X;
         }
 
         _mainViewModel.ClientAreaSizeChanged(this.ClientAreaGrid.Bounds.Width, this.ClientAreaGrid.Bounds.Height);
@@ -1389,8 +1252,8 @@ public partial class MainWindow : Window
             }
 
             droppedFiles.Add(filePath);
+
             Debug.WriteLine(filePath);
-            //Debug.WriteLine(file);
         }
 
         if (droppedFiles.Count > 0)
@@ -1400,75 +1263,21 @@ public partial class MainWindow : Window
             // We can remove this line after Above PR is merged and released.
             //droppedFiles = [.. droppedFiles.Distinct()];
 
-            //_ = ProcessFiles(droppedFiles);
-            //await ProcessFiles(droppedFiles);
             await Task.Run(() => ProcessFiles(droppedFiles));
         }
         else
         {
             _mainViewModel.IsWorking = false;
         }
-
-        /*
-        // awaiting is bad right here.
-        //await Task.Yield();
-
-        //Debug.WriteLine("Getting GetDroppedItems @Window_Drop");
-
-        var droppedFiles = await GetDroppedItems(e.DataTransfer);
-        if (droppedFiles.Count > 0)
-        {
-            //Debug.WriteLine("Starting await ProcessFiles @Window_Drop");
-
-            //await ProcessFiles(droppedFiles);
-            await Task.Run(() => ProcessFiles(droppedFiles));
-        }
-        else
-        {
-            _mainViewModel.IsWorking = false;
-        }
-        */
     }
 
-    private static Task<List<string>> GetDroppedItems(IDataTransfer data)
-    {
-        //Debug.WriteLine("GetDroppedItems()");
-
-        //ATN: Do not await in here.
-
-        var droppedFiles = new List<string>();
-        // Check if the dropped data contains file paths
-        //if (e.Data.Contains(Avalonia.Input.DataFormats.Files)) // Deprecated.
-        if (data.Contains(DataFormat.File))
-        {
-            var fileNames = data.GetItems(DataFormat.File)?.ToList();
-            if (fileNames is not null && fileNames.Count != 0)
-            {
-                foreach (var file in fileNames)
-                {
-                    var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
-                    if (filePath != null)
-                    {
-                        droppedFiles.Add(filePath);
-                    }
-                }
-
-                if (droppedFiles.Count > 0)
-                {
-                    //ProcessFiles(droppedFiles);
-                }
-            }
-        }
-
-        return Task.FromResult(droppedFiles);
-    }
 
     private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
     {
         // On Linux.
         //Sort
-        IComparer<string> _naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
-        fileNames = [.. fileNames.OrderBy(x => x, _naturalSortComparer)];//StringComparer.Ordinal
+        IComparer<string> naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
+        fileNames = [.. fileNames.OrderBy(x => x, naturalSortComparer)];//StringComparer.Ordinal
 
         // File first
         List<FileSystemInfo> files = [];
@@ -1578,8 +1387,8 @@ public partial class MainWindow : Window
 
                                     if (IncludeSiblingsFileNames.Count > 1)
                                     {
-                                        IComparer<string> _naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
-                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, _naturalSortComparer)];
+                                        IComparer<string> naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
+                                        IncludeSiblingsFileNames = [.. IncludeSiblingsFileNames.OrderBy(x => x, naturalSortComparer)];
                                     }
                                 }
                                 else
@@ -1802,14 +1611,7 @@ public partial class MainWindow : Window
     {
         //Debug.WriteLine("SetWindowStateNormal()");
 
-        if (_mainViewModel.IsWorking)
-        {
-            this.Cursor = new Cursor(StandardCursorType.AppStarting);
-        }
-        else
-        {
-            this.Cursor = Cursor.Default;
-        }
+        this.Cursor = _mainViewModel.IsWorking ? new Cursor(StandardCursorType.AppStarting) : Cursor.Default;
 
         //this.WindowState = WindowState.Normal;
 
@@ -1860,9 +1662,7 @@ public partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.Space)
         {
-            //_mainViewModel.SpaceKeyPressed();
-
-            //e.Handled = true;
+            // handled at InitKeyBindigs().
         }
         else if (e.Key == Avalonia.Input.Key.Right)
         {
@@ -1913,9 +1713,7 @@ public partial class MainWindow : Window
         {
             if (this.DataContext is MainViewModel)
             {
-                //vm.SpaceKeyPressed();
-
-                //e.Handled = true;
+                // handled at InitKeyBindigs().
             }
         }
         else if (e.Key == Key.Right)
@@ -1995,14 +1793,14 @@ public partial class MainWindow : Window
         {
             return;
         }
-        if (dataItem is not ImageInfo Item)
+        if (dataItem is not ImageInfo item)
         {
             return;
         }
 
-        lb.SelectedItem = Item;
+        lb.SelectedItem = item;
 
-        _ = _mainViewModel.ListBoxItemSelected(Item);
+        _ = _mainViewModel.ListBoxItemSelected(item);
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
@@ -2079,14 +1877,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        listBox.Tag = "ListBox_Loaded_ListBoxStackPanelBehaviors";
-
         var scrollViewer = listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
 
         var virtualPanel = listBox.GetVisualDescendants().OfType<VirtualizingStackPanel>().FirstOrDefault();
 
         if ((scrollViewer != null) && (virtualPanel != null))
         {
+            listBox.Tag = "ListBox_Loaded_ListBoxStackPanelBehaviors";
+
             // Subscribe to the scroll event to update the visible items.
             scrollViewer.ScrollChanged += (s, args) => UpdateVisibleItems(scrollViewer, virtualPanel);
             // .. size changed event too.
@@ -2176,7 +1974,7 @@ public partial class MainWindow : Window
 
             //lb.ScrollIntoView(selectedIndex);
 
-            if (DataContext is not MainViewModel vm)
+            if (DataContext is not MainViewModel)
             {
                 return;
             }

@@ -35,7 +35,6 @@ public sealed class ListBoxStackPanelBehaviors
                 return;
             }
 
-            listBox.Tag = "LoadedEvent_ListBoxStackPanelBehaviors";
 
             var scrollViewer = listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
 
@@ -43,6 +42,8 @@ public sealed class ListBoxStackPanelBehaviors
 
             if ((scrollViewer != null) && (virtualPanel != null))
             {
+                listBox.Tag = "LoadedEvent_ListBoxStackPanelBehaviors";
+
                 // Subscribe to the scroll event to update the visible items.
                 scrollViewer.ScrollChanged += (s, args) => UpdateVisibleItems(listBox, scrollViewer, virtualPanel);
                 // .. size changed event too.
