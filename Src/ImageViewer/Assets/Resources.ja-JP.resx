@@ -180,6 +180,9 @@
   <data name="Label_30Second" xml:space="preserve">
     <value>３０秒</value>
   </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>このアプリについて</value>
+  </data>
   <data name="Label_Crossfade" xml:space="preserve">
     <value>クロスフェード</value>
   </data>

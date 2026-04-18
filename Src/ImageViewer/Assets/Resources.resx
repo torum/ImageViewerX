@@ -180,6 +180,10 @@
   <data name="Label_30Second" xml:space="preserve">
     <value>30 Seconds</value>
   </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>About</value>
+    <comment>Not used for now</comment>
+  </data>
   <data name="Label_Crossfade" xml:space="preserve">
     <value>Crossfade</value>
   </data>
