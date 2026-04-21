@@ -63,15 +63,6 @@
 		</Style>
 	</Window.Styles>
 	-->
-	<Interaction.Behaviors>
-		<DataTriggerBehavior Binding="{Binding IsWorking}" ComparisonCondition="Equal" Value="True">
-			<ChangePropertyAction PropertyName="Cursor" Value="AppStarting" />
-		</DataTriggerBehavior>
-		<DataTriggerBehavior Binding="{Binding IsWorking}" ComparisonCondition="Equal" Value="False">
-			<ChangePropertyAction PropertyName="Cursor" Value="Arrow" />
-		</DataTriggerBehavior>
-	</Interaction.Behaviors>
-	
 	<FlyoutBase.AttachedFlyout>
 		<MenuFlyout Placement="Pointer">
 			<MenuFlyout.FlyoutPresenterTheme>
@@ -718,7 +709,7 @@
 				</WrapPanel>
 
 				<HyperlinkButton Margin="0,0,0,0" HorizontalAlignment="Center" NavigateUri="https://github.com/torum/ImageViewerX">
-					<TextBlock TextDecorations="{x:Null}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Opacity="0.4" HorizontalAlignment="Center">
+					<TextBlock TextDecorations="{x:Null}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" Opacity="0.4" HorizontalAlignment="Center">
 						<Run Text="{x:Static assets:Resources.AppTitle}"></Run><Run Text=" "></Run><Run Text="{Binding AppVersion}"></Run>
 					</TextBlock>
 				</HyperlinkButton>

@@ -47,7 +47,6 @@ public partial class MainWindow : Window
 
     public MainWindow(MainViewModel vm)
     {
-        //_mainViewModel = App.GetService<MainViewModel>();
         _mainViewModel = vm;
         this.DataContext = vm;
 
@@ -57,7 +56,7 @@ public partial class MainWindow : Window
 
         UpdateThemeBackground(ActualThemeVariant);
 
-        //this.Title = ImageViewer.Assets.Resources.AppTitle + " " + _mainViewModel.AppVersion; // Not good here.
+        //this.Title = ImageViewer.Assets.Resources.AppTitle;
 
         // Moved to Window_Loaded.
         //this.ContentFrame.Content = App.GetService<MainView>();
@@ -73,6 +72,8 @@ public partial class MainWindow : Window
         _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState; 
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { OnSlideshowIntervalChanged(arg); };
+        _mainViewModel.WorkingStateChanged += OnWorkingStateChanged;
+        //
 
         this.DetachedFromVisualTree += (s, e) =>
         {
@@ -95,6 +96,19 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
 
+    }
+
+    private void OnWorkingStateChanged(object? sender, bool e)
+    {
+        if (e)
+        {
+            this.Cursor = new Cursor(StandardCursorType.AppStarting);
+        }
+        else
+        {
+            this.Cursor = new Cursor(StandardCursorType.Arrow);
+        }
+        
     }
 
     public async void SetStdin(string[] args)
@@ -1271,7 +1285,6 @@ public partial class MainWindow : Window
         }
     }
 
-
     private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
     {
         // On Linux.
@@ -2071,83 +2084,6 @@ public partial class MainWindow : Window
         }, DispatcherPriority.Loaded);////.Default//.Background
     }
 
-    // EnableBlurBehind: Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
-    public static unsafe void EnableBlurBehind(IntPtr handle)
-    {
-        // The pointer for the unmanaged memory.
-        void* accentPtr = null;
-
-        try
-        {
-            uint darkGrayTint = 0;
-
-            var accent = new NativeMethods.AccentPolicy
-            {
-                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
-                AccentFlags = 0,
-                GradientColor = darkGrayTint,
-                AnimationId = 0
-            };
-
-            // Get the size of the structure.
-            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
-
-            // Allocate and zero the unmanaged memory.
-            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
-
-            // Copy the managed struct to the unmanaged memory.
-            Unsafe.Copy(accentPtr, ref accent);
-
-            var data = new NativeMethods.WindowCompositionAttributeData
-            {
-                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-                SizeOfData = (int)sizeOfAccent,
-                // Convert the void* pointer to an IntPtr for the interop call.
-                Data = (IntPtr)accentPtr
-            };
-
-            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-        }
-        finally
-        {
-            // Free the unmanaged memory if it was successfully allocated.
-            if (accentPtr != null)
-            {
-                NativeMemory.Free(accentPtr);
-            }
-        }
-    }
-    // EnableBlurBehind: Marshal.AllocHGlobal way.
-    /*
-    private static void EnableBlurBehind(IntPtr handle)
-    {
-        // Hexadecimal BGR color value
-        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
-
-        var accent = new NativeMethods.AccentPolicy
-        {
-            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
-            AccentFlags = 0,
-            GradientColor = darkGrayTint,//0,
-            AnimationId = 0
-        };
-
-        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
-        Marshal.StructureToPtr(accent, accentPtr, false);
-
-        var data = new NativeMethods.WindowCompositionAttributeData
-        {
-            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
-            SizeOfData = Marshal.SizeOf(accent),
-            Data = accentPtr
-        };
-
-        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
-
-        Marshal.FreeHGlobal(accentPtr);
-    }
-    */
-
     private async void Button_FilePick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         await OpenFilePicker();
@@ -2385,6 +2321,83 @@ public partial class MainWindow : Window
     {
         _mainViewModel.ClientAreaSizeChanged(this.ClientAreaGrid.Bounds.Width, this.ClientAreaGrid.Bounds.Height);
     }
+
+    // EnableBlurBehind: Use NativeMemory.Alloc, instead of Marshal.AllocHGlobal
+    public static unsafe void EnableBlurBehind(IntPtr handle)
+    {
+        // The pointer for the unmanaged memory.
+        void* accentPtr = null;
+
+        try
+        {
+            uint darkGrayTint = 0;
+
+            var accent = new NativeMethods.AccentPolicy
+            {
+                AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
+                AccentFlags = 0,
+                GradientColor = darkGrayTint,
+                AnimationId = 0
+            };
+
+            // Get the size of the structure.
+            nuint sizeOfAccent = (nuint)sizeof(NativeMethods.AccentPolicy);
+
+            // Allocate and zero the unmanaged memory.
+            accentPtr = NativeMemory.AllocZeroed(sizeOfAccent);
+
+            // Copy the managed struct to the unmanaged memory.
+            Unsafe.Copy(accentPtr, ref accent);
+
+            var data = new NativeMethods.WindowCompositionAttributeData
+            {
+                Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+                SizeOfData = (int)sizeOfAccent,
+                // Convert the void* pointer to an IntPtr for the interop call.
+                Data = (IntPtr)accentPtr
+            };
+
+            NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+        }
+        finally
+        {
+            // Free the unmanaged memory if it was successfully allocated.
+            if (accentPtr != null)
+            {
+                NativeMemory.Free(accentPtr);
+            }
+        }
+    }
+    // EnableBlurBehind: Marshal.AllocHGlobal way.
+    /*
+    private static void EnableBlurBehind(IntPtr handle)
+    {
+        // Hexadecimal BGR color value
+        uint darkGrayTint = 0;//0 default //0xAA222222; 67% transparent, dark gray // 0x99FF99CC; 60% transparent, light blue
+
+        var accent = new NativeMethods.AccentPolicy
+        {
+            AccentState = NativeMethods.AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND, //ACCENT_ENABLE_BLURBEHIND,
+            AccentFlags = 0,
+            GradientColor = darkGrayTint,//0,
+            AnimationId = 0
+        };
+
+        var accentPtr = Marshal.AllocHGlobal(Marshal.SizeOf(accent));
+        Marshal.StructureToPtr(accent, accentPtr, false);
+
+        var data = new NativeMethods.WindowCompositionAttributeData
+        {
+            Attribute = NativeMethods.WindowCompositionAttribute.WCA_ACCENT_POLICY,
+            SizeOfData = Marshal.SizeOf(accent),
+            Data = accentPtr
+        };
+
+        NativeMethods.SetWindowCompositionAttribute(handle, ref data);
+
+        Marshal.FreeHGlobal(accentPtr);
+    }
+    */
 }
 
 public static partial class NativeMethods

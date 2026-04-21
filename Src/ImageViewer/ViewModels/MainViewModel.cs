@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -200,6 +201,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     // When busy, it's busy processing file in/out the background thread.
+    //[GenerateTypedChangePropertyAction(UseDispatcher = true)]
     public bool IsWorking
     {
         get;
@@ -214,6 +216,10 @@ public partial class MainViewModel : ObservableObject
             {
                 // Only non fullscreen mode since IsWorking is binding to busy cursor.
                 OnPropertyChanged();
+
+                Dispatcher.UIThread.Post(() => {
+                    WorkingStateChanged?.Invoke(this, value);
+                },DispatcherPriority.Input);
             }
         }
     }
@@ -753,9 +759,10 @@ public partial class MainViewModel : ObservableObject
     public event EventHandler? ToggleFullscreenState;
     public event EventHandler? HideMenuFlyout;
     public event EventHandler<long>? SlideshowIntervalChanged;
+    public event EventHandler<bool>? WorkingStateChanged;
 
     #endregion
-    
+
     public MainViewModel()
     {
         // Init Timer.
@@ -902,7 +909,6 @@ public partial class MainViewModel : ObservableObject
         IsWorking = false;
         await Task.Yield();
     }
-
 
     public async Task NextKeyPressed()
     {
@@ -1702,7 +1708,7 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        var dir = Path.GetDirectoryName(_currentFile);
+        var dir = System.IO.Path.GetDirectoryName(_currentFile);
         if (string.IsNullOrEmpty(dir))
         {
             return;
@@ -1715,63 +1721,58 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        // Open in default app.
-        //await launcher.LaunchFileInfoAsync(new FileInfo(_currentFile));
-        
-        // Open in explorer/file manager.
-        if (await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(dir)))
-        {
-            // ok
-        }
-        else
-        {
-            // TODO: show error message.
-
-            // This failes in Debug session when the app is attached VSCode from Snap packages on Linux. 
-        }
-
-        /*
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Test A
-            Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true });
+            // Avalonia's Launcher does not support selecting file in explorer on Windows. So roll our own.
 
-            // Test B
-            string argument = $"/select, \"{_currentFile}\"";
-            Process.Start("explorer.exe", argument);
+            // Just open the directory.
+            //Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true });
 
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            Process.Start(new ProcessStartInfo
+            // This works currectly (select intended file) only if execute twice. Not sure why.
+            Process.Start("explorer.exe", $"/select,\"{_currentFile}\"");
+
+            // Pretty much the same as above. This one requires pinvoke.
+            //ShellExecute(IntPtr.Zero, "open", "explorer.exe", $"/select,\"{_currentFile}\"", null, 1);
+
+            // Reuse explorer window. But failed to select the first time same as above.
+            /*
+            SHParseDisplayName(dir, IntPtr.Zero, out nint pidlFolder, 0, out uint attrs);
+            SHParseDisplayName(_currentFile, IntPtr.Zero, out nint pidlFile, 0, out attrs);
+
+            try
             {
-                FileName = "xdg-open",
-                Arguments = $"\"{dir}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-        }
-        */
-
-        /*
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            string argument = $"/select,\"{_currentFile}\"";
-            Process.Start("explorer.exe", argument);
+                SHOpenFolderAndSelectItems(pidlFolder, 1, [pidlFile], 0);
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(pidlFolder);
+                Marshal.FreeCoTaskMem(pidlFile);
+            }
+            */
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
+            // macOS uses 'open -R' to reveal in Finder
             Process.Start("open", $"-R \"{_currentFile}\"");
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var dir = Path.GetDirectoryName(_currentFile);
-            if (dir is not null)
+            // On Linux, there is no way to support selecting file in file manager.
+            // So, just use Avalonia's Launcher to open the directory.
+            if (await launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(dir)))
             {
-                Process.Start("xdg-open", dir);
+                // ok
             }
+            else
+            {
+                // TODO: show error message?
+                // This failes in Debug session when the app is attached VSCode from Snap packages on Linux. 
+            }
+
+            // Or this. (not tested)
+            // Process.Start("xdg-open", dir);
         }
-        */
+
     }
     private bool CanShowInExplorer()
     {
@@ -1800,7 +1801,6 @@ public partial class MainViewModel : ObservableObject
         _ = PrevKeyPressed();
     }
 
-
     [RelayCommand]
     public static void Quit()
     {
@@ -1808,8 +1808,28 @@ public partial class MainViewModel : ObservableObject
         mainWin.Close();
     }
 
-
     #endregion
+
+    /*
+    [LibraryImport("shell32.dll", EntryPoint = "ShellExecuteW", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
+    */
+    /*
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial int SHParseDisplayName(
+        [MarshalAs(UnmanagedType.LPWStr)] string pszName,
+        IntPtr pbc,
+        out IntPtr ppidl,
+        uint sfgaoIn,
+        out uint psfgaoOut);
+
+    [LibraryImport("shell32.dll")]
+    private static partial int SHOpenFolderAndSelectItems(
+        IntPtr pidlFolder,
+        uint cidl,
+        [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl,
+        uint dwFlags);
+    */
 }
 
 

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using ImageViewer;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
