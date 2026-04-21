@@ -76,15 +76,16 @@
 					<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
 					<Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
 					<Setter Property="CornerRadius" Value="{DynamicResource OverlayCornerRadius}" />
-					<Setter Property="Width" Value="327" />
-					<Setter Property="Opacity" Value="0.98" />
+					<Setter Property="Width" Value="351" />
+					<Setter Property="Opacity" Value="1" />
 					<Setter Property="Template">
 						<ControlTemplate>
+									<!-- Padding="{DynamicResource FlyoutBorderThemePadding}" -->
 							<Border Name="LayoutRoot"
+									 BoxShadow="0 4 10 0 #80000000" Margin="10" Padding="3,3,3,3"
 									Background="{TemplateBinding Background}"
 									BorderBrush="{TemplateBinding BorderBrush}"
 									BorderThickness="{TemplateBinding BorderThickness}"
-									Padding="{DynamicResource FlyoutBorderThemePadding}"
 									CornerRadius="{TemplateBinding CornerRadius}">
 								<ScrollViewer HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
 											  Theme="{StaticResource FluentMenuScrollViewer}"
