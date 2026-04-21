@@ -1,19 +1,21 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data.Core;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
-using ImageViewer;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Linq;
 using System.IO;
 using System.Text;
+using Avalonia.Threading;
 
 namespace ImageViewer;
 
-public class App : Application
+public partial class App : Application
 {
     public static readonly string AppName = "ImageViewer2";
     private const string AppDeveloper = "torum";
@@ -56,11 +58,6 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        // v12
-        //BindingPlugins.DataValidators.RemoveAt(0);
-
         // Testing only
         //Assets.Resources.Culture = new CultureInfo("ja-JP");
 
@@ -93,6 +90,15 @@ public class App : Application
             };
         }
 
+        /*
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = new MainWindow
+            {
+                DataContext = new MainWindowViewModel(),
+            };
+        }
+        */
         base.OnFrameworkInitializationCompleted();
     }
 

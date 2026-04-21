@@ -7,7 +7,7 @@
     <Application.Styles>
 
 		<FluentTheme/>
-		<StyleInclude Source="avares://ImageViewer/Styles/Styles.axaml" />
+		<StyleInclude Source="avares://ImageViewerX/Styles/Styles.axaml" />
 
 	</Application.Styles>
 </Application>
