@@ -744,7 +744,7 @@ public partial class MainViewModel : ObservableObject
 
     #region == Strings ==
 
-    public string SlideshowStartStopString => IsSlideshowOn ? ImageViewer.Assets.Resources.Label_SlideshowStop : ImageViewer.Assets.Resources.Label_SlideshowStart;
+    public string SlideshowStartStopString => IsSlideshowOn ? ImageViewer.Properties.Resources.Label_SlideshowStop : ImageViewer.Properties.Resources.Label_SlideshowStart;
 
     #endregion
 

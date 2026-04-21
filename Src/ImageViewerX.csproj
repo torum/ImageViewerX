@@ -5,21 +5,21 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	  <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <RootNamespace>ImageViewer</RootNamespace>
 	<AssemblyName>ImageViewerX</AssemblyName>
 	  <ApplicationIcon>Assets\ImageViewerX-AppIcon.ico</ApplicationIcon>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  <VersionPrefix>1.0.0.0</VersionPrefix>
 	  <FileVersion>1.0.0.0</FileVersion>
+	  <IsAotCompatible>true</IsAotCompatible>
 	  
   </PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<IncludeSymbols>True</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PublishAot>True</PublishAot>
 		<!-- Recommended Avalonia trimming settings for Native AOT -->
-		<BuiltInComInteropSupport>False</BuiltInComInteropSupport>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<TrimMode>link</TrimMode>
 		<PublishTrimmed>True</PublishTrimmed>
 		<PublishSingleFile>true</PublishSingleFile>
@@ -30,6 +30,17 @@
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> -->
 	</PropertyGroup>
 
+	<PropertyGroup Label="Avalonia">
+		<AvaloniaNameGeneratorAttachDevTools>False</AvaloniaNameGeneratorAttachDevTools>
+		<Title>ImageViewerX</Title>
+		<Company>torum</Company>
+		<Product>ImageViewerX</Product>
+		<Description>Image Viewer</Description>
+		<Copyright>torum</Copyright>
+		<PackageProjectUrl>https://github.com/torum/ImageViewerX</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/torum/ImageViewerX</RepositoryUrl>
+	</PropertyGroup>
+	
   <ItemGroup>
 	  <PackageReference Include="Avalonia" Version="12.0.1" />
 	  <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
@@ -54,12 +65,12 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<Compile Update="Assets\Resources.Designer.cs">
+		<Compile Update="Properties\Resources.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Resources.resx</DependentUpon>
 		</Compile>
-		<EmbeddedResource Update="Assets\Resources.resx">
+		<EmbeddedResource Update="Properties\Resources.resx">
 			<Generator>PublicResXFileCodeGenerator</Generator>
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
 		</EmbeddedResource>
@@ -81,6 +92,7 @@
 		<None Remove="deb-staging\**" />
 	</ItemGroup>
 	<ItemGroup>
+		<None Remove="deb-packaging.txt" />
 		<None Remove="ImageViewerX.parcel" />
 	</ItemGroup>
 </Project>

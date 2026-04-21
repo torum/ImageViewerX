@@ -56,7 +56,7 @@ public partial class MainWindow : Window
 
         UpdateThemeBackground(ActualThemeVariant);
 
-        //this.Title = ImageViewer.Assets.Resources.AppTitle;
+        //this.Title = ImageViewer.Properties.Resources.AppTitle;
 
         // Moved to Window_Loaded.
         //this.ContentFrame.Content = App.GetService<MainView>();
@@ -798,7 +798,7 @@ public partial class MainWindow : Window
         this.MenuItemSystemDpiScalingFactor.IsVisible = true;
         this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
         this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
-        this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Assets.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+        this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Properties.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -821,7 +821,7 @@ public partial class MainWindow : Window
         this.MenuItemSystemDpiScalingFactor.IsVisible = false;
         this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
         this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
-        this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Assets.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
+        this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Properties.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
 
         // SystemDpiScalingFactor - Windows Only
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
