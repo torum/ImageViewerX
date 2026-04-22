@@ -420,7 +420,7 @@ FodyWeavers.xsd
 
 
 
-!Src/ImageViewer.Desktop/deb-staging/usr/bin/*
+!Src/deb-staging/usr/bin/*
 
 
 
