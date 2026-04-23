@@ -420,7 +420,7 @@ FodyWeavers.xsd
 
 
 
-!Src/deb-staging/usr/bin/*
+!deb-staging/usr/bin/*
 *.so
 *.parcel
 
