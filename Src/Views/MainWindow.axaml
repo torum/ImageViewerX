@@ -76,17 +76,18 @@
 					<Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
 					<Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
 					<Setter Property="CornerRadius" Value="{DynamicResource OverlayCornerRadius}" />
-					<Setter Property="Width" Value="351" />
+					<Setter Property="Width" Value="353" />
 					<Setter Property="Opacity" Value="1" />
 					<Setter Property="Template">
 						<ControlTemplate>
-									<!-- Padding="{DynamicResource FlyoutBorderThemePadding}" -->
+									<!--
+									 BoxShadow="0 4 10 0 #80000000" Margin="10" Padding="3,3,3,3" -->
 							<Border Name="LayoutRoot"
-									 BoxShadow="0 4 10 0 #80000000" Margin="10" Padding="3,3,3,3"
 									Background="{TemplateBinding Background}"
 									BorderBrush="{TemplateBinding BorderBrush}"
 									BorderThickness="{TemplateBinding BorderThickness}"
-									CornerRadius="{TemplateBinding CornerRadius}">
+									CornerRadius="{TemplateBinding CornerRadius}"
+									Padding="{DynamicResource FlyoutBorderThemePadding}">
 								<ScrollViewer HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
 											  Theme="{StaticResource FluentMenuScrollViewer}"
 											  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
@@ -99,7 +100,7 @@
 										</Grid.RowDefinitions>
 
 										<StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="4">
-											<Button Command="{Binding ToggleSlideshowCommand}" ToolTip.Tip="Space" Width="60" Height="48" BorderThickness="0" Margin="4,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleSlideshowCommand}" ToolTip.Tip="Space" Width="65" Height="48" BorderThickness="0" Margin="4,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<Button.Styles>
 													<Style Selector=":disabled /template/ ContentPresenter">
 														<Setter Property="Opacity" Value="0.5"/>
@@ -113,7 +114,7 @@
 													<TextBlock Text="{Binding SlideshowStartStopString, Mode=OneWay}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"></TextBlock>
 												</StackPanel>
 											</Button>
-											<Button Command="{Binding ToggleShuffleCommand}" Width="60" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleShuffleCommand}" Width="65" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataShuffleIcon, Mode=OneWay}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
@@ -121,7 +122,7 @@
 													<TextBlock Text="{x:Static props:Resources.Label_Shuffle}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"></TextBlock>
 												</StackPanel>
 											</Button>
-											<Button Command="{Binding ToggleRepeatCommand}" Width="60" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleRepeatCommand}" Width="65" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataRepeatIcon, Mode=OneWay}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
@@ -129,7 +130,7 @@
 													<TextBlock Text="{x:Static props:Resources.Label_Repeat}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"></TextBlock>
 												</StackPanel>
 											</Button>
-											<Button Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="F" Width="60" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="F" Width="65" Height="48" BorderThickness="0" Margin="0,4,0,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Foreground="{Binding $parent[Button].Foreground}" Data="{Binding DataFullscreenOnIcon, Mode=OneWay}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
@@ -137,7 +138,7 @@
 													<TextBlock Text="{x:Static props:Resources.Label_Fullscreen}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"></TextBlock>
 												</StackPanel>
 											</Button>
-											<Button Command="{Binding ToggleStayOnTopCommand}" Width="60" Height="48" BorderThickness="0" Margin="0,4,4,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+											<Button Command="{Binding ToggleStayOnTopCommand}" Width="65" Height="48" BorderThickness="0" Margin="0,4,4,0" FontSize="12" Padding="0" Background="Transparent" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
 												<StackPanel>
 													<Viewbox Width="14" Height="14" Margin="0,4,0,8">
 														<PathIcon Data="{Binding DataStayOnTopIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0"></PathIcon>
@@ -449,7 +450,7 @@
 		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
 			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
 			
-			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" Tapped="ListBox_Tapped" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="False" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
+			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="False" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
 				<!--  helper:ListBoxStackPanelBehaviors.VisibleItems="{Binding VisibleItemsImageInfo, Mode=OneWayToSource}" -->
 				<ListBox.Resources>
 					<!-- Edit: VerticalScrollViewerAnimatedBehavior. -->

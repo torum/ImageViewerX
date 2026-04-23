@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
@@ -96,6 +97,8 @@ public partial class MainWindow : Window
         // TODO: more
         InitKeyBindigs();
 
+        // Subscribe to PointerPressed with Tunneling strategy
+        QueueListBox.AddHandler(InputElement.PointerPressedEvent, OnItemPointerPressed, RoutingStrategies.Tunnel);
     }
 
     private void OnWorkingStateChanged(object? sender, bool e)
@@ -1786,10 +1789,14 @@ public partial class MainWindow : Window
 
     private void ListBox_Tapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
+        // Not always works. Use OnItemPointerPressed instead.
+        /*
+        Debug.WriteLine("ListBox_Tapped_1");
         e.Handled = true;
 
         if (sender is not ListBox lb)
         {
+            Debug.WriteLine("ListBox_Tapped_2");
             return;
         }
 
@@ -1798,10 +1805,51 @@ public partial class MainWindow : Window
         var listBoxItem = element?.FindAncestorOfType<ListBoxItem>();
         if (listBoxItem == null)
         {
+            Debug.WriteLine("ListBox_Tapped_3");
             return;
         }
         var dataItem = listBoxItem.DataContext;
+        if (dataItem == null)
+        {
+            Debug.WriteLine("ListBox_Tapped_4");
+            return;
+        }
+        if (dataItem is not ImageInfo item)
+        {
+            Debug.WriteLine("ListBox_Tapped_5");
+            return;
+        }
 
+        Debug.WriteLine("ListBox_Tapped_6");
+        lb.SelectedItem = item;
+
+        _ = _mainViewModel.ListBoxItemSelected(item);
+        */
+    }
+
+    private async void OnItemPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        //Debug.WriteLine($"OnItemPointerPressed sender is {sender}, e.Source is {e.Source}");
+        //OnItemPointerPressed sender is Avalonia.Controls.ListBox, e.Source is Avalonia.Controls.Image
+
+        if (sender is not ListBox lb)
+        {
+            return;
+        }
+
+        if (e.Source is not Control)
+        {
+            return;
+        }
+
+        var element = e.Source as Control;//Visual;
+
+        var listBoxItem = element?.FindAncestorOfType<ListBoxItem>();
+        if (listBoxItem == null)
+        {
+            return;
+        }
+        var dataItem = listBoxItem.DataContext;
         if (dataItem == null)
         {
             return;
@@ -1814,6 +1862,7 @@ public partial class MainWindow : Window
         lb.SelectedItem = item;
 
         _ = _mainViewModel.ListBoxItemSelected(item);
+
     }
 
     private void ListBox_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
