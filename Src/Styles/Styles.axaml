@@ -3,10 +3,11 @@
     <Styles.Resources>
 
         <ResourceDictionary>
-
+			<!-- Change system button colors so that it's easier to see 
 			<SolidColorBrush x:Key="CaptionButtonForeground" Color="Black" />
 			<SolidColorBrush x:Key="CaptionButtonBackground" Color="Gray" />
 			<SolidColorBrush x:Key="CaptionButtonBorderBrush" Color="#C0C0C0" />
+			-->
 						
 			<ResourceDictionary.MergedDictionaries>
 				

@@ -421,7 +421,10 @@ FodyWeavers.xsd
 
 
 !Src/deb-staging/usr/bin/*
+*.so
+*.parcel
 
+!deb-staging/*
 
 
 **/.idea
