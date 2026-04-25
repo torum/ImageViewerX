@@ -42,6 +42,8 @@ public partial class MainWindow : Window
     private Avalonia.Platform.Screen? _currentScreen;
     private double _systemDpiScalingFactor = 1;
 
+    private Process? _LinuxSleepInhibitorProcess;
+
 #pragma warning disable CS8618 
     public MainWindow() { }
 #pragma warning restore CS8618
@@ -86,6 +88,7 @@ public partial class MainWindow : Window
             _mainViewModel.ToggleFullscreenState -= OnToggleFullscreenState;
             _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
             _mainViewModel.SlideshowIntervalChanged -= (_, arg) => { OnSlideshowIntervalChanged(arg); };
+            _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
         };
 
         _timerPointerCursorHide = new DispatcherTimer
@@ -161,18 +164,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_mainViewModel.IsSlideshowOn)
         {
-            if (_mainViewModel.IsSlideshowOn)
-            {
-                //Debug.WriteLine("SetThreadExecutionState set @OnSlideshowStatusChanged");
-                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-            }
-            else
-            {
-                //Debug.WriteLine("SetThreadExecutionState off @OnSlideshowStatusChanged");
-                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
-            }
+            //NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+            StartSleepInhibitor();
+        }
+        else
+        {
+            //NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+            StopSleepInhibitor();
         }
     }
 
@@ -1613,13 +1613,9 @@ public partial class MainWindow : Window
         }
         _timerPointerCursorHide.Start();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_mainViewModel.IsSlideshowOn)
         {
-            if (_mainViewModel.IsSlideshowOn)
-            {
-                //Debug.WriteLine("SetThreadExecutionState set @SetWindowStateFullScreen");
-                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
-            }
+            StartSleepInhibitor();
         }
     }
 
@@ -1636,13 +1632,9 @@ public partial class MainWindow : Window
             _timerPointerCursorHide.Stop();
         }
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (_mainViewModel.IsSlideshowOn)
         {
-            if (_mainViewModel.IsSlideshowOn)
-            {
-                //Debug.WriteLine("SetThreadExecutionState off @SetWindowStateNormal()");
-                NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
-            }
+            StopSleepInhibitor();
         }
 
         // restore visibility
@@ -1661,6 +1653,47 @@ public partial class MainWindow : Window
             else
             {
                 _mainViewModel.IsFilePathPopupVisible = false;
+            }
+        }
+    }
+
+    private void StartSleepInhibitor()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Debug.WriteLine("SetThreadExecutionState set @StartSleepInhibitor");
+            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            Debug.WriteLine("systemd-inhibit started @StartSleepInhibitor");
+            _LinuxSleepInhibitorProcess = new Process();
+            _LinuxSleepInhibitorProcess.StartInfo.FileName = "systemd-inhibit";
+            _LinuxSleepInhibitorProcess.StartInfo.Arguments = "--what=idle:sleep --who=ImageViewerX --mode=block sleep infinity";
+            _LinuxSleepInhibitorProcess.StartInfo.UseShellExecute = false;
+            _LinuxSleepInhibitorProcess.Start();
+        }
+    }
+
+    private void StopSleepInhibitor()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Debug.WriteLine("SetThreadExecutionState off @StopSleepInhibitor()");
+            NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            if (_LinuxSleepInhibitorProcess is not null && !_LinuxSleepInhibitorProcess.HasExited)
+            {
+                Debug.WriteLine("systemd-inhibit started @StopSleepInhibitor");
+                _LinuxSleepInhibitorProcess.Kill();
+                _LinuxSleepInhibitorProcess.Dispose();
+                _LinuxSleepInhibitorProcess = null;
+            }
+            else
+            {
+                Debug.WriteLine("_LinuxSleepInhibitorProcess is already exited @StopSleepInhibitor");
             }
         }
     }
