@@ -192,6 +192,19 @@ public partial class MainWindow : Window
             return;
         }
 
+        // For linux.
+        if (e.NewValue != null && e.OldValue != null)
+        {
+            if (e.NewValue.Equals(e.OldValue))
+            {
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+
         //Debug.WriteLine($"WindowState changed from {e.OldValue} to {e.NewValue}");
 
         if (e.NewValue is WindowState.FullScreen)
