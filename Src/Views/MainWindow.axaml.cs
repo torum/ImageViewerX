@@ -1661,17 +1661,24 @@ public partial class MainWindow : Window
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Debug.WriteLine("SetThreadExecutionState set @StartSleepInhibitor");
+            Debug.WriteLine("SetThreadExecutionState set @StartSleepInhibitor()");
             NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            Debug.WriteLine("systemd-inhibit started @StartSleepInhibitor");
-            _LinuxSleepInhibitorProcess = new Process();
-            _LinuxSleepInhibitorProcess.StartInfo.FileName = "systemd-inhibit";
-            _LinuxSleepInhibitorProcess.StartInfo.Arguments = "--what=idle:sleep --who=ImageViewerX --mode=block sleep infinity";
-            _LinuxSleepInhibitorProcess.StartInfo.UseShellExecute = false;
-            _LinuxSleepInhibitorProcess.Start();
+            Debug.WriteLine("systemd-inhibit started @StartSleepInhibitor()");
+            try
+            {
+                _LinuxSleepInhibitorProcess = new Process();
+                _LinuxSleepInhibitorProcess.StartInfo.FileName = "systemd-inhibit";
+                _LinuxSleepInhibitorProcess.StartInfo.Arguments = "--what=idle:sleep --who=ImageViewerX --mode=block sleep infinity";
+                _LinuxSleepInhibitorProcess.StartInfo.UseShellExecute = false;
+                _LinuxSleepInhibitorProcess.Start();
+            }
+            catch (Exception ex) 
+            { 
+                Debug.WriteLine($"Exception: {ex.Message} @StartSleepInhibitor()");
+            }
         }
     }
 
@@ -1686,7 +1693,7 @@ public partial class MainWindow : Window
         {
             if (_LinuxSleepInhibitorProcess is not null && !_LinuxSleepInhibitorProcess.HasExited)
             {
-                Debug.WriteLine("systemd-inhibit started @StopSleepInhibitor");
+                Debug.WriteLine("systemd-inhibit stoped @StopSleepInhibitor()");
                 _LinuxSleepInhibitorProcess.Kill();
                 _LinuxSleepInhibitorProcess.Dispose();
                 _LinuxSleepInhibitorProcess = null;
