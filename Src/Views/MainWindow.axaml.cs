@@ -950,6 +950,8 @@ public partial class MainWindow : Window
         _mainViewModel.CleanUp();
 
         SaveSettings();
+
+        StopSleepInhibitor();
     }
 
     private void SaveSettings()
@@ -1679,14 +1681,42 @@ public partial class MainWindow : Window
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            Debug.WriteLine("systemd-inhibit started @StartSleepInhibitor()");
             try
             {
-                _LinuxSleepInhibitorProcess = new Process();
-                _LinuxSleepInhibitorProcess.StartInfo.FileName = "systemd-inhibit";
-                _LinuxSleepInhibitorProcess.StartInfo.Arguments = "--what=idle:sleep --who=ImageViewerX --mode=block sleep infinity";
-                _LinuxSleepInhibitorProcess.StartInfo.UseShellExecute = false;
-                _LinuxSleepInhibitorProcess.Start();
+                if (_LinuxSleepInhibitorProcess is not null)
+                {
+                    return;
+                }
+
+                // This "systemd-inhibit" is ignored by Gnome because it is too low level.
+                /*
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "systemd-inhibit",
+                    Arguments = "--what=idle:sleep --who=ImageViewerX --mode=block sleep infinity",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Debug.WriteLine("systemd-inhibit started @StartSleepInhibitor()");
+                _LinuxSleepInhibitorProcess = Process.Start(startInfo);
+                */
+
+                // For Gnome.
+                // TODO: Check the XDG_CURRENT_DESKTOP environment variable.
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "gnome-session-inhibit",
+                    // --inhibit-only: Prevents the screen from blanking without needing to wrap another command
+                    // --reason: Provides a human-readable explanation in the system inhibitor list
+                    // --inhibit idle: Specifically targets the "screen blanking" behavior
+                    Arguments = "--inhibit idle --reason \"Viewing Images\" --inhibit-only",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                Debug.WriteLine("gnome-session-inhibit started @StartSleepInhibitor");
+                _LinuxSleepInhibitorProcess = Process.Start(startInfo);
             }
             catch (Exception ex) 
             { 
