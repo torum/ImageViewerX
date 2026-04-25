@@ -1688,8 +1688,8 @@ public partial class MainWindow : Window
                     return;
                 }
 
+                /* 
                 // This "systemd-inhibit" is ignored by Gnome because it is too low level.
-                /*
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "systemd-inhibit",
@@ -1702,7 +1702,7 @@ public partial class MainWindow : Window
                 _LinuxSleepInhibitorProcess = Process.Start(startInfo);
                 */
 
-                // For Gnome.
+                // Gnome only gnome-session-inhibit.
                 // TODO: Check the XDG_CURRENT_DESKTOP environment variable.
                 var startInfo = new ProcessStartInfo
                 {
@@ -1717,6 +1717,58 @@ public partial class MainWindow : Window
 
                 Debug.WriteLine("gnome-session-inhibit started @StartSleepInhibitor");
                 _LinuxSleepInhibitorProcess = Process.Start(startInfo);
+
+                // Or use DBus
+                /*
+                //Interface
+                using Tmds.DBus;
+
+                [DBusInterface("org.freedesktop.ScreenSaver")]
+                public interface IScreenSaver : IDBusObject
+                {
+                    // Returns a cookie (uint) used to UnInhibit later
+                    Task<uint> InhibitAsync(string appName, string reason);
+                    Task UnInhibitAsync(uint cookie);
+                }
+                //Ussage
+                using System;
+                using System.Threading.Tasks;
+                using Tmds.DBus;
+
+                class Program
+                {
+                    static async Task Main(string[] args)
+                    {
+                        // 1. Create a connection to the Session Bus
+                        using var connection = new Connection(Address.Session);
+                        await connection.ConnectAsync();
+
+                        // 2. Create a proxy for the ScreenSaver service
+                        var screenSaver = connection.CreateProxy<IScreenSaver>(
+                            "org.freedesktop.ScreenSaver", 
+                            "/org/freedesktop/ScreenSaver"
+                        );
+
+                        try
+                        {
+                            // 3. Request Inhibition
+                            Console.WriteLine("Inhibiting display sleep...");
+                            uint cookie = await screenSaver.InhibitAsync("MyDotNetApp", "Running a critical task");
+
+                            // Your application logic here
+                            await Task.Delay(TimeSpan.FromMinutes(5)); 
+
+                            // 4. Release Inhibition
+                            Console.WriteLine("Releasing inhibition.");
+                            await screenSaver.UnInhibitAsync(cookie);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error: {ex.Message}");
+                        }
+                    }
+                }
+                */
             }
             catch (Exception ex) 
             { 
@@ -1729,6 +1781,8 @@ public partial class MainWindow : Window
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            // TODO: check if already ES_CONTINUOUS. If so, return immediately.
+
             Debug.WriteLine("SetThreadExecutionState off @StopSleepInhibitor()");
             NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
         }
@@ -1736,7 +1790,7 @@ public partial class MainWindow : Window
         {
             if (_LinuxSleepInhibitorProcess is not null && !_LinuxSleepInhibitorProcess.HasExited)
             {
-                Debug.WriteLine("systemd-inhibit stoped @StopSleepInhibitor()");
+                Debug.WriteLine("_LinuxSleepInhibitorProcess stoped @StopSleepInhibitor()");
                 _LinuxSleepInhibitorProcess.Kill();
                 _LinuxSleepInhibitorProcess.Dispose();
                 _LinuxSleepInhibitorProcess = null;
