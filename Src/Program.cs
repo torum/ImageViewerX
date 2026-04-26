@@ -17,6 +17,7 @@ namespace ImageViewer
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
+                .With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
                 .LogToTrace();
     }
 }

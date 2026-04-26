@@ -663,9 +663,9 @@
 		</Grid>
 
 		<Grid x:Name="FilePathGrid" IsHitTestVisible="False" IsVisible="{Binding IsFilePathPopupVisible, Mode=OneWay}" VerticalAlignment="Bottom" Height="24">
-			<Popup x:Name="PopupFilePath" IsOpen="{Binding IsFilePathPopupVisible, Mode=TwoWay}" PlacementTarget="{Binding ElementName=FilePathGrid}" Placement="AnchorAndGravity" IsLightDismissEnabled="False" Margin="24" Topmost="False">
-				<Border CornerRadius="12" BorderThickness="1" Padding="12" Background="{DynamicResource MenuFlyoutPresenterBackground}" Opacity="0.8">
-					<SelectableTextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}"></SelectableTextBlock>
+			<Popup x:Name="PopupFilePath" IsOpen="{Binding IsFilePathPopupVisible, Mode=TwoWay}" ShouldUseOverlayLayer="True" PlacementTarget="{Binding ElementName=FilePathGrid}" Placement="AnchorAndGravity" IsLightDismissEnabled="False" Margin="24" Topmost="False">
+				<Border CornerRadius="12" BorderThickness="1" Background="{DynamicResource MenuFlyoutPresenterBackground}" Opacity="0.8">
+					<SelectableTextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}" Margin="12"></SelectableTextBlock>
 				</Border>
 			</Popup>
 		</Grid>

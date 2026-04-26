@@ -426,6 +426,7 @@ public partial class MainWindow : Window
 
         if (!System.IO.File.Exists(App.AppConfigFilePath))
         {
+            _isFullyLoaded = true; // needs this to save lator.
             Debug.WriteLine("(!System.IO.File.Exists(App.AppConfigFilePath)");
             return;
         }
@@ -1180,13 +1181,12 @@ public partial class MainWindow : Window
             }
             else if (this.WindowState == WindowState.FullScreen)
             {
-                //this.Cursor = new Cursor(StandardCursorType.None);
+                // do nothing.
             }
         }
-
-        // Right clicked on Window.
-        if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
+        else  if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
         {
+            // Right clicked on Window.
             if (sender is Window target)
             {
                 var flyout = FlyoutBase.GetAttachedFlyout(target);
