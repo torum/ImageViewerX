@@ -12,6 +12,8 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using Avalonia.Threading;
+using System.Runtime.InteropServices;
+using Avalonia.Media;
 
 namespace ImageViewer;
 
@@ -65,12 +67,15 @@ public partial class App : Application
         {
             Dispatcher.UIThread.UnhandledException += OnUnhandledException;
 
-            /*
-            desktop.MainWindow = new MainWindow
+            // Set custom font for non-Windows platforms.
+            if (Application.Current != null)
             {
-                DataContext = new MainViewModel()
-            };
-            */
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Application.Current.Resources["ContentControlThemeFontFamily"] = new FontFamily("fonts:Inter#Inter");
+                }
+            }
+
             var mainWin = App.GetService<MainWindow>();
 
             // get Stdin, set it for parsing in MainWindow.
