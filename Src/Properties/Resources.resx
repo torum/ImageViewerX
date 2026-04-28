@@ -224,13 +224,16 @@
     <value>Repeat</value>
   </data>
   <data name="Label_SelectFiles" xml:space="preserve">
-    <value>Select Files</value>
+    <value>Files</value>
   </data>
   <data name="Label_SelectFolders" xml:space="preserve">
-    <value>Select Folders</value>
+    <value>Folders</value>
+  </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>Show</value>
   </data>
   <data name="Label_ShowInFileManager" xml:space="preserve">
-    <value>Show in File Manager</value>
+    <value>In File Manager</value>
   </data>
   <data name="Label_Shuffle" xml:space="preserve">
     <value>Shuffle</value>
@@ -257,7 +260,7 @@
     <value>Pin Top</value>
   </data>
   <data name="Label_TransitionEffect" xml:space="preserve">
-    <value>Transition Effect</value>
+    <value>Effects</value>
   </data>
   <data name="Label_View" xml:space="preserve">
     <value>View</value>

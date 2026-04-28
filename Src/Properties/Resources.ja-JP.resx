@@ -228,6 +228,9 @@
   <data name="Label_SelectFolders" xml:space="preserve">
     <value>フォルダの選択</value>
   </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>表示</value>
+  </data>
   <data name="Label_ShowInFileManager" xml:space="preserve">
     <value>ファイルマネージャーで表示</value>
   </data>

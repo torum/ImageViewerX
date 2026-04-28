@@ -376,7 +376,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Files.
+        ///   Looks up a localized string similar to Files.
         /// </summary>
         public static string Label_SelectFiles {
             get {
@@ -385,7 +385,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Folders.
+        ///   Looks up a localized string similar to Folders.
         /// </summary>
         public static string Label_SelectFolders {
             get {
@@ -394,7 +394,16 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Show in File Manager.
+        ///   Looks up a localized string similar to Show.
+        /// </summary>
+        public static string Label_Show {
+            get {
+                return ResourceManager.GetString("Label_Show", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In File Manager.
         /// </summary>
         public static string Label_ShowInFileManager {
             get {
@@ -475,7 +484,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Transition Effect.
+        ///   Looks up a localized string similar to Effects.
         /// </summary>
         public static string Label_TransitionEffect {
             get {
