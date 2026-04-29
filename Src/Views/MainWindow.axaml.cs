@@ -25,7 +25,7 @@ using System.Xml.Linq;
 
 namespace ImageViewer.Views;
 
-public partial class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timerPointerCursorHide;
     private Avalonia.Point _mousePosition;
@@ -45,10 +45,11 @@ public partial class MainWindow : Window
     private Process? _LinuxSleepInhibitorProcess;
 
 #pragma warning disable CS8618 
-    public MainWindow() { }
+    // Optional parameterless constructor for XAML Previewer
+    public MainWindow() { InitializeComponent(); }
 #pragma warning restore CS8618
 
-    public MainWindow(MainViewModel vm)
+    public MainWindow(MainViewModel vm) : base()
     {
         _mainViewModel = vm;
         this.DataContext = vm;

@@ -20,7 +20,8 @@ public partial class MainView : UserControl
     readonly MainViewModel _viewModel;
 
 #pragma warning disable CS8618
-    public MainView() { }
+    // Optional parameterless constructor for XAML Previewer
+    public MainView() { InitializeComponent(); }
 #pragma warning restore CS8618
     public MainView(MainViewModel vm)
     {
