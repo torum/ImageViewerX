@@ -18,6 +18,7 @@ namespace ImageViewer
                 .UsePlatformDetect()
                 .WithInterFont()
                 .With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
+                .With(new Win32PlatformOptions { OverlayPopups = true })
                 .LogToTrace();
     }
 }

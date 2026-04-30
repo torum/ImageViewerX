@@ -1,5 +1,5 @@
 Package: ImageViewerX
-Version: 1.0.0
+Version: 1.0.0.0
 Section: Graphics
 Priority: optional
 Architecture: amd64
@@ -8,4 +8,4 @@ Depends: libx11-6, libice6, libsm6, libfontconfig1, ca-certificates, tzdata, lib
 Maintainer: torum
 Homepage: https://github.com/torum/ImageViewerX
 Description: Image Viewer
-Copyright: torum 2025
+Copyright: torum 2026
