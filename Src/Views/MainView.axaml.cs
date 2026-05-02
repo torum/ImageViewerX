@@ -30,14 +30,6 @@ public partial class MainView : UserControl
 
        InitializeComponent();
 
-        /*
-        var compositeTransition = new CompositePageTransition();
-        compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Vertical));
-        compositeTransition.PageTransitions.Add(new PageSlide(TimeSpan.FromMilliseconds(500), PageSlide.SlideAxis.Horizontal));
-        compositeTransition.PageTransitions.Add(new CrossFade(TimeSpan.FromMilliseconds(1000)));
-        this.ImageTransitioningContentControl.PageTransition = compositeTransition;
-        */
-
         _viewModel.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
 
         this.DetachedFromVisualTree += (s, e) =>
@@ -70,7 +62,7 @@ public partial class MainView : UserControl
         if (_viewModel.IsEffectFadeInAndOutOn)
         {
             var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1500), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
         else if (_viewModel.IsEffectPageSlideOn)
@@ -276,6 +268,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         {
             var fromAnimation = new Avalonia.Animation.Animation
             {
+                //Easing = new CubicEaseIn(),
                 //Easing = new CubicEaseInOut(),
                 Duration = _duration,
                 FillMode = FillMode.Forward,
@@ -320,6 +313,8 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
 
             var toAnimation = new Avalonia.Animation.Animation
             {
+                //Easing = new CubicEaseInOut(),
+                //Easing = new CubicEaseOut(),
                 Easing = new CubicEaseIn(),
                 Duration = _duration,
                 FillMode = FillMode.Forward,

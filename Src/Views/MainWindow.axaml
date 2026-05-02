@@ -216,7 +216,7 @@
 					</MenuItem.Icon>
 				</MenuItem>
 				<Separator x:Name="MenuItemSystemDpiScalingFactorSeparator"/>
-				<MenuItem x:Name="MenuItemSystemDpiScalingFactor" Header="{x:Static props:Resources.Label_OverrideDPIScaling}" Command="{Binding ToggleSystemDpiScalingFactorCommand}" IsVisible="False">
+				<MenuItem x:Name="MenuItemSystemDpiScalingFactor" Header="{x:Static props:Resources.Label_OverrideDPIScaling}" Command="{Binding ToggleSystemDpiScalingFactorCommand}" IsVisible="True">
 					<MenuItem.Icon>
 						<PathIcon Data="{Binding DataSystemDpiScalingFactorOnIcon}" Width="NaN" Height="NaN" Margin="0" Padding="0">
 						</PathIcon>

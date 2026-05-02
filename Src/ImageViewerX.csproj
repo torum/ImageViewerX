@@ -13,7 +13,7 @@
 	  <VersionPrefix>1.0.1.0</VersionPrefix>
 	  <FileVersion>1.0.1.0</FileVersion>
 	  <IsAotCompatible>true</IsAotCompatible>
-	  
+	  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

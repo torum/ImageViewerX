@@ -175,7 +175,7 @@ public partial class MainViewModel : ObservableObject
             field = value;
             OnPropertyChanged();
         }
-    } = 1;
+    } = 1.0;
 
     // Reflects actual state.
     private bool _isFullscreen;
@@ -589,53 +589,43 @@ public partial class MainViewModel : ObservableObject
             if (field == value)
                 return;
 
-            // SystemDpiScalingFactor - Windows Only
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                field = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
+            field = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
 
-                if (_queue.Count > 0)
+            if (_queue.Count > 0)
+            {
+                foreach (var item in _queue)
                 {
-                    foreach (var item in _queue)
+                    if (item.ImageSource is not null)
                     {
-                        if (item.ImageSource is not null)
-                        {
-                            item.ImageSource = null;
-                            item.ImageWidth = 0;
-                            item.ImageHeight = 0;
-                            item.IsAcquired = false;
-                            item.IsLoading = false;
-                        }
+                        item.ImageSource = null;
+                        item.ImageWidth = 0;
+                        item.ImageHeight = 0;
+                        item.IsAcquired = false;
+                        item.IsLoading = false;
                     }
-
-                    // Reload image.
-                    _currentFile = string.Empty;
-
-                    //OnPropertyChanged(nameof(Queue));
-                    if ((_queueIndex - 1) >= 0)
-                    {
-                        //QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
-                        _queueIndex--;
-                    }
-                    else
-                    {
-                        //QueueHasBeenChanged?.Invoke(this, 0);
-                        _queueIndex = 0;
-                    }
-
-                    _ = Show();
                 }
-            }
-            else
-            {
-                field = false;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
+
+                // Reload image.
+                _currentFile = string.Empty;
+
+                //OnPropertyChanged(nameof(Queue));
+                if ((_queueIndex - 1) >= 0)
+                {
+                    //QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
+                    _queueIndex--;
+                }
+                else
+                {
+                    //QueueHasBeenChanged?.Invoke(this, 0);
+                    _queueIndex = 0;
+                }
+
+                _ = Show();
             }
         }
-    } = false;
+    } = true;
 
     //Stretch in 
     public bool IsStretchInOn

@@ -214,7 +214,7 @@
     <value>開く</value>
   </data>
   <data name="Label_OverrideDPIScaling" xml:space="preserve">
-    <value>DPI スケーリングを上書き</value>
+    <value>DPI スケーリング</value>
   </data>
   <data name="Label_Quit" xml:space="preserve">
     <value>閉じる</value>
@@ -265,10 +265,10 @@
     <value>表示</value>
   </data>
   <data name="String_OverrideDPIScaling" xml:space="preserve">
-    <value>DPIスケーリングの上書き（{0}%）</value>
+    <value>DPIスケーリング（{0}%）</value>
   </data>
   <data name="String_OverrideDPIScaling_Default" xml:space="preserve">
-    <value>DPIスケーリングの上書き（100%）</value>
+    <value>DPIスケーリング（100%）</value>
   </data>
   <data name="String_Welcome_DragAndDrop" xml:space="preserve">
     <value>ドラッグ &amp; ドロップ</value>

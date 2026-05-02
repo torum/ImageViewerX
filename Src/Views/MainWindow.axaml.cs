@@ -40,7 +40,7 @@ public sealed partial class MainWindow : Window
     private int _winRestoreLeft = 100;
 
     private Avalonia.Platform.Screen? _currentScreen;
-    private double _systemDpiScalingFactor = 1;
+    private double _systemDpiScalingFactor = 1.0;
 
     private Process? _LinuxSleepInhibitorProcess;
 
@@ -799,24 +799,28 @@ public sealed partial class MainWindow : Window
 
     private void UpdateSystemDPIScalingFactor()
     {
-        // SystemDPIScalingFactor
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
-        
         var platformHandle = TryGetPlatformHandle();
         if (platformHandle == null) return;
 
-        _systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
+        var screen = this.Screens.ScreenFromWindow(this);
 
-        //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDPIScalingFactor}");
+        // SystemDPIScalingFactor
+        _systemDpiScalingFactor = screen?.Scaling ?? 1.0;
+        //_systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
-        if (_systemDpiScalingFactor == 1) return;
+        //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}");
 
-        _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+        //if (_systemDpiScalingFactor == 1.0) return;
 
-        this.MenuItemSystemDpiScalingFactor.IsVisible = true;
-        this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
-        this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
-        this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Properties.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+        if (_mainViewModel.SystemDpiScalingFactor != _systemDpiScalingFactor)
+        {
+            _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+
+            //this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+            //this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
+            ///this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
+            this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Properties.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
+        }
     }
 
     private void Window_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -836,60 +840,42 @@ public sealed partial class MainWindow : Window
         OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
 
         // SystemDpiScalingFactor - Set default.
-        this.MenuItemSystemDpiScalingFactor.IsVisible = false;
-        this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
-        this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
+        //this.MenuItemSystemDpiScalingFactor.IsVisible = false;
+        //this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
+        //this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
         this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Properties.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
 
-        // SystemDpiScalingFactor - Windows Only
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        // SystemDpiScalingFactor 
+        // Initial screen detection upon loading
+        _currentScreen = GetCurrentScreen();
+
+        //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
+
+        // Subscribe to position changes
+        this.PositionChanged += MainWindow_PositionChanged;
+
+        // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
+        if (this.Screens is { } screens)
         {
-            // Initial screen detection upon loading
-            _currentScreen = GetCurrentScreen();
-
-            //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
-
-            // Subscribe to position changes
-            this.PositionChanged += MainWindow_PositionChanged;
-
-            // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
-            if (this.Screens is { } screens)
-            {
-                screens.Changed += Screens_Changed;
-            }
-
-            UpdateSystemDPIScalingFactor();
+            screens.Changed += Screens_Changed;
         }
+
+        UpdateSystemDPIScalingFactor();
     }
 
     private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         CheckAndNotifyDisplayChange();
     }
 
     private void Screens_Changed(object? sender, EventArgs e)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         // Screen configurations changed, check if the window is still on the same "logical" screen
         CheckAndNotifyDisplayChange();
     }
 
     private void CheckAndNotifyDisplayChange()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         var newScreen = GetCurrentScreen();
 
         if (newScreen != null && _currentScreen != null && newScreen != _currentScreen)
@@ -913,11 +899,6 @@ public sealed partial class MainWindow : Window
 
     private Avalonia.Platform.Screen? GetCurrentScreen()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return null;
-        }
-
         if (this.Screens is not { } screens || screens.All.Count == 0)
         {
             return null;
@@ -936,11 +917,6 @@ public sealed partial class MainWindow : Window
 
     private void OnDisplayChanged(Avalonia.Platform.Screen newScreen)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return;
-        }
-
         // Add your custom logic here (e.g., adjust DPI specific settings, reload data, etc.)
         Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
 
@@ -1784,7 +1760,7 @@ public sealed partial class MainWindow : Window
         {
             // TODO: check if already ES_CONTINUOUS. If so, return immediately.
 
-            Debug.WriteLine("SetThreadExecutionState off @StopSleepInhibitor()");
+            //Debug.WriteLine("SetThreadExecutionState off @StopSleepInhibitor()");
             NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))

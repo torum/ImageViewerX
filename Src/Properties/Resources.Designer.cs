@@ -349,7 +349,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Override DPI Scaling.
+        ///   Looks up a localized string similar to DPI Scaling.
         /// </summary>
         public static string Label_OverrideDPIScaling {
             get {
@@ -502,7 +502,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Override DPI Scaling ({0}%).
+        ///   Looks up a localized string similar to DPI Scaling ({0}%).
         /// </summary>
         public static string String_OverrideDPIScaling {
             get {
@@ -511,7 +511,7 @@ namespace ImageViewer.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Override DPI Scaling (100%).
+        ///   Looks up a localized string similar to DPI Scaling (100%).
         /// </summary>
         public static string String_OverrideDPIScaling_Default {
             get {
