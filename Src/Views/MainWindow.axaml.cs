@@ -804,21 +804,27 @@ public sealed partial class MainWindow : Window
 
         var screen = this.Screens.ScreenFromWindow(this);
 
-        // SystemDPIScalingFactor
         _systemDpiScalingFactor = screen?.Scaling ?? 1.0;
         //_systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
         //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}");
 
-        //if (_systemDpiScalingFactor == 1.0) return;
+        if (_systemDpiScalingFactor == 1.0) 
+        {
+            this.MenuItemSystemDpiScalingFactor.IsVisible = false;
+            this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
+            this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
+            this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Properties.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
+            return;
+        }
 
         if (_mainViewModel.SystemDpiScalingFactor != _systemDpiScalingFactor)
         {
             _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
 
-            //this.MenuItemSystemDpiScalingFactor.IsVisible = true;
-            //this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
-            ///this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
+            this.MenuItemSystemDpiScalingFactor.IsVisible = true;
+            this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
+            this.MenuItemSystemDpiScalingFactor.IsEnabled = true;
             this.MenuItemSystemDpiScalingFactor.Header = string.Format(ImageViewer.Properties.Resources.String_OverrideDPIScaling, (_systemDpiScalingFactor * 100)); //$"Override DPI Scaling ({_systemDpiScalingFactor * 100}%)"; //Override System DPI Scaling Factor 
         }
     }
@@ -840,10 +846,12 @@ public sealed partial class MainWindow : Window
         OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
 
         // SystemDpiScalingFactor - Set default.
-        //this.MenuItemSystemDpiScalingFactor.IsVisible = false;
-        //this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
-        //this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
+        /*
+        this.MenuItemSystemDpiScalingFactor.IsVisible = false;
+        this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
+        this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
         this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Properties.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
+        */
 
         // SystemDpiScalingFactor 
         // Initial screen detection upon loading
