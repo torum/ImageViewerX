@@ -1801,6 +1801,21 @@ public sealed partial class MainWindow : Window
         else if (e.Key == Avalonia.Input.Key.Space)
         {
             // handled at InitKeyBindigs().
+
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+            {
+                // Alt + Space pressed.
+                Debug.WriteLine("Window_KeyDown: Alt + Space pressed. Ignoring for play/pause to allow system menu access.");
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // not working. handled this at KeyDown to allow system menu access. Do nothing here.
+                    //if (GetTopLevel(this)?.TryGetPlatformHandle() is not { } handle) return;
+                    //NativeMethods.ShowSystemWindowMenu(handle.Handle);
+                    e.Handled = true;
+                    return;
+                }
+            }
         }
         else if (e.Key == Avalonia.Input.Key.Right)
         {
@@ -1852,6 +1867,21 @@ public sealed partial class MainWindow : Window
             if (this.DataContext is MainViewModel)
             {
                 // handled at InitKeyBindigs().
+
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+                {
+                    // Alt + Space pressed.
+                    Debug.WriteLine("Window_KeyUp: Alt + Space pressed. Ignoring for play/pause to allow system menu access.");
+
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        // KeyUp works, keyDown doesn't.
+                        if (GetTopLevel(this)?.TryGetPlatformHandle() is not { } handle) return;
+                        NativeMethods.ShowSystemWindowMenu(handle.Handle);
+                        e.Handled = true;
+                        return;
+                    }
+                }
             }
         }
         else if (e.Key == Key.Right)
@@ -2613,11 +2643,24 @@ public static partial class NativeMethods
 
     #endregion
 
-    /*
-    // For Alt+Space sys menu.
+    #region == DpiHelper (GetDpiForWindow) ==
+
+    public const int WM_SYSCOMMAND = 0x0112;
+    public const int SC_KEYMENU = 0xF100;
+
+    //[DllImport("user32.dll", SetLastError = true)]
+    //public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
     [LibraryImport("user32.dll", EntryPoint = "DefWindowProcW")]
-    public static partial IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-    */
+    private static partial IntPtr DefWindowProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+    // Helper method to show the system window menu (aka the Control Menu) for a given window handle
+    public static void ShowSystemWindowMenu(IntPtr hWnd)
+    {
+        DefWindowProc(hWnd, WM_SYSCOMMAND, (IntPtr)SC_KEYMENU, (IntPtr)32);
+    }
+
+    #endregion
 
     #region == Prevent from sleep (SetThreadExecutionState) ==
 
@@ -2634,23 +2677,7 @@ public static partial class NativeMethods
 
 }
 
-// TryRegisterWindowsMenu() for sys menu (alt+space)
-/*
-private void TryRegisterWindowsMenu()
-{
-    if (!OperatingSystem.IsWindows()) return;
-    if (GetTopLevel(this)?.TryGetPlatformHandle() is not { } handle) return;
-    const uint wmSysCommandMessage = 0x0112;
-    const nint sysCommandsScKeyMenu = 0xF100;
-    const nint spaceChar = ' ';
-    AddHandler(KeyUpEvent, (sender, args) =>
-    {
-        if (args.Key != Key.Space || args.KeyModifiers == KeyModifiers.None) return;
-        NativeMethods.DefWindowProc(handle.Handle, wmSysCommandMessage, sysCommandsScKeyMenu, spaceChar);
-    }, RoutingStrategies.Tunnel);
-}
-*/
-
+// Not used anymore.
 public partial class DpiHelper
 {
     // Define the P/Invoke signature for GetDpiForWindow
