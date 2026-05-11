@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-
 namespace ImageViewer.Views;
 
 public sealed partial class MainWindow : Window
@@ -317,96 +316,96 @@ public sealed partial class MainWindow : Window
 
     public void OnSlideshowIntervalChanged(long interval)
     {
-        this.Interval1SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval2SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval3SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval4SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval5SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval6SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval7SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval8SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval9SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval10SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval15SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval20SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval30SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval60SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval120SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval180SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval300SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
-        this.Interval600SecIconData.Data = _mainViewModel.DataUnCheckedCircleIcon;
+        this.Interval1SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval2SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval3SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval4SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval5SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval6SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval7SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval8SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval9SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval10SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval15SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval20SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval30SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval60SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval120SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval180SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval300SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
+        this.Interval600SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
 
         if (interval <= 1)
         {
-            this.Interval1SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval1SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 2)
         {
-            this.Interval2SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval2SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 3)
         {
-            this.Interval3SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval3SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 4)
         {
-            this.Interval4SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval4SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 5)
         {
-            this.Interval5SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval5SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 6)
         {
-            this.Interval6SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval6SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 7)
         {
-            this.Interval7SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval7SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 8)
         {
-            this.Interval8SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval8SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 9)
         {
-            this.Interval9SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval9SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 10)
         {
-            this.Interval10SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval10SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 15)
         {
-            this.Interval15SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval15SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 20)
         {
-            this.Interval20SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval20SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 30)
         {
-            this.Interval30SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval30SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 60)
         {
-            this.Interval60SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval60SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 120)
         {
-            this.Interval120SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval120SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 180)
         {
-            this.Interval180SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval180SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval == 300)
         {
-            this.Interval300SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval300SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
         else if (interval >= 600)
         {
-            this.Interval600SecIconData.Data = _mainViewModel.DataCheckedCircleIcon;
+            this.Interval600SecIconData.Data = MainViewModel.DataCheckedCircleIcon;
         }
     }
 

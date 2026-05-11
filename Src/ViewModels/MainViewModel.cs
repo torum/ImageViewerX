@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-#pragma warning disable IDE0028
+#pragma warning disable IDE0028,IDE0001
 
 namespace ImageViewer.ViewModels;
 
@@ -32,17 +32,12 @@ public partial class MainViewModel : ObservableObject
     private int _queueIndex;
     private string _currentFile = string.Empty;
     private readonly DispatcherTimer _timerSlideshow;
-    //private bool _isBusy = false;
     private List<ImageInfo> _originalQueue = [];
 
     // Font info used for culculating displaying text width.
-
     private FontFamily TextFontFamily { get; } = FontFamily.Default;
-
     private double TextFontSize { get; } = 14;
-
     private FontWeight TextFontWeight { get; } = FontWeight.Regular;
-
     private FontStyle TextFontStyle { get; } = FontStyle.Normal;
 
     #endregion
@@ -61,7 +56,7 @@ public partial class MainViewModel : ObservableObject
         {
             field = value;
 
-            if ((_displayImage is null) || string.IsNullOrEmpty(_displayImage.ImageFilePath))
+            if ((DisplayImage is null) || string.IsNullOrEmpty(DisplayImage.ImageFilePath))
             {
                 return;
             }
@@ -73,47 +68,15 @@ public partial class MainViewModel : ObservableObject
 
     public double ClientAreaHeight { get; set; } = 550;
 
-    #region == Binding properties ==
 
-    private ObservableCollection<ImageInfo> _queue = [];
-    public ObservableCollection<ImageInfo> Queue
-    {
-        get => _queue;
-        set
-        {
-            if (_queue == value)
-                return;
+    [ObservableProperty]
+    public partial ObservableCollection<ImageInfo> Queue { get; set; } = [];
 
-            _queue = value;
-            OnPropertyChanged();
-        }
-    }
+    [ObservableProperty]
+    public partial ImageInfo? SelectedQueueImage { get; set; }
 
-    public ImageInfo? SelectedQueueImage
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public bool IsTransitionReversed
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    } = false;
+    [ObservableProperty]
+    public partial bool IsTransitionReversed { get; set; } = false;
 
     public IEnumerable<object>? VisibleItemsImageInfo
     {
@@ -132,33 +95,22 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private ImageInfo? _displayImage;
-    public ImageInfo? DisplayImage
-    {
-        get => _displayImage;
-        set
-        {
-            if (_displayImage == value)
-                return;
-
-            _displayImage = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(FileNameFullPath));
-        }
-    }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FileNameFullPath))]
+    public partial ImageInfo? DisplayImage { get; set; }
 
     public string FileNameFullPath
     {
         get
         {
-            if (_displayImage is not null)
+            if (DisplayImage is not null)
             {
-                if (string.IsNullOrEmpty(_displayImage.ImageFilePath))
+                if (string.IsNullOrEmpty(DisplayImage.ImageFilePath))
                 {
                     return string.Empty;
                 }
 
-                return PathHelper.MinimizeName(_displayImage.ImageFilePath, TextFontFamily, TextFontSize, TextFontStyle, TextFontWeight, ClientAreaWidth, 450);
+                return PathHelper.MinimizeName(DisplayImage.ImageFilePath, TextFontFamily, TextFontSize, TextFontStyle, TextFontWeight, ClientAreaWidth, 450);
             }
             else
             {
@@ -167,14 +119,11 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public double SystemDpiScalingFactor
+    [ObservableProperty]
+    public partial double SystemDpiScalingFactor
     {
         get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
+        set;
     } = 1.0;
 
     // Reflects actual state.
@@ -245,32 +194,19 @@ public partial class MainViewModel : ObservableObject
     } = true;
 
     // internal state.
-    public bool IsFilePathPopupVisible
+    [ObservableProperty]
+    public partial bool IsFilePathPopupVisible
     {
         get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = _queue.Count > 0 && value;
-
-            OnPropertyChanged();
-        }
+        set;
     } = false;
 
     // Internal state only
-    public bool IsStretchNone
+    [ObservableProperty]
+    public partial bool IsStretchNone
     {
         get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
+        set;
     }
 
     public bool IsSaveLog
@@ -282,25 +218,10 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             field = value;
+            // TODO: do we need this?
             OnPropertyChanged();
         }
     }
-
-    public string AppVersion
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(field)) return field;
-
-            var assembly = Assembly.GetExecutingAssembly().GetName();
-            var version = assembly.Version;
-            field = $"{version?.Major}.{version?.Minor}.{version?.Build}.{version?.Revision}";
-
-            return field;
-        }
-    } = string.Empty;
-
-    #endregion
 
     #region == User Opts ==
 
@@ -410,7 +331,7 @@ public partial class MainViewModel : ObservableObject
 
             HideMenuFlyout?.Invoke(this, EventArgs.Empty);
 
-            if (_queue.Count <= 0) return;
+            if (Queue.Count <= 0) return;
             IsWorking = true;
 
             // Slideshow Timer temp stop.
@@ -424,18 +345,18 @@ public partial class MainViewModel : ObservableObject
 
             if (_isShuffleOn)
             {
-                //_queue = new ObservableCollection<ImageInfo>(_originalQueue);
-                _queue.Shuffle();
+                //Queue = new ObservableCollection<ImageInfo>(_originalQueue);
+                Queue.Shuffle();
             }
             else
             {
-                _queue = new ObservableCollection<ImageInfo>(_originalQueue);
+                Queue = new ObservableCollection<ImageInfo>(_originalQueue);
             }
 
             if (!string.IsNullOrEmpty(_currentFile))
             {
                 //Debug.WriteLine(_currentFile);
-                var cur = _queue.FirstOrDefault(x => x.ImageFilePath == _currentFile);
+                var cur = Queue.FirstOrDefault(x => x.ImageFilePath == _currentFile);
 
                 // clear here.
                 //_currentFile = string.Empty;
@@ -551,7 +472,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged();
             OnPropertyChanged(nameof(DataViewFilePathPopupOnIcon));
 
-            //if (_queue.Count <= 1) return;
+            //if (Queue.Count <= 1) return;
             if (_isFullscreen) return;
 
             IsFilePathPopupVisible = _isViewFilePathPopupOn;
@@ -573,7 +494,7 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged();
             OnPropertyChanged(nameof(DataViewImageListOnIcon));
 
-            if (_queue.Count <= 1) return;
+            if (Queue.Count <= 1) return;
             if (_isFullscreen) return;
 
             IsQueueListBoxVisible = _isViewImageListOn;
@@ -593,9 +514,9 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged();
             OnPropertyChanged(nameof(DataSystemDpiScalingFactorOnIcon));
 
-            if (_queue.Count > 0)
+            if (Queue.Count > 0)
             {
-                foreach (var item in _queue)
+                foreach (var item in Queue)
                 {
                     if (item.ImageSource is not null)
                     {
@@ -680,6 +601,8 @@ public partial class MainViewModel : ObservableObject
 
     #region == User opts menu icons == 
 
+    // TODO: make this static resource or something.
+
     private const string Play = "M5.74514 3.06445C5.41183 2.87696 5 3.11781 5 3.50023V12.5005C5 12.8829 5.41182 13.1238 5.74512 12.9363L13.7454 8.43631C14.0852 8.24517 14.0852 7.75589 13.7454 7.56474L5.74514 3.06445ZM4 3.50023C4 2.35298 5.2355 1.63041 6.23541 2.19288L14.2357 6.69317C15.2551 7.26664 15.2551 8.73446 14.2356 9.3079L6.23537 13.8079C5.23546 14.3703 4 13.6477 4 12.5005V3.50023Z";
     private const string Pause = "M3.75 2C2.7835 2 2 2.7835 2 3.75V12.25C2 13.2165 2.7835 14 3.75 14H5.25C6.2165 14 7 13.2165 7 12.25V3.75C7 2.7835 6.2165 2 5.25 2H3.75ZM3 3.75C3 3.33579 3.33579 3 3.75 3H5.25C5.66421 3 6 3.33579 6 3.75V12.25C6 12.6642 5.66421 13 5.25 13H3.75C3.33579 13 3 12.6642 3 12.25V3.75ZM10.75 2C9.7835 2 9 2.7835 9 3.75V12.25C9 13.2165 9.7835 14 10.75 14H12.25C13.2165 14 14 13.2165 14 12.25V3.75C14 2.7835 13.2165 2 12.25 2H10.75ZM10 3.75C10 3.33579 10.3358 3 10.75 3H12.25C12.6642 3 13 3.33579 13 3.75V12.25C13 12.6642 12.6642 13 12.25 13H10.75C10.3358 13 10 12.6642 10 12.25V3.75Z";
     public string DataPlayPauseIcon => IsSlideshowOn ? Pause : Play;
@@ -701,10 +624,10 @@ public partial class MainViewModel : ObservableObject
     private const string UncheckedBox = "M2 4.5C2 3.11929 3.11929 2 4.5 2H11.5C12.8807 2 14 3.11929 14 4.5V11.5C14 12.8807 12.8807 14 11.5 14H4.5C3.11929 14 2 12.8807 2 11.5V4.5ZM4.5 3C3.67157 3 3 3.67157 3 4.5V11.5C3 12.3284 3.67157 13 4.5 13H11.5C12.3284 13 13 12.3284 13 11.5V4.5C13 3.67157 12.3284 3 11.5 3H4.5Z";
 
     private const string CheckedCircle = "M2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8ZM8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1ZM10.8536 6.85355C11.0488 6.65829 11.0488 6.34171 10.8536 6.14645C10.6583 5.95118 10.3417 5.95118 10.1464 6.14645L7.25 9.04289L5.85355 7.64645C5.65829 7.45118 5.34171 7.45118 5.14645 7.64645C4.95118 7.84171 4.95118 8.15829 5.14645 8.35355L6.89645 10.1036C7.09171 10.2988 7.40829 10.2988 7.60355 10.1036L10.8536 6.85355Z";
-    public Avalonia.Media.Geometry DataCheckedCircleIcon => Avalonia.Media.Geometry.Parse(CheckedCircle);
+    public static Avalonia.Media.Geometry DataCheckedCircleIcon => Avalonia.Media.Geometry.Parse(CheckedCircle);
 
     private const string UnCheckedCircle = "M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14ZM8 13C5.23858 13 3 10.7614 3 8C3 5.23858 5.23858 3 8 3C10.7614 3 13 5.23858 13 8C13 10.7614 10.7614 13 8 13Z";
-    public Avalonia.Media.Geometry DataUnCheckedCircleIcon => Avalonia.Media.Geometry.Parse(UnCheckedCircle);
+    public static Avalonia.Media.Geometry DataUnCheckedCircleIcon => Avalonia.Media.Geometry.Parse(UnCheckedCircle);
 
     public string DataCrossfadeIcon => IsEffectCrossfadeOn ? CheckedBox : UncheckedBox;
 
@@ -733,6 +656,20 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region == Strings ==
+
+    public string AppVersion
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(field)) return field;
+
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            var version = assembly.Version;
+            field = $"{version?.Major}.{version?.Minor}.{version?.Build}.{version?.Revision}";
+
+            return field;
+        }
+    } = string.Empty;
 
     public string SlideshowStartStopString => IsSlideshowOn ? ImageViewer.Properties.Resources.Label_SlideshowStop : ImageViewer.Properties.Resources.Label_SlideshowStart;
 
@@ -769,243 +706,6 @@ public partial class MainViewModel : ObservableObject
         IsSaveLog = false;
 #endif
     }
-
-    #region == Public Methods ==
-
-    // Dropped or Open with.
-    public async Task DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
-    {
-        //Debug.WriteLine("DroppedFiles()");
-
-        if (images.Count < 1)
-        {
-            IsWorking = false;
-            return;
-        }
-
-        /*
-        Dispatcher.UIThread.Post(async () =>
-        {
-
-        }, DispatcherPriority.Loaded);
-        */
-
-        IsWorking = true;
-
-        if (_timerSlideshow.IsEnabled)
-        {
-            _timerSlideshow.Stop();
-        }
-
-        // rest 
-        _queueIndex = 0;
-
-        // Let's keep the prev image for the sake of fade out effects.
-        //DiplayImage1 = null;
-
-        // Just because.
-        SelectedQueueImage = null;
-
-        _queue.Clear();
-        _originalQueue.Clear();
-
-        _queue = new ObservableCollection<ImageInfo>(images);
-        _originalQueue = images;//[.. images];
-
-        // When the same files dropped, the file won't reload due to "dup". So clear it.
-        _currentFile = string.Empty;
-
-        if (_queue.Count <= 0)
-        {
-            IsWorking = false;
-            return;
-        }
-        
-        // Hide welcome screen
-        QueueLoaded?.Invoke(this, EventArgs.Empty);
-
-        if (!IsFullscreen)
-        {
-            // show file path if on.
-            IsFilePathPopupVisible = _isViewFilePathPopupOn;
-            // show listbox if on.
-            IsQueueListBoxVisible = _isViewImageListOn;
-
-            if (IsViewImageListOn)
-            {
-                // Hide if count = 1
-                IsQueueListBoxVisible = _queue.Count != 1;
-            }
-        }
-
-        if (_isShuffleOn)
-        {
-            //Debug.WriteLine("Shuffle @DroppedFiles()");
-
-            _queue.Shuffle();
-
-            // Move the single selected image file to top/ 0 index if exist for easier viewing when shuffled. This is for the case when user select a file and drag and drop to the app.
-            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
-            {
-                var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
-                _queue.Remove(item);
-                _queue.Insert(0, item);
-                _queueIndex = 0;
-            }
-        }
-        else
-        {
-            // Move index to the single selected file if exist. This is for the case when user select a file and drag and drop to the app.
-            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
-            {
-                var item = _queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
-                _queueIndex = _queue.IndexOf(item);
-            }
-        }
-
-        // Test -> yap. IsWorking causes await delay 300 mil sec in Show(),
-        IsWorking = false;
-
-        IsTransitionReversed = false;
-
-        //Debug.WriteLine("Calling Show() @DroppedFiles()");
-
-        // Show Image.
-        await Show();
-
-        // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
-        await Task.Delay(500);
-
-        IsWorking = true;
-        await Task.Yield();
-
-        //Debug.WriteLine("Updating Queue @DroppedFiles()");
-
-        // Display images in the ListBox.
-        OnPropertyChanged(nameof(Queue));
-
-        // Need this for trigger UpdateVisibleItems because if only a few images are loaded,
-        // scrollviewer does not fire changed events.
-        if (_queueIndex > 0)
-        {   
-            // Shuffled
-            QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
-        }
-        else
-        {
-            QueueHasBeenChanged?.Invoke(this, 0);
-        }
-
-        IsWorking = false;
-        await Task.Yield();
-    }
-
-    public async Task NextKeyPressed()
-    {
-        if (_timerSlideshow.IsEnabled)
-        {
-            _timerSlideshow.Stop();
-        }
-
-        if (_queue.Count <= 0) return;
-
-        //_queueIndex++;
-        if ((_queueIndex) > (_queue.Count - 1)) 
-        {
-            if (IsRepeatOn)
-            {
-                // Reset index.
-                _queueIndex = 0;
-            }
-            else
-            {
-                if (IsSlideshowOn)
-                {
-                    // No more to show.
-                    IsSlideshowOn = false;
-                }
-
-                return;
-            }
-        }
-
-        IsTransitionReversed = false;
-
-        await Show();
-    }
-
-    public async Task PrevKeyPressed()
-    {
-        if (_queue.Count <= 0) return;
-
-        if (_queueIndex == 1)
-        {
-            //Debug.WriteLine("(_queueIndex == 0) PrevKeyPressed");
-            return;
-        }
-
-        if ((_queueIndex - 2) <= -1)
-        {
-            return;
-        }
-
-        if (_timerSlideshow.IsEnabled)
-        {
-            _timerSlideshow.Stop();
-        }
-
-        _queueIndex -= 2;
-
-        IsTransitionReversed = true;
-
-        await Show();
-    }
-
-    public async Task ListBoxItemSelected(ImageInfo img)
-    {
-        // TODO: check index and determie 
-        IsTransitionReversed = false;
-
-        _queueIndex = Queue.IndexOf(img);
-        
-        await Show();
-    }
-
-    public static bool HasImageExtension(string fileName, string[] extensions)
-    {
-        var extension = System.IO.Path.GetExtension(fileName);
-
-        foreach (var validExt in extensions)
-        {
-            if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void ClientAreaSizeChanged(double width, double height)
-    {
-        ClientAreaWidth = width;
-        ClientAreaHeight = height;
-        UpdateDisplayImageMaxSizeAndStretchProperty();
-    }
-
-    public void CleanUp()
-    {
-        _cts.Cancel();
-    }
-
-    public void Destroy()
-    {
-        _cts.Dispose();
-
-        _originalQueue.Clear();
-        Queue.Clear();
-    }
-
-    #endregion
 
     #region == Private Methods ==
 
@@ -1093,7 +793,7 @@ public partial class MainViewModel : ObservableObject
 
                             App.AppendErrorLog($"Exception @GetPictures on new Bitmap() {img.ImageFilePath}", ex.ToString());
                         }
-                        
+
                         return null;
 
                     }, _cts.Token);
@@ -1157,30 +857,39 @@ public partial class MainViewModel : ObservableObject
 
     private async void OnSlideshowTimerTick(object? sender, EventArgs e)
     {
-        // This code runs on the UI thread, so it's safe to update UI elements.
-        if (_queue.Count <= 0) return;
-        if (_queueIndex > (_queue.Count - 1))
+        try
         {
-            if (IsRepeatOn)
+            // This code runs on the UI thread, so it's safe to update UI elements.
+            if (Queue.Count <= 0) return;
+            if (_queueIndex > (Queue.Count - 1))
             {
-                // Reset index.
-                _queueIndex = 0;
-            }
-            else
-            {
-                if (IsSlideshowOn)
+                if (IsRepeatOn)
                 {
-                    // No more to show.
-                    IsSlideshowOn = false;
+                    // Reset index.
+                    _queueIndex = 0;
                 }
+                else
+                {
+                    if (IsSlideshowOn)
+                    {
+                        // No more to show.
+                        IsSlideshowOn = false;
+                    }
 
-                return;
+                    return;
+                }
             }
+
+            IsTransitionReversed = false;
+
+            await Show();
         }
-
-        IsTransitionReversed = false;
-
-        await Show();
+        catch (Exception ex)
+        {
+            _ = ex;
+            Debug.WriteLine($"{ex}");
+            // TODO handle exception
+        }
     }
 
     private async Task Show()
@@ -1201,9 +910,9 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (_queue.Count <= 0) return;
+        if (Queue.Count <= 0) return;
         if (_queueIndex < 0) return;
-        if (_queueIndex > (_queue.Count - 1)) 
+        if (_queueIndex > (Queue.Count - 1))
         {
             if (IsRepeatOn)
             {
@@ -1222,7 +931,7 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        var img = _queue[_queueIndex];
+        var img = Queue[_queueIndex];
 
         if (string.IsNullOrEmpty(img.ImageFilePath))
         {
@@ -1250,7 +959,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         */
-        
+
         // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep or loading very large file for example.
         await Task.Run(async () =>
         {
@@ -1313,7 +1022,7 @@ public partial class MainViewModel : ObservableObject
         //_isWorking = true;
 
         //Debug.WriteLine($"{idx} Enter critical section.");
-        
+
         // no longer needed
         //Bitmap? bitmap;
         if (img.IsAcquired)
@@ -1381,25 +1090,25 @@ public partial class MainViewModel : ObservableObject
         if (_queueIndex > 20)
         {
             var i = _queueIndex - 15;
-            if ((_queue[i].ImageSource is not null) && _queue[i].IsAcquired)
+            if ((Queue[i].ImageSource is not null) && Queue[i].IsAcquired)
             {
-                _queue[i].ImageSource?.Dispose();
-                _queue[i].ImageSource = null;
-                _queue[i].IsAcquired = false;
-                _queue[i].IsLoading = false;
+                Queue[i].ImageSource?.Dispose();
+                Queue[i].ImageSource = null;
+                Queue[i].IsAcquired = false;
+                Queue[i].IsLoading = false;
             }
         }
 
-        var c = _queue.Count;
+        var c = Queue.Count;
         if (_queueIndex + 20 < c)
         {
             var i = _queueIndex + 15;
-            if ((_queue[i].ImageSource is not null) && _queue[i].IsAcquired)
+            if ((Queue[i].ImageSource is not null) && Queue[i].IsAcquired)
             {
-                _queue[i].ImageSource?.Dispose();
-                _queue[i].ImageSource = null;
-                _queue[i].IsAcquired = false;
-                _queue[i].IsLoading = false;
+                Queue[i].ImageSource?.Dispose();
+                Queue[i].ImageSource = null;
+                Queue[i].IsAcquired = false;
+                Queue[i].IsLoading = false;
             }
         }
 
@@ -1418,9 +1127,9 @@ public partial class MainViewModel : ObservableObject
         DisplayImage.ImageMaxWidth = ClientAreaWidth;
         DisplayImage.ImageMaxHeight = ClientAreaHeight;
 
-        if (_queue.Count > 0)
+        if (Queue.Count > 0)
         {
-            foreach (var img in _queue)
+            foreach (var img in Queue)
             {
                 if ((img.ImageSource is not null) && (img.IsAcquired))
                 {
@@ -1500,15 +1209,252 @@ public partial class MainViewModel : ObservableObject
                 img.ImageStretchDirection = StretchDirection.DownOnly;
                 break;
             default:
-            {
-                if (IsStretchOutOn)
                 {
-                    img.ImageStretchDirection = StretchDirection.UpOnly;
-                }
+                    if (IsStretchOutOn)
+                    {
+                        img.ImageStretchDirection = StretchDirection.UpOnly;
+                    }
 
-                break;
+                    break;
+                }
+        }
+    }
+
+    #endregion
+
+    #region == Public Methods ==
+
+    // Dropped or Open with.
+    public async Task DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
+    {
+        //Debug.WriteLine("DroppedFiles()");
+
+        if (images.Count < 1)
+        {
+            IsWorking = false;
+            return;
+        }
+
+        /*
+        Dispatcher.UIThread.Post(async () =>
+        {
+
+        }, DispatcherPriority.Loaded);
+        */
+
+        IsWorking = true;
+
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
+
+        // rest 
+        _queueIndex = 0;
+
+        // Let's keep the prev image for the sake of fade out effects.
+        //DiplayImage1 = null;
+
+        // Just because.
+        SelectedQueueImage = null;
+
+        Queue.Clear();
+        _originalQueue.Clear();
+
+        Queue = new ObservableCollection<ImageInfo>(images);
+        _originalQueue = images;//[.. images];
+
+        // When the same files dropped, the file won't reload due to "dup". So clear it.
+        _currentFile = string.Empty;
+
+        if (Queue.Count <= 0)
+        {
+            IsWorking = false;
+            return;
+        }
+        
+        // Hide welcome screen
+        QueueLoaded?.Invoke(this, EventArgs.Empty);
+
+        if (!IsFullscreen)
+        {
+            // show file path if on.
+            IsFilePathPopupVisible = _isViewFilePathPopupOn;
+            // show listbox if on.
+            IsQueueListBoxVisible = _isViewImageListOn;
+
+            if (IsViewImageListOn)
+            {
+                // Hide if count = 1
+                IsQueueListBoxVisible = Queue.Count != 1;
             }
         }
+
+        if (_isShuffleOn)
+        {
+            //Debug.WriteLine("Shuffle @DroppedFiles()");
+
+            Queue.Shuffle();
+
+            // Move the single selected image file to top/ 0 index if exist for easier viewing when shuffled. This is for the case when user select a file and drag and drop to the app.
+            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
+            {
+                var item = Queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
+                Queue.Remove(item);
+                Queue.Insert(0, item);
+                _queueIndex = 0;
+            }
+        }
+        else
+        {
+            // Move index to the single selected file if exist. This is for the case when user select a file and drag and drop to the app.
+            if (!string.IsNullOrEmpty(singleSelectedOriginalFile))
+            {
+                var item = Queue.First(x => x.ImageFilePath == singleSelectedOriginalFile);
+                _queueIndex = Queue.IndexOf(item);
+            }
+        }
+
+        // Test -> yap. IsWorking causes await delay 300 mil sec in Show(),
+        IsWorking = false;
+
+        IsTransitionReversed = false;
+
+        //Debug.WriteLine("Calling Show() @DroppedFiles()");
+
+        // Show Image.
+        await Show();
+
+        // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
+        await Task.Delay(500);
+
+        IsWorking = true;
+        await Task.Yield();
+
+        //Debug.WriteLine("Updating Queue @DroppedFiles()");
+
+        // Display images in the ListBox.
+        OnPropertyChanged(nameof(Queue));
+
+        // Need this for trigger UpdateVisibleItems because if only a few images are loaded,
+        // scrollviewer does not fire changed events.
+        if (_queueIndex > 0)
+        {   
+            // Shuffled
+            QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
+        }
+        else
+        {
+            QueueHasBeenChanged?.Invoke(this, 0);
+        }
+
+        IsWorking = false;
+        await Task.Yield();
+    }
+
+    public async Task NextKeyPressed()
+    {
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
+
+        if (Queue.Count <= 0) return;
+
+        //_queueIndex++;
+        if ((_queueIndex) > (Queue.Count - 1)) 
+        {
+            if (IsRepeatOn)
+            {
+                // Reset index.
+                _queueIndex = 0;
+            }
+            else
+            {
+                if (IsSlideshowOn)
+                {
+                    // No more to show.
+                    IsSlideshowOn = false;
+                }
+
+                return;
+            }
+        }
+
+        IsTransitionReversed = false;
+
+        await Show();
+    }
+
+    public async Task PrevKeyPressed()
+    {
+        if (Queue.Count <= 0) return;
+
+        if (_queueIndex == 1)
+        {
+            //Debug.WriteLine("(_queueIndex == 0) PrevKeyPressed");
+            return;
+        }
+
+        if ((_queueIndex - 2) <= -1)
+        {
+            return;
+        }
+
+        if (_timerSlideshow.IsEnabled)
+        {
+            _timerSlideshow.Stop();
+        }
+
+        _queueIndex -= 2;
+
+        IsTransitionReversed = true;
+
+        await Show();
+    }
+
+    public async Task ListBoxItemSelected(ImageInfo img)
+    {
+        // TODO: check index and determie 
+        IsTransitionReversed = false;
+
+        _queueIndex = Queue.IndexOf(img);
+        
+        await Show();
+    }
+
+    public static bool HasImageExtension(string fileName, string[] extensions)
+    {
+        var extension = System.IO.Path.GetExtension(fileName);
+
+        foreach (var validExt in extensions)
+        {
+            if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void ClientAreaSizeChanged(double width, double height)
+    {
+        ClientAreaWidth = width;
+        ClientAreaHeight = height;
+        UpdateDisplayImageMaxSizeAndStretchProperty();
+    }
+
+    public void CleanUp()
+    {
+        _cts.Cancel();
+    }
+
+    public void Destroy()
+    {
+        _cts.Dispose();
+
+        _originalQueue.Clear();
+        Queue.Clear();
     }
 
     #endregion
@@ -1585,13 +1531,13 @@ public partial class MainViewModel : ObservableObject
                 _timerSlideshow.Stop();
             }
 
-            if (_queue.Count > 0)
+            if (Queue.Count > 0)
             {
                 //Debug.WriteLine("StartSlideshow true");
                 IsSlideshowOn = true;
 
                 // If at the end, reset index.
-                if (_queueIndex >= (_queue.Count - 1))
+                if (_queueIndex >= (Queue.Count - 1))
                 {
                     _queueIndex = 0;
                 }
@@ -1605,7 +1551,7 @@ public partial class MainViewModel : ObservableObject
     }
     private bool CanToggleSlideshow()
     {
-        return _queue.Count > 1;
+        return Queue.Count > 1;
     }
 
     [RelayCommand]
@@ -1668,7 +1614,7 @@ public partial class MainViewModel : ObservableObject
     }
     public bool CanToggleViewFilePath()
     {
-        //if (_queue.Count <= 0) return false;
+        //if (Queue.Count <= 0) return false;
         if (_isFullscreen) return false;
         return true;
     }
@@ -1680,7 +1626,7 @@ public partial class MainViewModel : ObservableObject
     }
     private bool CanToggleViewImageList()
     {
-        //if (_queue.Count <= 1) return false;
+        //if (Queue.Count <= 1) return false;
         if (_isFullscreen) return false;
         return true;
     }
@@ -1766,7 +1712,7 @@ public partial class MainViewModel : ObservableObject
     }
     private bool CanShowInExplorer()
     {
-        return _queue.Count > 0;
+        return Queue.Count > 0;
     }
 
     [RelayCommand]

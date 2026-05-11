@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ImageViewer.Models;
 
-public sealed class ImageInfo : ObservableObject
+public sealed partial class ImageInfo : ObservableObject
 {
     public bool IsLoading { get; set; } = false;
     
@@ -12,98 +12,26 @@ public sealed class ImageInfo : ObservableObject
 
     public string? ImageFilePath { get; set; } = string.Empty;
 
-    //public int BinarySize { get; set; }
+    [ObservableProperty]
+    public partial Bitmap? ImageSource { get; set; }
 
-    public Bitmap? ImageSource
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
+    [ObservableProperty]
+    public partial double ImageWidth { get; set; }
 
-            field = value;
-            OnPropertyChanged();
-        }
-    }
+    [ObservableProperty]
+    public partial double ImageMaxWidth { get; set; }
 
-    public double ImageWidth
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
+    [ObservableProperty]
+    public partial double ImageHeight { get; set; }
 
-            field = value;
-            OnPropertyChanged();
-        }
-    }
+    [ObservableProperty]
+    public partial double ImageMaxHeight { get; set; }
 
-    public double ImageMaxWidth
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
+    [ObservableProperty]
+    public partial Avalonia.Media.Stretch ImageStretch { get; set; } = Stretch.Uniform;
 
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public double ImageHeight
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public double ImageMaxHeight
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public Avalonia.Media.Stretch ImageStretch
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    } = Stretch.Uniform;
-
-    public Avalonia.Media.StretchDirection ImageStretchDirection
-    {
-        get;
-        set
-        {
-            if (field == value)
-                return;
-
-            field = value;
-            OnPropertyChanged();
-        }
-    } = StretchDirection.DownOnly;
+    [ObservableProperty]
+    public partial Avalonia.Media.StretchDirection ImageStretchDirection { get; set; } = StretchDirection.DownOnly;
 }
 
 
