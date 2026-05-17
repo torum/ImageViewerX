@@ -63,6 +63,14 @@
 		</Style>
 	</Window.Styles>
 	-->
+	<!-- not good
+	<Window.Styles>
+		<Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+		  <Setter Property="IsVisible" Value="False" />
+		</Style>
+	</Window.Styles>
+	-->
+
 	<FlyoutBase.AttachedFlyout>
 		<MenuFlyout Placement="Pointer">
 			<MenuFlyout.FlyoutPresenterTheme>

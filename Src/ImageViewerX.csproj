@@ -26,8 +26,7 @@
 		<SelfContained>true</SelfContained>
 		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 		<DebugSymbols>false</DebugSymbols>
-		<!-- 
-		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> -->
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Avalonia">
@@ -63,6 +62,7 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<IsAotCompatible>True</IsAotCompatible>
+		<Optimize>True</Optimize>
 	</PropertyGroup>
 	
 	<ItemGroup>
