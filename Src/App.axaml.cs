@@ -17,7 +17,7 @@ using Avalonia.Media;
 
 namespace ImageViewer;
 
-public partial class App : Application
+internal sealed partial class App : Application
 {
     public static readonly string AppName = "ImageViewer2";
     private const string AppDeveloper = "torum";

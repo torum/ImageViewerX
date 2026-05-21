@@ -24,7 +24,7 @@ using System.Xml.Linq;
 
 namespace ImageViewer.Views;
 
-public sealed partial class MainWindow : Window
+internal sealed partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timerPointerCursorHide;
     private Avalonia.Point _mousePosition;
@@ -1168,7 +1168,7 @@ public sealed partial class MainWindow : Window
                 // do nothing.
             }
         }
-        else  if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
+        else if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
         {
             // Right clicked on Window.
             if (sender is Window target)

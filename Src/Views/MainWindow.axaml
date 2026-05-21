@@ -449,13 +449,15 @@
 		</MenuFlyout>
 	</FlyoutBase.AttachedFlyout>
 
-	<Grid x:Name="ClientAreaGrid" SizeChanged="ClientAreaGrid_SizeChanged">
-		<Border x:Name="BackgroundLayerBorder" Background="#131313" Opacity="0" IsVisible="False"></Border>
-		<Grid IsHitTestVisible="False">
+	<Grid x:Name="ClientAreaGrid" RowDefinitions="40,*" SizeChanged="ClientAreaGrid_SizeChanged">
+		<Border Grid.Row="0" Background="Transparent" WindowDecorationProperties.ElementRole="User"/>
+
+		<Border x:Name="BackgroundLayerBorder" Grid.Row="0" Grid.RowSpan="2" Background="#131313" Opacity="0" IsVisible="False"></Border>
+		<Grid Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
 			<ContentControl x:Name="ContentFrame"/>
 		</Grid>
 
-		<Grid HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
+ 		<Grid Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Left" Margin="24" IsHitTestVisible="True">
 			<Border x:Name="ListBoxBackgroundLayerBorder" CornerRadius="12" Background="#131313" Opacity="0.2" IsVisible="False"></Border>
 			
 			<ListBox x:Name="QueueListBox" Theme="{StaticResource CustomListBoxTheme}" IsVisible="{Binding IsQueueListBoxVisible, Mode=TwoWay}" GotFocus="ListBox_GotFocus" DoubleTapped="ListBox_DoubleTapped" LostFocus="ListBox_LostFocus" PointerWheelChanged="ListBox_PointerWheelChanged" Loaded="ListBox_Loaded" KeyDown="ListBox_KeyDown" KeyUp="ListBox_KeyUp" CornerRadius="12" ItemsSource="{Binding Queue}" SelectedItem="{Binding SelectedQueueImage, Mode=TwoWay}" SelectionMode="AlwaysSelected,Single" AutoScrollToSelectedItem="False" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Width="132" Background="Transparent">
@@ -670,7 +672,7 @@
 
 		</Grid>
 
-		<Grid x:Name="FilePathGrid" IsHitTestVisible="False" IsVisible="{Binding IsFilePathPopupVisible, Mode=OneWay}" VerticalAlignment="Bottom" Height="24">
+		<Grid x:Name="FilePathGrid" Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False" IsVisible="{Binding IsFilePathPopupVisible, Mode=OneWay}" VerticalAlignment="Bottom" Height="24">
 			<Popup x:Name="PopupFilePath" IsOpen="{Binding IsFilePathPopupVisible, Mode=TwoWay}" ShouldUseOverlayLayer="True" PlacementTarget="{Binding ElementName=FilePathGrid}" Placement="AnchorAndGravity" IsLightDismissEnabled="False" Margin="24" Topmost="False">
 				<Border CornerRadius="12" BorderThickness="1" Background="{DynamicResource MenuFlyoutPresenterBackground}" Opacity="0.8">
 					<SelectableTextBlock x:Name="TextBlockFileNameFullPath" Text="{Binding FileNameFullPath, Mode=OneWay}" Margin="12"></SelectableTextBlock>
@@ -678,7 +680,7 @@
 			</Popup>
 		</Grid>
 
-		<Grid x:Name="WelcomeMessageGrid" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="True">
+		<Grid x:Name="WelcomeMessageGrid" Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="True">
 			<StackPanel HorizontalAlignment="Center" Spacing="24" Margin="24,24,24,0">
 				
 				<TextBlock x:Name="DragDropTextBlock" Text="{x:Static props:Resources.String_Welcome_DragAndDrop}" TextWrapping="Wrap" TextTrimming="WordEllipsis" FontWeight="Bold" FontSize="36" HorizontalAlignment="Center"></TextBlock>

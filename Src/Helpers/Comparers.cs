@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace ImageViewer.Helpers;
 
-public sealed class LinuxFilesComparer : IComparer<FileSystemInfo>
+internal sealed class LinuxFilesComparer : IComparer<FileSystemInfo>
 {
     private readonly NaturalSortComparer _nameComparer = new();
 
@@ -26,7 +26,7 @@ public sealed class LinuxFilesComparer : IComparer<FileSystemInfo>
     }
 }
 
-public sealed partial class NaturalSortComparer : IComparer<string>, IComparer
+internal sealed partial class NaturalSortComparer : IComparer<string>, IComparer
 {
     private static readonly Regex _regex = CompRegex();
 

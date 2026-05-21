@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ImageViewer.Models;
 
-public sealed partial class ImageInfo : ObservableObject
+internal sealed partial class ImageInfo : ObservableObject
 {
     public bool IsLoading { get; set; } = false;
     

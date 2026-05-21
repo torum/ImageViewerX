@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Views;
 
-public partial class MainView : UserControl
+internal sealed partial class MainView : UserControl
 {
     readonly MainViewModel _viewModel;
 

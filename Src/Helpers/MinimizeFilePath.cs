@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 
-public static class PathHelper
+internal static class PathHelper
 {
     /// <summary>
     /// Returns a shortened version of a file name so it fits within a maximum width.

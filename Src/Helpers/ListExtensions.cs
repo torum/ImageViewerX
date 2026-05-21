@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.Helpers;
 
-public static class ListExtensions
+internal static class ListExtensions
 {
     private static readonly Random rng = new();
 

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ImageViewer.Helpers;
 
-public sealed class ItemsControlStackPanelBehaviors
+internal sealed class ItemsControlStackPanelBehaviors
 {
     // The target is ScrollViewer(with ItemsControl inside), and the value is an IEnumerable of objects.
     public static readonly AttachedProperty<IEnumerable<object>> VisibleItemsProperty =

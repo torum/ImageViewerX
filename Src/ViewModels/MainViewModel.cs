@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+internal sealed partial class MainViewModel : ObservableObject
 {
     #region == Private ==
 
