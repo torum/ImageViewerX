@@ -28,7 +28,7 @@ internal sealed partial class MainView : UserControl
         //_viewModel = App.GetService<MainViewModel>();
         _viewModel = vm;
 
-       InitializeComponent();
+        InitializeComponent();
 
         _viewModel.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
 
@@ -290,7 +290,7 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             if (_crossFade)
             {
                 fromAnimation.Easing = new CubicEaseInOut();
-            } 
+            }
             else
             {
                 fromAnimation.Easing = new CubicEaseIn();

@@ -4,7 +4,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -72,7 +71,7 @@ internal sealed partial class MainWindow : Window
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
-        _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState; 
+        _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState;
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { OnSlideshowIntervalChanged(arg); };
         _mainViewModel.WorkingStateChanged += OnWorkingStateChanged;
@@ -114,7 +113,7 @@ internal sealed partial class MainWindow : Window
         {
             this.Cursor = new Cursor(StandardCursorType.Arrow);
         }
-        
+
     }
 
     public async void SetStdin(string[] args)
@@ -808,7 +807,7 @@ internal sealed partial class MainWindow : Window
 
         //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}");
 
-        if (_systemDpiScalingFactor == 1.0) 
+        if (_systemDpiScalingFactor == 1.0)
         {
             this.MenuItemSystemDpiScalingFactor.IsVisible = false;
             this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
@@ -1754,8 +1753,8 @@ internal sealed partial class MainWindow : Window
                 }
                 */
             }
-            catch (Exception ex) 
-            { 
+            catch (Exception ex)
+            {
                 Debug.WriteLine($"Exception: {ex.Message} @StartSleepInhibitor()");
             }
         }

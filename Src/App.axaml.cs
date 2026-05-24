@@ -1,19 +1,16 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Threading;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Linq;
 using System.IO;
-using System.Text;
-using Avalonia.Threading;
 using System.Runtime.InteropServices;
-using Avalonia.Media;
+using System.Text;
 
 namespace ImageViewer;
 

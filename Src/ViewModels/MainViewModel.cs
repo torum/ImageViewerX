@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -166,9 +165,10 @@ internal sealed partial class MainViewModel : ObservableObject
                 // Only non fullscreen mode since IsWorking is binding to busy cursor.
                 OnPropertyChanged();
 
-                Dispatcher.UIThread.Post(() => {
+                Dispatcher.UIThread.Post(() =>
+                {
                     WorkingStateChanged?.Invoke(this, value);
-                },DispatcherPriority.Input);
+                }, DispatcherPriority.Input);
             }
         }
     }
@@ -188,7 +188,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
             if (field)
             {
-                QueueHasBeenChanged?.Invoke(this, _queueIndex -1);
+                QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
             }
         }
     } = true;
@@ -1272,7 +1272,7 @@ internal sealed partial class MainViewModel : ObservableObject
             IsWorking = false;
             return;
         }
-        
+
         // Hide welcome screen
         QueueLoaded?.Invoke(this, EventArgs.Empty);
 
@@ -1339,7 +1339,7 @@ internal sealed partial class MainViewModel : ObservableObject
         // Need this for trigger UpdateVisibleItems because if only a few images are loaded,
         // scrollviewer does not fire changed events.
         if (_queueIndex > 0)
-        {   
+        {
             // Shuffled
             QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
         }
@@ -1362,7 +1362,7 @@ internal sealed partial class MainViewModel : ObservableObject
         if (Queue.Count <= 0) return;
 
         //_queueIndex++;
-        if ((_queueIndex) > (Queue.Count - 1)) 
+        if ((_queueIndex) > (Queue.Count - 1))
         {
             if (IsRepeatOn)
             {
@@ -1419,7 +1419,7 @@ internal sealed partial class MainViewModel : ObservableObject
         IsTransitionReversed = false;
 
         _queueIndex = Queue.IndexOf(img);
-        
+
         await Show();
     }
 
