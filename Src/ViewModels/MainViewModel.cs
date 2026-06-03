@@ -1740,8 +1740,9 @@ internal sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     public static void Quit()
     {
-        var mainWin = App.GetService<MainWindow>();
-        mainWin.Close();
+        // If the flyout is open, app freezes in linux when trying to close. So close the flyout first.
+        //var mainWin = App.GetService<MainWindow>();
+        //mainWin.Close();
     }
 
     #endregion

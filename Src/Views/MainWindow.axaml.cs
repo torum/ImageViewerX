@@ -2567,6 +2567,17 @@ internal sealed partial class MainWindow : Window
             }
         }
     }
+
+    private void MenuItemQuit_Click(object? sender, RoutedEventArgs e)
+    {
+        var flyout = FlyoutBase.GetAttachedFlyout(this);
+        // If the flyout is open, app freezes in linux when trying to close. So close the flyout first.
+        flyout?.IsOpen = false;
+
+        Close();
+    }
+
+
     // EnableBlurBehind: Marshal.AllocHGlobal way.
     /*
     private static void EnableBlurBehind(IntPtr handle)

@@ -42,18 +42,20 @@
 		<WindowDrawnDecorationsTemplate>
 		<WindowDrawnDecorationsContent>
 			<!-- Edit: Changed backgrounds of PART_WindowBorder and PART_TitleBar from {DynamicResource SystemControlBackgroundAltHighBrush} to transparent.
-			See the issue: https://github.com/AvaloniaUI/Avalonia/issues/21082 -->
+			See the issue: https://github.com/AvaloniaUI/Avalonia/issues/21082
+			https://github.com/AvaloniaUI/Avalonia/pull/21354
+			https://github.com/AvaloniaUI/Avalonia/pull/21440 -->
 			<WindowDrawnDecorationsContent.Underlay>
 			<Panel x:Name="PART_UnderlayWrapper">
 				<Border x:Name="PART_WindowBorder"
-						Background="Transparent"
+						Background="{DynamicResource SystemControlTransparentBrush}"
 						BorderThickness="{TemplateBinding FrameThickness}"
 						BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
 						IsHitTestVisible="False" />
 				<!-- Titlebar: background, title text, and drag area live in underlay -->
 				<Panel x:Name="PART_TitleBar" VerticalAlignment="Top"
 						Height="{TemplateBinding TitleBarHeight}"
-						Background="Transparent"
+						Background="{DynamicResource SystemControlTransparentBrush}"
 						IsVisible="{TemplateBinding HasTitleBar}"
 						WindowDecorationProperties.ElementRole="TitleBar" />
 
