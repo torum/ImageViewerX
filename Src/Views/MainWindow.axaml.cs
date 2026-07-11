@@ -237,7 +237,7 @@ internal sealed partial class MainWindow : Window
                 if (handle != IntPtr.Zero)
                 {
                     this.Background = Brushes.Transparent;
-                    this.TransparencyLevelHint = [WindowTransparencyLevel.None];
+                    this.TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
 
                     //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
                     EnableBlurBehind(handle);
