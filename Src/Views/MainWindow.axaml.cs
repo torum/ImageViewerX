@@ -274,11 +274,13 @@ internal sealed partial class MainWindow : Window
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
 
+            /*
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on this platform.";
                 this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
             }
+            */
         }
         else
         {
