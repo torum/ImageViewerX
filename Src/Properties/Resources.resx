@@ -231,6 +231,7 @@
   </data>
   <data name="Label_Show" xml:space="preserve">
     <value>Show</value>
+    <comment>not needed anymore</comment>
   </data>
   <data name="Label_ShowInFileManager" xml:space="preserve">
     <value>In File Manager</value>

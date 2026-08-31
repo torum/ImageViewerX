@@ -62,7 +62,7 @@ internal sealed partial class MainView : UserControl
         if (_viewModel.IsEffectFadeInAndOutOn)
         {
             var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1500), _viewModel.IsEffectCrossfadeOn));
+            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
         else if (_viewModel.IsEffectPageSlideOn)
@@ -336,9 +336,9 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             toAnimTask = toAnimation.RunAsync(to, cancellationToken);
         }
 
-        //await fromAnimTask;
-        //await toAnimTask;
-        await Task.WhenAll(fromAnimTask, toAnimTask);
+        await toAnimTask;
+        await fromAnimTask;
+        //await Task.WhenAll(fromAnimTask, toAnimTask);
 
         _first = false;
     }

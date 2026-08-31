@@ -105,6 +105,11 @@ internal sealed partial class MainWindow : Window
 
     private void OnWorkingStateChanged(object? sender, bool e)
     {
+        if (_mainViewModel.IsSlideshowOn)
+        {
+            return;
+        }
+
         if (e)
         {
             this.Cursor = new Cursor(StandardCursorType.AppStarting);
@@ -113,7 +118,6 @@ internal sealed partial class MainWindow : Window
         {
             this.Cursor = new Cursor(StandardCursorType.Arrow);
         }
-
     }
 
     public async void SetStdin(string[] args)
@@ -146,9 +150,16 @@ internal sealed partial class MainWindow : Window
             }
         }
 
-        // TODO: Is there any way to determine current cursor type?
-        // Creating new cursor every time is weird.
-        this.Cursor = new Cursor(StandardCursorType.None);
+        if (_mainViewModel.IsSlideshowOn || (this.WindowState == WindowState.FullScreen))
+        {
+            // TODO: Is there any way to determine current cursor type?
+            // Creating new cursor every time is weird.
+            this.Cursor = new Cursor(StandardCursorType.None);
+        }
+        else
+        {
+            this.Cursor = Cursor.Default;
+        }
     }
 
     private void OnQueueHasBeenChanged(object? sender, int ind)
@@ -160,6 +171,10 @@ internal sealed partial class MainWindow : Window
     {
         if (this.WindowState != WindowState.FullScreen)
         {
+            if (!_mainViewModel.IsSlideshowOn)
+            {
+                this.Cursor = Cursor.Default;
+            }
             return;
         }
 
@@ -258,6 +273,9 @@ internal sealed partial class MainWindow : Window
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
+            this.BackgroundLayerBorder.IsVisible = true;
+            this.BackgroundLayerBorder.Opacity = 0.9;
+
             if (theme == ThemeVariant.Dark)
             {
                 //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
@@ -415,6 +433,9 @@ internal sealed partial class MainWindow : Window
         var flyout = FlyoutBase.GetAttachedFlyout(this);
 
         flyout?.Hide();
+
+        this.Activate();
+        this.Focus();
     }
 
     private void LoadSettings()
@@ -1123,36 +1144,49 @@ internal sealed partial class MainWindow : Window
 
     private void Window_PointerMoved(object? sender, Avalonia.Input.PointerEventArgs e)
     {
-        if (this.WindowState == WindowState.FullScreen)
+        /*
+        if (this.WindowState != WindowState.FullScreen)
         {
-            var position = e.GetPosition(this);
-
-            if ((position.X == _mousePosition.X) && (position.Y == _mousePosition.Y))
-            {
-                //Debug.WriteLine($"Same pos, returning: sender {sender}, X {position.X}, Y {position.Y}, Source {e.Source}");
-                return;
-            }
-
-            _mousePosition = position;
-
-            if (_timerPointerCursorHide.IsEnabled)
-            {
-                _timerPointerCursorHide.Stop();
-            }
-
-            if (_mainViewModel.IsWorking)
-            {
-                this.Cursor = new Cursor(StandardCursorType.AppStarting);
-            }
-            else
-            {
-                this.Cursor = Cursor.Default;
-            }
-
-            _timerPointerCursorHide.Start();
-
             e.Handled = true;
+            return;
         }
+        */
+        /*
+        if (!_mainViewModel.IsSlideshowOn)
+        {
+            e.Handled = true;
+            return;
+        }
+        */
+
+        var position = e.GetPosition(this);
+
+        if ((position.X == _mousePosition.X) && (position.Y == _mousePosition.Y))
+        {
+            //Debug.WriteLine($"Same pos, returning: sender {sender}, X {position.X}, Y {position.Y}, Source {e.Source}");
+            e.Handled = true;
+            return;
+        }
+
+        _mousePosition = position;
+
+        if (_timerPointerCursorHide.IsEnabled)
+        {
+            _timerPointerCursorHide.Stop();
+        }
+
+        if (_mainViewModel.IsWorking)
+        {
+            this.Cursor = new Cursor(StandardCursorType.AppStarting);
+        }
+        else
+        {
+            this.Cursor = Cursor.Default;
+        }
+
+        _timerPointerCursorHide.Start();
+
+        e.Handled = true;
     }
 
     private void Window_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -1193,6 +1227,9 @@ internal sealed partial class MainWindow : Window
                         this.Cursor = Cursor.Default;
                     }
                 }
+
+                this.Activate();
+                this.Focus();
             }
         }
     }
@@ -1661,7 +1698,7 @@ internal sealed partial class MainWindow : Window
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            Debug.WriteLine("SetThreadExecutionState set @StartSleepInhibitor()");
+            //Debug.WriteLine("SetThreadExecutionState set @StartSleepInhibitor()");
             NativeMethods.SetThreadExecutionState(NativeMethods.ES_CONTINUOUS | NativeMethods.ES_SYSTEM_REQUIRED | NativeMethods.ES_DISPLAY_REQUIRED);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -2288,6 +2325,8 @@ internal sealed partial class MainWindow : Window
     private async void Button_FilePick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         await OpenFilePicker();
+        this.Activate();
+        this.Focus();
     }
 
     public async Task OpenFilePicker()
@@ -2392,6 +2431,8 @@ internal sealed partial class MainWindow : Window
     private async void Button_FolderPick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         await SelectFolder();
+        this.Activate();
+        this.Focus();
     }
 
     public async Task SelectFolder()

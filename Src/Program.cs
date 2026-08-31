@@ -16,10 +16,10 @@ namespace ImageViewer
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .WithInterFont()
-                .With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
-                .With(new Win32PlatformOptions { OverlayPopups = true })
-                .With(new X11PlatformOptions { OverlayPopups = true })
-                .LogToTrace();
+                .WithInterFont();
+                //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
+                //.With(new Win32PlatformOptions { OverlayPopups = true })
+                //.With(new X11PlatformOptions { OverlayPopups = true })
+                //.LogToTrace();
     }
 }
