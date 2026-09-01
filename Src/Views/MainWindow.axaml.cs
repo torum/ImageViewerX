@@ -107,6 +107,7 @@ internal sealed partial class MainWindow : Window
     {
         if (_mainViewModel.IsSlideshowOn)
         {
+            //this.Cursor = new Cursor(StandardCursorType.None); Not good.
             return;
         }
 
@@ -146,6 +147,7 @@ internal sealed partial class MainWindow : Window
         {
             if (flyout.IsOpen)
             {
+                this.Cursor = Cursor.Default;
                 return;
             }
         }
