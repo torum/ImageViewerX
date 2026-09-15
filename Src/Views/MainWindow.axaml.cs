@@ -1210,25 +1210,23 @@ internal sealed partial class MainWindow : Window
             // Right clicked on Window.
             if (sender is Window target)
             {
+                if (_mainViewModel.IsWorking)
+                {
+                    this.Cursor = new Cursor(StandardCursorType.AppStarting);
+                }
+                else
+                {
+                    this.Cursor = Cursor.Default;
+                }
+
                 var flyout = FlyoutBase.GetAttachedFlyout(target);
                 if (flyout is MenuFlyout menuFlyout)
                 {
                     menuFlyout.Placement = PlacementMode.Pointer;
                 }
+
                 // Show the flyout using the 'Placement="Pointer"' property.
                 flyout?.ShowAt(target);
-
-                if (this.WindowState == WindowState.FullScreen)
-                {
-                    if (_mainViewModel.IsWorking)
-                    {
-                        this.Cursor = new Cursor(StandardCursorType.AppStarting);
-                    }
-                    else
-                    {
-                        this.Cursor = Cursor.Default;
-                    }
-                }
 
                 this.Activate();
                 this.Focus();
