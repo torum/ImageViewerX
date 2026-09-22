@@ -16,12 +16,12 @@ namespace ImageViewer;
 
 internal sealed partial class App : Application
 {
-    public static readonly string AppName = "ImageViewer2";
+    public const string AppName = "ImageViewer2";
     private const string AppDeveloper = "torum";
 
     // Data folder and Config file path.
-    private static readonly string EnvDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(EnvDataFolder, AppDeveloper), AppName);
+    private static readonly string _envDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(_envDataFolder, AppDeveloper), AppName);
     public static string AppConfigFilePath { get; } = System.IO.Path.Combine(AppDataFolder, AppName + ".config");
 
     public IHost AppHost { get; private set; }

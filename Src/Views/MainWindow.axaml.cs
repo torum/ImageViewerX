@@ -1369,11 +1369,10 @@ internal sealed partial class MainWindow : Window
 
         _mainViewModel.IsWorking = true;
 
-        // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower.
-        // Don't _ =, nor await = . at all. 
-        await Task.Run(() =>
+        // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower (try sleeping HDD).
+        _ = Task.Run(async () =>
         {
-            Dispatcher.UIThread.Post(() =>
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _mainViewModel.IsWorking = true;
             });
@@ -1605,8 +1604,8 @@ internal sealed partial class MainWindow : Window
                     return;
                 }
 
-                //_mainViewModel.DroppedFiles(droppedImages);
                 Dispatcher.UIThread.Post(async () =>
+                //await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     //Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
 
@@ -1615,7 +1614,7 @@ internal sealed partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                Dispatcher.UIThread.Post(() =>
+                Dispatcher.UIThread.Post(async () =>
                 {
                     _mainViewModel.IsWorking = false;
                 });

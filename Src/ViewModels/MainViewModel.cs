@@ -711,11 +711,6 @@ internal sealed partial class MainViewModel : ObservableObject
 
     private async Task GetPictures(IEnumerable<object>? imageInfoItems)
     {
-        if (Queue.Count <= 0)
-        {
-            return;
-        }
-
         if (imageInfoItems is null)
         {
             Debug.WriteLine("imageInfoItems is null @GetPictures");
@@ -724,14 +719,13 @@ internal sealed partial class MainViewModel : ObservableObject
 
         if (Queue.Count <= 0)
         {
-            Debug.WriteLine("Queue.Count <= 0 @GetPictures");
+            Debug.WriteLine("Queue.Count == 0 @GetPictures");
+            // Just in case...
             return;
         }
 
         foreach (var item in imageInfoItems)
         {
-            await Task.Delay(10);
-
             if (_cts.IsCancellationRequested)
             {
                 Debug.WriteLine("@GetPictures() in foreach IsCancellationRequested");
@@ -770,9 +764,12 @@ internal sealed partial class MainViewModel : ObservableObject
 
             //Debug.WriteLine($"@GetPictures IsLoading: {img.ImageFilePath}");
 
+            // TODO: This try is not ...
             try
             {
-                Dispatcher.UIThread.Post(async () =>
+                // Don't await. Fire and Forget.
+                //Dispatcher.UIThread.Post(async () =>
+                await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     var bitmap = await Task.Run(() =>
                     {
@@ -829,7 +826,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
                     img.IsAcquired = true;
                     img.IsLoading = false;
-                }, DispatcherPriority.Loaded);//Default//.Background
+                }, DispatcherPriority.Background);//Default//.Background //Loaded
 
             }
             catch (Exception e)
@@ -851,7 +848,8 @@ internal sealed partial class MainViewModel : ObservableObject
                 img.IsLoading = false;
             }
 
-            await Task.Delay(20);
+            await Task.Delay(50);
+            await Task.Yield();
         }
     }
 
@@ -963,6 +961,30 @@ internal sealed partial class MainViewModel : ObservableObject
         // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep or loading very large file for example.
         await Task.Run(async () =>
         {
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                IsWorking = true;
+
+                if (await ShowImage(img))
+                {
+                    if (_cts.IsCancellationRequested)
+                    {
+                        Debug.WriteLine("@Show() after ShowImage() IsCancellationRequested");
+                        return;
+                    }
+
+                    IsWorking = false;
+
+                    if (IsSlideshowOn)
+                    {
+                        _timerSlideshow.Start();
+                    }
+
+                    QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
+                }
+            });
+
+            /*
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsWorking = true;
@@ -988,6 +1010,7 @@ internal sealed partial class MainViewModel : ObservableObject
                     QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
                 });
             }
+            */
         }, _cts.Token);
     }
 
@@ -1234,13 +1257,6 @@ internal sealed partial class MainViewModel : ObservableObject
             IsWorking = false;
             return;
         }
-
-        /*
-        Dispatcher.UIThread.Post(async () =>
-        {
-
-        }, DispatcherPriority.Loaded);
-        */
 
         IsWorking = true;
 

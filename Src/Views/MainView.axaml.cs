@@ -336,9 +336,9 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
             toAnimTask = toAnimation.RunAsync(to, cancellationToken);
         }
 
-        await toAnimTask;
-        await fromAnimTask;
-        //await Task.WhenAll(fromAnimTask, toAnimTask);
+        //await toAnimTask;
+        //await fromAnimTask;
+        await Task.WhenAll(fromAnimTask, toAnimTask);
 
         _first = false;
     }
