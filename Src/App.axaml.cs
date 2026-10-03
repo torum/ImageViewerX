@@ -11,6 +11,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ImageViewer;
 
@@ -23,6 +24,8 @@ internal sealed partial class App : Application
     private static readonly string _envDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(_envDataFolder, AppDeveloper), AppName);
     public static string AppConfigFilePath { get; } = System.IO.Path.Combine(AppDataFolder, AppName + ".config");
+
+    private Task? _appHostStartTask;
 
     public IHost AppHost { get; private set; }
 
@@ -83,6 +86,12 @@ internal sealed partial class App : Application
             }
 
             desktop.MainWindow = mainWin;
+            desktop.MainWindow.ShowActivated = true;
+            desktop.MainWindow.Show();
+
+            desktop.Exit += OnDesktopExit;
+            //AppHost.StartAsync().GetAwaiter().GetResult();
+            _appHostStartTask = StartAppHostAsync();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
@@ -102,6 +111,36 @@ internal sealed partial class App : Application
         }
         */
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private async Task StartAppHostAsync()
+    {
+        try
+        {
+            await AppHost.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            AppendErrorLog("AppHost.StartAsync", ex.ToString());
+            SaveErrorLog();
+        }
+    }
+
+    private async void OnDesktopExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+    {
+        try
+        {
+            if (_appHostStartTask is not null)
+            {
+                await _appHostStartTask;
+            }
+
+            await AppHost.StopAsync();
+        }
+        finally
+        {
+            AppHost.Dispose();
+        }
     }
 
     // Log file.

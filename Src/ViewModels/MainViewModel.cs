@@ -982,6 +982,10 @@ internal sealed partial class MainViewModel : ObservableObject
 
                     QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
                 }
+                else
+                {
+                    IsWorking = false;
+                }
             });
 
             /*

@@ -66,30 +66,6 @@ internal sealed partial class MainWindow : Window
         // There is some issue showing sysmenu in AvaloniaUI.
         //TryRegisterWindowsMenu();
 
-        this.PropertyChanged += this.OnWindow_PropertyChanged;
-        this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
-        _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
-        _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
-        _mainViewModel.QueueLoaded += OnQueueLoaded;
-        _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState;
-        _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
-        _mainViewModel.SlideshowIntervalChanged += (sender, arg) => { OnSlideshowIntervalChanged(arg); };
-        _mainViewModel.WorkingStateChanged += OnWorkingStateChanged;
-        //
-
-        this.DetachedFromVisualTree += (s, e) =>
-        {
-            this.PropertyChanged -= this.OnWindow_PropertyChanged;
-            this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
-            _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
-            _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
-            _mainViewModel.QueueLoaded -= OnQueueLoaded;
-            _mainViewModel.ToggleFullscreenState -= OnToggleFullscreenState;
-            _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
-            _mainViewModel.SlideshowIntervalChanged -= (_, arg) => { OnSlideshowIntervalChanged(arg); };
-            _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
-        };
-
         _timerPointerCursorHide = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(3)
@@ -101,6 +77,36 @@ internal sealed partial class MainWindow : Window
 
         // Subscribe to PointerPressed with Tunneling strategy
         QueueListBox.AddHandler(InputElement.PointerPressedEvent, OnItemPointerPressed, RoutingStrategies.Tunnel);
+    }
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+
+        this.PropertyChanged += this.OnWindow_PropertyChanged;
+        this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+        _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
+        _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
+        _mainViewModel.QueueLoaded += OnQueueLoaded;
+        _mainViewModel.ToggleFullscreenState += OnToggleFullscreenState;
+        _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
+        _mainViewModel.SlideshowIntervalChanged += OnSlideshowIntervalChanged;
+        _mainViewModel.WorkingStateChanged += OnWorkingStateChanged;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        this.PropertyChanged -= this.OnWindow_PropertyChanged;
+        this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+        _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
+        _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
+        _mainViewModel.QueueLoaded -= OnQueueLoaded;
+        _mainViewModel.ToggleFullscreenState -= OnToggleFullscreenState;
+        _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
+        _mainViewModel.SlideshowIntervalChanged -= OnSlideshowIntervalChanged;
+        _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
+
+        base.OnClosed(e);
     }
 
     private void OnWorkingStateChanged(object? sender, bool e)
@@ -335,7 +341,7 @@ internal sealed partial class MainWindow : Window
         ToggleFullScreen();
     }
 
-    public void OnSlideshowIntervalChanged(long interval)
+    public void OnSlideshowIntervalChanged(object? sender,long interval)
     {
         this.Interval1SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
         this.Interval2SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
@@ -866,7 +872,7 @@ internal sealed partial class MainWindow : Window
         }
 
         // Update Slideshow Interval menu 
-        OnSlideshowIntervalChanged(_mainViewModel.SlideshowTimerInterval);
+        OnSlideshowIntervalChanged(this,_mainViewModel.SlideshowTimerInterval);
 
         // SystemDpiScalingFactor - Set default.
         /*
