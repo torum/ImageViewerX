@@ -2185,6 +2185,11 @@ internal sealed partial class MainWindow : Window
             }
         }
 
+        if (visibleItems.Count <= 0)
+        {
+            return;
+        }
+
         // Set the new value of the attached property.
         //listBox.SetValue(VisibleItemsProperty, visibleItems);
         vm.VisibleItemsImageInfo = visibleItems;

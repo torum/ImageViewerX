@@ -89,6 +89,12 @@ internal sealed partial class MainViewModel : ObservableObject
                 return;
             }
 
+            var i = field.Count();
+            if (i <= 0)
+            {
+                return;
+            }
+
             // Don't await here. Fire and forget. No _ = either.
             _ = Task.Run(() => GetPictures(field), _cts.Token);
         }
@@ -740,6 +746,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
             if (string.IsNullOrEmpty(img.ImageFilePath))
             {
+                Debug.WriteLine("img.ImageFilePath is null or empty @GetPictures");
                 continue;
             }
 
@@ -826,7 +833,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
                     img.IsAcquired = true;
                     img.IsLoading = false;
-                }, DispatcherPriority.Background);//Default//.Background //Loaded
+                }, DispatcherPriority.Default);//Default//.Background //Loaded
 
             }
             catch (Exception e)
