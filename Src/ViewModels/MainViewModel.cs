@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -8,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.Views;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,6 +35,8 @@ internal sealed partial class MainViewModel : ObservableObject
     private int _queueIndex;
     private string _currentFile = string.Empty;
     private List<ImageInfo> _originalQueue = [];
+
+    private Vector _displayDpi = new Vector(96.0, 96.0);
 
     // Font info used for culculating displaying text width.
     private FontFamily TextFontFamily { get; } = FontFamily.Default;
@@ -63,6 +68,14 @@ internal sealed partial class MainViewModel : ObservableObject
         };
         _timerSlideshow.Tick += OnSlideshowTimerTick;
 
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var screen = desktop.MainWindow?.Screens.ScreenFromWindow(desktop.MainWindow);
+            double scaling = screen?.Scaling ?? 1.0;
+            _displayDpi = new Vector(96.0 * scaling, 96.0 * scaling);
+        }
+
+
 #if DEBUG
         IsSaveLog = true;
 
@@ -71,12 +84,14 @@ internal sealed partial class MainViewModel : ObservableObject
 #endif
     }
 
+
+
     #region == Public Properties ==
 
     // TODO: Make user editable.
     // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
     //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif", ".jxl"]; //
-    public string[] ValidExtensions { get; } = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"];
+    public string[] ValidExtensions { get; } = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"];//, ".avif"
 
     public double ClientAreaWidth
     {
@@ -789,7 +804,21 @@ internal sealed partial class MainViewModel : ObservableObject
 
                         try
                         {
-                            return new Bitmap(img.ImageFilePath);
+                            //return new Bitmap(img.ImageFilePath);
+                            return UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi);
+                            /*
+                            string extension = Path.GetExtension(img.ImageFilePath).ToLowerInvariant();
+                            // AVIF
+                            if (extension == ".avif")
+                            {
+                                using var fileStream = new FileStream(img.ImageFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+                                return AvifImageDecoder.DecodeAvifToAvalonia(fileStream, _displayDpi);
+                            }
+                            else
+                            {
+                                return new Bitmap(img.ImageFilePath);
+                            }
+                            */
                         }
                         catch (Exception ex)
                         {
@@ -1076,7 +1105,32 @@ internal sealed partial class MainViewModel : ObservableObject
 
             try
             {
-                img.ImageSource = new(img.ImageFilePath);
+                //img.ImageSource = new(img.ImageFilePath);
+                img.ImageSource = UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi);
+                if (img.ImageSource is null)
+                {
+                    img.IsAcquired = false;
+                    img.IsLoading = false;
+                    Debug.WriteLine($"@ShowImage: Failed to load image: {img.ImageFilePath}");
+                    //throw new Exception($"Failed to load image: {img.ImageFilePath}");
+                    DisplayImage = null;
+                    _queueIndex = idx + 1;
+
+                    return Task.FromResult(true); // true makes go next image. // Be carefull about this when all the images are null and repeat option is on then....
+                }
+                /*
+                string extension = Path.GetExtension(img.ImageFilePath).ToLowerInvariant();
+                // AVIF
+                if (extension == ".avif")
+                {
+                    using var fileStream = new FileStream(img.ImageFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+                    img.ImageSource = AvifImageDecoder.DecodeAvifToAvalonia(fileStream, _displayDpi);
+                }
+                else
+                {
+                    img.ImageSource = new Bitmap(img.ImageFilePath);
+                }
+                */
 
                 if (IsOverrideSystemDpiScalingFactorOn && (SystemDpiScalingFactor > 1))
                 {
