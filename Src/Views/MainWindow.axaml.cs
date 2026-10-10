@@ -1615,7 +1615,7 @@ internal sealed partial class MainWindow : Window
                 {
                     //Debug.WriteLine("Calling DroppedFiles in ViewModel @ProcessFiles()");
 
-                    await _mainViewModel.DroppedFiles(droppedImages, singleSelectedOriginalFile);
+                    await _mainViewModel.DroppedFilesAsync(droppedImages, singleSelectedOriginalFile);
                 });
             }
             catch (Exception ex)
@@ -1829,7 +1829,7 @@ internal sealed partial class MainWindow : Window
         }
     }
 
-    private void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    private async void Window_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
     {
         if (e.Key == Avalonia.Input.Key.Escape)
         {
@@ -1861,13 +1861,13 @@ internal sealed partial class MainWindow : Window
         }
         else if (e.Key == Avalonia.Input.Key.Right)
         {
-            _ = _mainViewModel.NextKeyPressed();
+            await _mainViewModel.NextKeyPressedAsync();
 
             e.Handled = true;
         }
         else if (e.Key == Avalonia.Input.Key.Left)
         {
-            _ = _mainViewModel.PrevKeyPressed();
+            await _mainViewModel.PrevKeyPressedAsync();
 
             e.Handled = true;
         }
@@ -1961,16 +1961,16 @@ internal sealed partial class MainWindow : Window
         }
     }
 
-    private void Window_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
+    private async void Window_PointerWheelChanged(object? sender, Avalonia.Input.PointerWheelEventArgs e)
     {
         if (e.Delta.Y > 0) // Scroll up
         {
-            _ = _mainViewModel.PrevKeyPressed();
+            await _mainViewModel.PrevKeyPressedAsync();
         }
         else if (e.Delta.Y < 0) // Scroll down
         {
             //
-            _ = _mainViewModel.NextKeyPressed();
+            await _mainViewModel.NextKeyPressedAsync();
         }
 
         e.Handled = true;
@@ -2055,7 +2055,7 @@ internal sealed partial class MainWindow : Window
 
         lb.SelectedItem = item;
 
-        _ = _mainViewModel.ListBoxItemSelected(item);
+        await _mainViewModel.ListBoxItemSelectedAsync(item);
 
     }
 
@@ -2334,12 +2334,12 @@ internal sealed partial class MainWindow : Window
 
     private async void Button_FilePick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        await OpenFilePicker();
+        await OpenFilePickerAsync();
         this.Activate();
         this.Focus();
     }
 
-    public async Task OpenFilePicker()
+    public async Task OpenFilePickerAsync()
     {
         if (_mainViewModel.IsWorking)
         {
@@ -2440,12 +2440,12 @@ internal sealed partial class MainWindow : Window
 
     private async void Button_FolderPick_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        await SelectFolder();
+        await SelectFolderAsync();
         this.Activate();
         this.Focus();
     }
 
-    public async Task SelectFolder()
+    public async Task SelectFolderAsync()
     {
         if (_mainViewModel.IsWorking)
         {

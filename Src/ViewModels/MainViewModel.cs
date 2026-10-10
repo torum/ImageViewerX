@@ -28,9 +28,9 @@ internal sealed partial class MainViewModel : ObservableObject
     #region == Private ==
 
     private readonly CancellationTokenSource _cts = new();
+    private readonly DispatcherTimer _timerSlideshow;
     private int _queueIndex;
     private string _currentFile = string.Empty;
-    private readonly DispatcherTimer _timerSlideshow;
     private List<ImageInfo> _originalQueue = [];
 
     // Font info used for culculating displaying text width.
@@ -40,6 +40,36 @@ internal sealed partial class MainViewModel : ObservableObject
     private FontStyle TextFontStyle { get; } = FontStyle.Normal;
 
     #endregion
+
+    #region == Events ==
+
+    public event EventHandler<int>? QueueHasBeenChanged;
+    public event EventHandler? TransitionsHasBeenChanged;
+    public event EventHandler? SlideshowStatusChanged;
+    public event EventHandler? QueueLoaded;
+    public event EventHandler? ToggleFullscreenState;
+    public event EventHandler? HideMenuFlyout;
+    public event EventHandler<long>? SlideshowIntervalChanged;
+    public event EventHandler<bool>? WorkingStateChanged;
+
+    #endregion
+
+    public MainViewModel()
+    {
+        // Init Timer.
+        _timerSlideshow = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(_slideshowTimerInterval)
+        };
+        _timerSlideshow.Tick += OnSlideshowTimerTick;
+
+#if DEBUG
+        IsSaveLog = true;
+
+#else
+        IsSaveLog = false;
+#endif
+    }
 
     #region == Public Properties ==
 
@@ -96,7 +126,7 @@ internal sealed partial class MainViewModel : ObservableObject
             }
 
             // Don't await here. Fire and forget. No _ = either.
-            _ = Task.Run(() => GetPictures(field), _cts.Token);
+            _ = Task.Run(() => GetPicturesAsync(field), _cts.Token);
         }
     }
 
@@ -549,7 +579,7 @@ internal sealed partial class MainViewModel : ObservableObject
                     _queueIndex = 0;
                 }
 
-                _ = Show();
+                _ = ShowAsync();
             }
         }
     } = true;
@@ -683,49 +713,19 @@ internal sealed partial class MainViewModel : ObservableObject
 
     #endregion
 
-    #region == Events ==
-
-    public event EventHandler<int>? QueueHasBeenChanged;
-    public event EventHandler? TransitionsHasBeenChanged;
-    public event EventHandler? SlideshowStatusChanged;
-    public event EventHandler? QueueLoaded;
-    public event EventHandler? ToggleFullscreenState;
-    public event EventHandler? HideMenuFlyout;
-    public event EventHandler<long>? SlideshowIntervalChanged;
-    public event EventHandler<bool>? WorkingStateChanged;
-
-    #endregion
-
-    public MainViewModel()
-    {
-        // Init Timer.
-        _timerSlideshow = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(_slideshowTimerInterval)
-        };
-        _timerSlideshow.Tick += OnSlideshowTimerTick;
-
-#if DEBUG
-        IsSaveLog = true;
-
-#else
-        IsSaveLog = false;
-#endif
-    }
-
     #region == Private Methods ==
 
-    private async Task GetPictures(IEnumerable<object>? imageInfoItems)
+    private async Task GetPicturesAsync(IEnumerable<object>? imageInfoItems)
     {
         if (imageInfoItems is null)
         {
-            Debug.WriteLine("imageInfoItems is null @GetPictures");
+            Debug.WriteLine("imageInfoItems is null @GetPicturesAsync");
             return;
         }
 
         if (Queue.Count <= 0)
         {
-            Debug.WriteLine("Queue.Count == 0 @GetPictures");
+            Debug.WriteLine("Queue.Count == 0 @GetPicturesAsync");
             // Just in case...
             return;
         }
@@ -734,19 +734,19 @@ internal sealed partial class MainViewModel : ObservableObject
         {
             if (_cts.IsCancellationRequested)
             {
-                Debug.WriteLine("@GetPictures() in foreach IsCancellationRequested");
+                Debug.WriteLine("@GetPicturesAsync() in foreach IsCancellationRequested");
                 return;
             }
 
             if (item is not ImageInfo img)
             {
-                Debug.WriteLine("item is not ImageInfo @GetPictures");
+                Debug.WriteLine("item is not ImageInfo @GetPicturesAsync");
                 continue;
             }
 
             if (string.IsNullOrEmpty(img.ImageFilePath))
             {
-                Debug.WriteLine("img.ImageFilePath is null or empty @GetPictures");
+                Debug.WriteLine("img.ImageFilePath is null or empty @GetPicturesAsync");
                 continue;
             }
 
@@ -887,7 +887,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
             IsTransitionReversed = false;
 
-            await Show();
+            await ShowAsync();
         }
         catch (Exception ex)
         {
@@ -897,7 +897,7 @@ internal sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task Show()
+    private async Task ShowAsync()
     {
         if (_timerSlideshow.IsEnabled)
         {
@@ -947,7 +947,7 @@ internal sealed partial class MainViewModel : ObservableObject
         if (HasImageExtension(img.ImageFilePath, ValidExtensions) == false)
         {
             _queueIndex++;
-            await Show();
+            await ShowAsync();
             return;
         }
 
@@ -1029,12 +1029,13 @@ internal sealed partial class MainViewModel : ObservableObject
     {
         if (_cts.IsCancellationRequested)
         {
-            Debug.WriteLine("@ShowImage IsCancellationRequested");
+            Debug.WriteLine("@ShowImage: IsCancellationRequested");
             return Task.FromResult(false);
         }
 
         if (string.IsNullOrEmpty(img.ImageFilePath))
         {
+            Debug.WriteLine("@ShowImage: ImageFilePath is null or empty");
             return Task.FromResult(false);
         }
 
@@ -1042,7 +1043,7 @@ internal sealed partial class MainViewModel : ObservableObject
         {
             if (img.ImageFilePath.Equals(_currentFile))
             {
-                Debug.WriteLine($"{_queueIndex} dupe skipping [{_currentFile}]");
+                Debug.WriteLine($"@ShowImage: Dupe {_queueIndex} skipping [{_currentFile}]");
                 _queueIndex++;
                 return Task.FromResult(true);
             }
@@ -1061,15 +1062,11 @@ internal sealed partial class MainViewModel : ObservableObject
         //Bitmap? bitmap;
         if (img.IsAcquired)
         {
-            // no longer needed
-            //bitmap = img.ImageSource;
+            //Debug.WriteLine($"@ShowImage: IsAcquired: {img.ImageFilePath}");
         }
         else if (img.IsLoading)
         {
-            Debug.WriteLine($"@ShowImage IsLoading: {img.ImageFilePath}");
-
-            // no longer needed
-            //bitmap = img.ImageSource;
+            Debug.WriteLine($"@ShowImage: IsLoading: {img.ImageFilePath}");
         }
         else
         {
@@ -1259,9 +1256,9 @@ internal sealed partial class MainViewModel : ObservableObject
     #region == Public Methods ==
 
     // Dropped or Open with.
-    public async Task DroppedFiles(List<ImageInfo> images, string singleSelectedOriginalFile)
+    public async Task DroppedFilesAsync(List<ImageInfo> images, string singleSelectedOriginalFile)
     {
-        //Debug.WriteLine("DroppedFiles()");
+        //Debug.WriteLine("DroppedFilesAsync()");
 
         if (images.Count < 1)
         {
@@ -1350,7 +1347,7 @@ internal sealed partial class MainViewModel : ObservableObject
         //Debug.WriteLine("Calling Show() @DroppedFiles()");
 
         // Show Image.
-        await Show();
+        await ShowAsync();
 
         // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
         await Task.Delay(500);
@@ -1379,7 +1376,7 @@ internal sealed partial class MainViewModel : ObservableObject
         await Task.Yield();
     }
 
-    public async Task NextKeyPressed()
+    public async Task NextKeyPressedAsync()
     {
         if (_timerSlideshow.IsEnabled)
         {
@@ -1410,10 +1407,10 @@ internal sealed partial class MainViewModel : ObservableObject
 
         IsTransitionReversed = false;
 
-        await Show();
+        await ShowAsync();
     }
 
-    public async Task PrevKeyPressed()
+    public async Task PrevKeyPressedAsync()
     {
         if (Queue.Count <= 0) return;
 
@@ -1437,17 +1434,17 @@ internal sealed partial class MainViewModel : ObservableObject
 
         IsTransitionReversed = true;
 
-        await Show();
+        await ShowAsync();
     }
 
-    public async Task ListBoxItemSelected(ImageInfo img)
+    public async Task ListBoxItemSelectedAsync(ImageInfo img)
     {
         // TODO: check index and determie 
         IsTransitionReversed = false;
 
         _queueIndex = Queue.IndexOf(img);
 
-        await Show();
+        await ShowAsync();
     }
 
     public static bool HasImageExtension(string fileName, string[] extensions)
@@ -1743,25 +1740,25 @@ internal sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void QueueListviewEnterKey(ImageInfo img)
+    public async Task QueueListviewEnterKey(ImageInfo img)
     {
-        _ = ListBoxItemSelected(img);
+        await ListBoxItemSelectedAsync(img);
     }
 
     [RelayCommand]
-    public void GoNext()
+    public async Task GoNext()
     {
         //Debug.WriteLine("GoNext");
 
-        _ = NextKeyPressed();
+        await NextKeyPressedAsync();
     }
 
     [RelayCommand]
-    public void GoPrev()
+    public async Task GoPrev()
     {
         //Debug.WriteLine("GoPrev");
 
-        _ = PrevKeyPressed();
+        await PrevKeyPressedAsync();
     }
 
     [RelayCommand]
@@ -1774,26 +1771,6 @@ internal sealed partial class MainViewModel : ObservableObject
 
     #endregion
 
-    /*
-    [LibraryImport("shell32.dll", EntryPoint = "ShellExecuteW", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
-    */
-    /*
-    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial int SHParseDisplayName(
-        [MarshalAs(UnmanagedType.LPWStr)] string pszName,
-        IntPtr pbc,
-        out IntPtr ppidl,
-        uint sfgaoIn,
-        out uint psfgaoOut);
-
-    [LibraryImport("shell32.dll")]
-    private static partial int SHOpenFolderAndSelectItems(
-        IntPtr pidlFolder,
-        uint cidl,
-        [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl,
-        uint dwFlags);
-    */
 }
 
 
