@@ -8,7 +8,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ImageViewer.Views.MainView"
              x:DataType="vm:MainViewModel">
-	<TransitioningContentControl x:Name="ImageTransitioningContentControl" Content="{Binding DisplayImage, Mode=OneWay}" IsTransitionReversed="{Binding IsTransitionReversed}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+	<TransitioningContentControl
+		x:Name="ImageTransitioningContentControl"
+		Content="{Binding DisplayImage, Mode=OneWay}"
+		IsTransitionReversed="{Binding IsTransitionReversed}"
+		HorizontalAlignment="Stretch"
+		VerticalAlignment="Stretch">
 		<TransitioningContentControl.ContentTemplate>
 			<DataTemplate DataType="mod:ImageInfo">
 				<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"

@@ -569,6 +569,7 @@ internal sealed partial class MainViewModel : ObservableObject
             {
                 foreach (var item in Queue)
                 {
+                    /*
                     if (item.ImageSource is not null)
                     {
                         item.ImageSource = null;
@@ -577,6 +578,8 @@ internal sealed partial class MainViewModel : ObservableObject
                         item.IsAcquired = false;
                         item.IsLoading = false;
                     }
+                    */
+                    ReleaseImage(item);
                 }
 
                 // Reload image.
@@ -1001,7 +1004,7 @@ internal sealed partial class MainViewModel : ObservableObject
             {
                 IsWorking = true;
 
-                if (await ShowImage(img))
+                if (await ShowImageAsync(img))
                 {
                     if (_cts.IsCancellationRequested)
                     {
@@ -1054,18 +1057,18 @@ internal sealed partial class MainViewModel : ObservableObject
         }, _cts.Token);
     }
 
-    private Task<bool> ShowImage(ImageInfo img)
+    private async Task<bool> ShowImageAsync(ImageInfo img)
     {
         if (_cts.IsCancellationRequested)
         {
             Debug.WriteLine("@ShowImage: IsCancellationRequested");
-            return Task.FromResult(false);
+            return false;
         }
 
         if (string.IsNullOrEmpty(img.ImageFilePath))
         {
             Debug.WriteLine("@ShowImage: ImageFilePath is null or empty");
-            return Task.FromResult(false);
+            return false;
         }
 
         if (!string.IsNullOrEmpty(_currentFile))
@@ -1074,7 +1077,7 @@ internal sealed partial class MainViewModel : ObservableObject
             {
                 Debug.WriteLine($"@ShowImage: Dupe {_queueIndex} skipping [{_currentFile}]");
                 _queueIndex++;
-                return Task.FromResult(true);
+                return true;
             }
         }
 
@@ -1086,79 +1089,81 @@ internal sealed partial class MainViewModel : ObservableObject
         //_isWorking = true;
 
         //Debug.WriteLine($"{idx} Enter critical section.");
-
+        /*
+        Debug.WriteLine(
+            $"[Fade check] acquired={img.IsAcquired}, " +
+            $"loading={img.IsLoading}, " +
+            $"hasBitmap={img.ImageSource is not null}, " +
+            $"file={img.ImageFilePath}");
+        */
         // no longer needed
         //Bitmap? bitmap;
-        if (img.IsAcquired)
+
+        if (img.IsLoading)
         {
-            //Debug.WriteLine($"@ShowImage: IsAcquired: {img.ImageFilePath}");
+            Debug.WriteLine($"@ShowImage: Waiting for preload: {img.ImageFilePath}");
+
+            while (img.IsLoading && !_cts.IsCancellationRequested)
+            {
+                await Task.Delay(10);
+            }
         }
-        else if (img.IsLoading)
+
+        if (_cts.IsCancellationRequested)
         {
-            Debug.WriteLine($"@ShowImage: IsLoading: {img.ImageFilePath}");
+            return false;
         }
-        else
+
+        if (!img.IsAcquired || img.ImageSource is null)
         {
             img.IsLoading = true;
 
-            //Debug.WriteLine($"{idx} {Path.GetFileName(_currentFile)}");
-
             try
             {
-                //img.ImageSource = new(img.ImageFilePath);
-                img.ImageSource = UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi);
-                if (img.ImageSource is null)
+                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi),_cts.Token);
+
+                if (_cts.IsCancellationRequested)
+                {
+                    bitmap?.Dispose();
+                    return false;
+                }
+
+                if (bitmap is null)
                 {
                     img.IsAcquired = false;
                     img.IsLoading = false;
-                    Debug.WriteLine($"@ShowImage: Failed to load image: {img.ImageFilePath}");
-                    //throw new Exception($"Failed to load image: {img.ImageFilePath}");
                     DisplayImage = null;
                     _queueIndex = idx + 1;
-
-                    return Task.FromResult(true); // true makes go next image. // Be carefull about this when all the images are null and repeat option is on then....
+                    return true;
                 }
-                /*
-                string extension = Path.GetExtension(img.ImageFilePath).ToLowerInvariant();
-                // AVIF
-                if (extension == ".avif")
+
+                img.ImageSource = bitmap;
+
+                if (IsOverrideSystemDpiScalingFactorOn && SystemDpiScalingFactor > 1)
                 {
-                    using var fileStream = new FileStream(img.ImageFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
-                    img.ImageSource = AvifImageDecoder.DecodeAvifToAvalonia(fileStream, _displayDpi);
+                    img.ImageWidth = img.ImageSource.PixelSize.Width / SystemDpiScalingFactor;
+                    img.ImageHeight = img.ImageSource.PixelSize.Height / SystemDpiScalingFactor;
                 }
                 else
                 {
-                    img.ImageSource = new Bitmap(img.ImageFilePath);
-                }
-                */
-
-                if (IsOverrideSystemDpiScalingFactorOn && (SystemDpiScalingFactor > 1))
-                {
-                    img.ImageWidth = (img.ImageSource.PixelSize.Width / SystemDpiScalingFactor);
-                    img.ImageHeight = (img.ImageSource.PixelSize.Height / SystemDpiScalingFactor);
-                }
-                else
-                {
-                    img.ImageWidth = img.ImageSource.PixelSize.Width;//img.ImageSource.Size.Width;
-                    img.ImageHeight = img.ImageSource.PixelSize.Height;//img.ImageSource.Size.Height;
+                    img.ImageWidth = img.ImageSource.PixelSize.Width;
+                    img.ImageHeight = img.ImageSource.PixelSize.Height;
                 }
 
                 AdjustStretchProperty(img);
-
                 img.IsAcquired = true;
-                img.IsLoading = false;
+            }
+            catch (OperationCanceledException) when (_cts.IsCancellationRequested)
+            {
+                return false;
             }
             catch (Exception ex)
             {
-                // TODO: 
                 Debug.WriteLine($"{ex} @ShowImage");
                 img.IsAcquired = false;
                 img.IsLoading = false;
-
-                App.AppendErrorLog($"Exception @ShowImage on new Bitmap() {img.ImageFilePath}", ex.ToString());
-
-                // no longer needed
-                //bitmap = null;
+                //DisplayImage = null;
+                App.AppendErrorLog($"Exception @ShowImage on new Bitmap() {img.ImageFilePath}",ex.ToString());
             }
             finally
             {
@@ -1199,7 +1204,7 @@ internal sealed partial class MainViewModel : ObservableObject
 
         #endregion
 
-        return Task.FromResult(true);
+        return true;
     }
 
     private void UpdateDisplayImageMaxSizeAndStretchProperty()
@@ -1305,6 +1310,19 @@ internal sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    private static void ReleaseImage(ImageInfo image)
+    {
+        var bitmap = image.ImageSource;
+        image.ImageSource = null;
+
+        image.ImageWidth = 0;
+        image.ImageHeight = 0;
+        image.IsAcquired = false;
+        image.IsLoading = false;
+
+        bitmap?.Dispose();
+    }
+
     #endregion
 
     #region == Public Methods ==
@@ -1336,6 +1354,17 @@ internal sealed partial class MainViewModel : ObservableObject
         // Just because.
         SelectedQueueImage = null;
 
+
+        // Keep old bitmaps alive while the outgoing image transitions away.
+        // Do not release ImageInfo instances reused in the incoming queue.
+        var incomingImages = new HashSet<ImageInfo>(images, ReferenceEqualityComparer.Instance);
+        var oldImages = Queue
+            .Concat(_originalQueue)
+            .Where(image => !incomingImages.Contains(image))
+            .Distinct<ImageInfo>(ReferenceEqualityComparer.Instance)
+            .ToArray();
+
+        
         Queue.Clear();
         _originalQueue.Clear();
 
@@ -1404,7 +1433,13 @@ internal sealed partial class MainViewModel : ObservableObject
         await ShowAsync();
 
         // Wait untill the Image drawn before loading ListBox which starts loading images on its own.
-        await Task.Delay(500);
+        //await Task.Delay(500);
+
+        // Dispose old images that are not in the new queue.
+        foreach (var image in oldImages)
+        {
+            ReleaseImage(image);
+        }
 
         IsWorking = true;
         await Task.Yield();

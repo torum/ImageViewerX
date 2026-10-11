@@ -149,14 +149,14 @@ internal sealed partial class App : Application
 
     private void OnUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        // Prevent the application from crashing
-        e.Handled = true;
+        // Well, no -> Prevent the application from crashing
+        //e.Handled = true;
 
         // Log the exception for debugging
         AppendErrorLog("DispatcherUnhandledException", e.Exception.ToString());
 
         // Don't save logs unless IsSaveLog is true in vm.
-        //SaveErrorLog();
+        SaveErrorLog();
     }
 
     public static void AppendErrorLog(string errorTxt, string detailedErrorMessageTxt)

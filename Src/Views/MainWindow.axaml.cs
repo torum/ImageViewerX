@@ -812,7 +812,7 @@ internal sealed partial class MainWindow : Window
 
         // MenuItemStartSlideshow
         this.MenuItemStartSlideshow.InputGesture = new KeyGesture(Avalonia.Input.Key.Space, KeyModifiers.None);
-        this.MenuItemQuit.KeyBindings.Add(ToggleSlideshowCommandKeyBinding);
+        this.MenuItemStartSlideshow.KeyBindings.Add(ToggleSlideshowCommandKeyBinding);
         //
         var QuitCommandKeyBinding = new KeyBinding
         {

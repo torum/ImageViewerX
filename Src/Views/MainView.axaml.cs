@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageViewer.ViewModels;
 using System;
@@ -63,6 +64,7 @@ internal sealed partial class MainView : UserControl
         {
             var compositeTransition = new CompositePageTransition();
             compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+            //compositeTransition.PageTransitions.Add(new CustomCompositorFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
         else if (_viewModel.IsEffectPageSlideOn)
@@ -578,3 +580,4 @@ public class CustomPageSlideTransition : IPageTransition
     }
     */
 }
+
