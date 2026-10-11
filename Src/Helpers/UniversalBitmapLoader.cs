@@ -11,8 +11,7 @@ public static class UniversalBitmapLoader
 {
     public static Bitmap? LoadAnyImage(string filePath, Vector displayDpi)
     {
-        if (!File.Exists(filePath))
-            throw new FileNotFoundException("Image file not found.", filePath);
+        if (!File.Exists(filePath)) throw new FileNotFoundException("Image file not found.", filePath);
 
         string extension = Path.GetExtension(filePath).ToLowerInvariant();
 

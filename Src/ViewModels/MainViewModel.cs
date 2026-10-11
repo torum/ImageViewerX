@@ -983,32 +983,21 @@ internal sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        /*
-
-        if (await ShowImage(img))
-        {
-            if (IsSlideshowOn)
-            {
-                _timerSlideshow.Start();
-            }
-
-            QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
-        }
-
-        */
-
+        // DO NOT await ShowImageAsync(img) directly on the UI thread or NEVER. It will freeze the UI for a while when loading from sleeping HDD.
         // Little hackkish... but it seems to work great without locking the UI when HDD (not SSD) is slowly waking up from sleep or loading very large file for example.
+        // Also await Dispatcher.UIThread.InvokeAsync is needed, so don't even try removing it.
         await Task.Run(async () =>
         {
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 IsWorking = true;
 
-                if (await ShowImageAsync(img))
+                // Never ever await(whatever they say) here: Don't await Task.Run(async () => await ShowImageAsync(img))
+                if (await Task.Run(() => ShowImageAsync(img), _cts.Token)) 
                 {
                     if (_cts.IsCancellationRequested)
                     {
-                        Debug.WriteLine("@Show() after ShowImage() IsCancellationRequested");
+                        Debug.WriteLine("@Show() after ShowImageAsync() IsCancellationRequested");
                         return;
                     }
 
@@ -1025,40 +1014,17 @@ internal sealed partial class MainViewModel : ObservableObject
                 {
                     IsWorking = false;
                 }
-            });
+            }, DispatcherPriority.Background);
 
-            /*
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                IsWorking = true;
-            });
-
-            if (await ShowImage(img))
-            {
-                if (_cts.IsCancellationRequested)
-                {
-                    Debug.WriteLine("@Show() after ShowImage() IsCancellationRequested");
-                    return;
-                }
-
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    IsWorking = false;
-
-                    if (IsSlideshowOn)
-                    {
-                        _timerSlideshow.Start();
-                    }
-
-                    QueueHasBeenChanged?.Invoke(this, _queueIndex - 1);
-                });
-            }
-            */
         }, _cts.Token);
+
     }
 
     private async Task<bool> ShowImageAsync(ImageInfo img)
     {
+        // Never ever await this (whatever they say).
+        // Don't await Task.Run(async () => await ShowImageAsync(img)) either.
+        
         if (_cts.IsCancellationRequested)
         {
             Debug.WriteLine("@ShowImage: IsCancellationRequested");
@@ -1096,8 +1062,6 @@ internal sealed partial class MainViewModel : ObservableObject
             $"hasBitmap={img.ImageSource is not null}, " +
             $"file={img.ImageFilePath}");
         */
-        // no longer needed
-        //Bitmap? bitmap;
 
         if (img.IsLoading)
         {
