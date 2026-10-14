@@ -4,6 +4,7 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
+using Avalonia.Rendering.Composition.Animations;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -70,7 +71,7 @@ internal sealed partial class MainView : UserControl
         if (_viewModel.IsEffectFadeInAndOutOn)
         {
             var compositeTransition = new CompositePageTransition();
-            compositeTransition.PageTransitions.Add(new CustomFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
+            compositeTransition.PageTransitions.Add(new CustomFadeTransitionOnComposition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             //compositeTransition.PageTransitions.Add(new CustomCompositorFadeTransition(TimeSpan.FromMilliseconds(1000), _viewModel.IsEffectCrossfadeOn));
             this.ImageTransitioningContentControl.PageTransition = compositeTransition;
         }
@@ -379,6 +380,105 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
 
         }
 
+    }
+}
+
+
+public class CustomFadeTransitionOnComposition(TimeSpan duration, bool crossFade) : IPageTransition
+{
+    private readonly TimeSpan _duration = duration;
+    private readonly bool _crossFade = crossFade;
+    private bool _first = true;
+
+    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
+    {
+        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
+        if (parent == null) return;
+
+        var fromAnimTask = Task.CompletedTask;
+        var toAnimTask = Task.CompletedTask;
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Fade out the "from" page on the compositor
+            if (from != null)
+            {
+                Easing fromEasing = _crossFade ? new CubicEaseInOut() : new CubicEaseIn();
+                fromAnimTask = RunOpacityAnimation(from, 1.0f, 0.0f, fromEasing, cancellationToken);
+            }
+
+            // Fade in the "to" page
+            if (to != null)
+            {
+                to.Opacity = 0.0;
+
+                // Do not wait when cross-fading, nor on the first run.
+                if ((!_crossFade) && (!_first))
+                {
+                    await Task.Delay(_duration, cancellationToken);
+                }
+
+                toAnimTask = RunOpacityAnimation(to, 0.0f, 1.0f, new CubicEaseInOut(), cancellationToken);
+            }
+
+            _first = false;
+
+            await Task.WhenAll(fromAnimTask, toAnimTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // Re-throw so Avalonia knows this transition cycle was aborted
+            throw;
+        }
+        finally
+        {
+            if (from != null) from.Opacity = 0.0;
+            if (to != null) to.Opacity = 1.0;
+
+            _first = false;
+        }
+    }
+
+    private Task RunOpacityAnimation(Visual visual, float start, float end, Easing easing, CancellationToken ct)
+    {
+        var compositionVisual = ElementComposition.GetElementVisual(visual);
+        if (compositionVisual == null)
+            return Task.CompletedTask;
+
+        var compositor = compositionVisual.Compositor;
+
+        var animation = compositor.CreateScalarKeyFrameAnimation();
+        animation.Target = "Opacity";
+        animation.Duration = _duration;
+        animation.InsertKeyFrame(0.0f, start, new LinearEasing());
+        // The easing of a key frame applies to the segment ending at that frame.
+        animation.InsertKeyFrame(1.0f, end, easing);
+        animation.IterationCount = 1;
+        // Equivalent of FillMode.Forward: the final value is held after completion.
+        animation.StopBehavior = AnimationStopBehavior.LeaveCurrentValue;
+
+        var tcs = new TaskCompletionSource();
+
+        // Start from the initial value, then animate on the compositor thread.
+        compositionVisual.Opacity = start;
+        compositionVisual.StartAnimation("Opacity", animation);
+
+        var registration = ct.Register(() =>
+        {
+            compositionVisual.StopAnimation("Opacity");
+            tcs.TrySetCanceled(ct);
+        });
+
+        // No public completion callback exists, so complete after the animation duration.
+        _ = Task.Delay(_duration, CancellationToken.None).ContinueWith(_ =>
+        {
+            registration.Dispose();
+            tcs.TrySetResult();
+        }, TaskScheduler.Default);
+
+        return tcs.Task;
     }
 }
 

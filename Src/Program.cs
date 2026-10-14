@@ -15,15 +15,22 @@ namespace ImageViewer
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .With(new SkiaOptions
-                {
-                    MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB. Without this, there are issues with large images.
-                })
-                .WithInterFont();
-                //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
-                //.With(new Win32PlatformOptions { OverlayPopups = true })
-                //.With(new X11PlatformOptions { OverlayPopups = true })
-                //.LogToTrace();
+            .UsePlatformDetect()
+            .UseWaylandWithFallback()
+            .With(new WaylandPlatformOptions()
+            {
+                AppId = "ImageViewerX",  // Matches your .desktop launcher file
+                UseDmabufSwapchain = true,     // Enables high-performance rendering
+                UseGLibMainLoop = true         // Integrates with Linux desktop loops
+            })
+            .With(new SkiaOptions
+            {
+                MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB. Without this, there are issues with large images.
+            })
+            .WithInterFont();
+            //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
+            //.With(new Win32PlatformOptions { OverlayPopups = true })
+            //.With(new X11PlatformOptions { OverlayPopups = true })
+            //.LogToTrace();
     }
 }

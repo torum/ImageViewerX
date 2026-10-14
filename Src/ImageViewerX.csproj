@@ -48,8 +48,9 @@
 		<PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
+		<PackageReference Include="Avalonia.Wayland" Version="12.1.4" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
 		<PackageReference Include="Egolds.Xaml.Behaviors.Interactions.Animated" Version="11.4.0" />
 		<PackageReference Include="SkiaSharp" Version="4.153.1" />
 		<!-- SkiaSharp.NativeAssets.Linux must match with SkiaSharp package ver -->
