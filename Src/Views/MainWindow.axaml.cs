@@ -240,6 +240,7 @@ internal sealed partial class MainWindow : Window
                 // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
                 // This covers the window border and makes it look little sophisticated.
                 this.BackgroundLayerBorder.Margin = new Thickness(0, 0, 0, 0);
+                this.ContentFrame.Margin = new Thickness(0, 0, 0, 0);
             }
         }
         else if (e.NewValue is WindowState.Maximized)
@@ -251,6 +252,7 @@ internal sealed partial class MainWindow : Window
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 this.BackgroundLayerBorder.Margin = new Thickness(0, 0, 0, 0);
+                this.ContentFrame.Margin = new Thickness(0, 0, 0, 0);
             }
         }
         else
@@ -263,7 +265,8 @@ internal sealed partial class MainWindow : Window
             {
                 // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
                 // This covers the window border and makes it look little sophisticated.
-                this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
+                this.BackgroundLayerBorder.Margin = new Thickness(9, 9, 9, 9);
+                this.ContentFrame.Margin = new Thickness(9, 9, 9, 9);
             }
         }
     }
@@ -308,9 +311,19 @@ internal sealed partial class MainWindow : Window
         {
             this.BackgroundLayerBorder.IsVisible = true;
             this.BackgroundLayerBorder.Opacity = 0.9;
-            // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
-            // This covers the window border and makes it look little sophisticated.
-            this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
+
+            if ((this.WindowState == WindowState.FullScreen) || (this.WindowState == WindowState.Maximized))
+            {
+                this.BackgroundLayerBorder.Margin = new Thickness(0, 0, 0, 0);
+                this.ContentFrame.Margin = new Thickness(0, 0, 0, 0);
+            }
+            else
+            {
+                // It's actually 10px on all sides, but the window border is 1px, so the total is 10px.
+                // This covers the window border and makes it look little sophisticated.
+                this.BackgroundLayerBorder.Margin = new Thickness(9, 9, 9, 9);
+                this.ContentFrame.Margin = new Thickness(9, 9, 9, 9);
+            }
 
             if (theme == ThemeVariant.Dark)
             {
