@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace ImageViewer.ViewModels;
 
-internal sealed partial class MainViewModel : ObservableObject
+internal sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     #region == Private ==
 
@@ -36,7 +36,7 @@ internal sealed partial class MainViewModel : ObservableObject
     private string _currentFile = string.Empty;
     private List<ImageInfo> _originalQueue = [];
 
-    private Vector _displayDpi = new Vector(96.0, 96.0);
+    private readonly Vector _displayDpi = new(96.0, 96.0);
 
     // Font info used for culculating displaying text width.
     private FontFamily TextFontFamily { get; } = FontFamily.Default;
@@ -84,14 +84,12 @@ internal sealed partial class MainViewModel : ObservableObject
 #endif
     }
 
-
-
     #region == Public Properties ==
 
     // TODO: Make user editable.
     // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
     //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif", ".jxl"]; //
-    public string[] ValidExtensions { get; } = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"];//, ".avif"
+    public static readonly HashSet<string> ValidExtensions = new(StringComparer.OrdinalIgnoreCase) {".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"};//, ".avif"
 
     public double ClientAreaWidth
     {
@@ -111,7 +109,6 @@ internal sealed partial class MainViewModel : ObservableObject
     } = 550;
 
     public double ClientAreaHeight { get; set; } = 550;
-
 
     [ObservableProperty]
     public partial ObservableCollection<ImageInfo> Queue { get; set; } = [];
@@ -170,11 +167,7 @@ internal sealed partial class MainViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    public partial double SystemDpiScalingFactor
-    {
-        get;
-        set;
-    } = 1.0;
+    public partial double SystemDpiScalingFactor { get; set; } = 1.0;
 
     // Reflects actual state.
     private bool _isFullscreen;
@@ -246,19 +239,11 @@ internal sealed partial class MainViewModel : ObservableObject
 
     // internal state.
     [ObservableProperty]
-    public partial bool IsFilePathPopupVisible
-    {
-        get;
-        set;
-    } = false;
+    public partial bool IsFilePathPopupVisible { get; set; }
 
     // Internal state only
     [ObservableProperty]
-    public partial bool IsStretchNone
-    {
-        get;
-        set;
-    }
+    public partial bool IsStretchNone { get; set; }
 
     public bool IsSaveLog
     {
@@ -1500,10 +1485,11 @@ internal sealed partial class MainViewModel : ObservableObject
         await ShowAsync();
     }
 
-    public static bool HasImageExtension(string fileName, string[] extensions)
+    public static bool HasImageExtension(string fileName, HashSet<string> extensions)
     {
         var extension = System.IO.Path.GetExtension(fileName);
-
+        return extensions.Contains(extension);
+        /*
         foreach (var validExt in extensions)
         {
             if (string.Equals(extension, validExt, StringComparison.OrdinalIgnoreCase))
@@ -1511,7 +1497,7 @@ internal sealed partial class MainViewModel : ObservableObject
                 return true;
             }
         }
-        return false;
+        */
     }
 
     public void ClientAreaSizeChanged(double width, double height)
@@ -1521,17 +1507,50 @@ internal sealed partial class MainViewModel : ObservableObject
         UpdateDisplayImageMaxSizeAndStretchProperty();
     }
 
-    public void CleanUp()
+    public void Dispose()
     {
-        _cts.Cancel();
-    }
+        try
+        {
+            if (_timerSlideshow is not null)
+            {
+                _timerSlideshow.Stop();
+                _timerSlideshow.Tick -= OnSlideshowTimerTick;
+            }
 
-    public void Destroy()
-    {
-        _cts.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Exception @Dispose() _timerSlideshow.Stop() - {ex}");
+        }
 
-        _originalQueue.Clear();
-        Queue.Clear();
+        try
+        {
+            try
+            {
+                if (Queue.Count > 0)
+                {
+                    foreach (var img in Queue)
+                    {
+                        ReleaseImage(img);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception @Dispose() ReleaseImage() - {ex}");
+            }
+
+            _cts.Cancel();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Exception @Dispose() _cts.Cancel() {_cts} - {ex}");
+        }
+        finally
+        {
+            _cts.Dispose();
+        }
     }
 
     #endregion

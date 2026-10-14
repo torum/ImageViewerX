@@ -16,6 +16,10 @@ namespace ImageViewer
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                .With(new SkiaOptions
+                {
+                    MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB
+                })
                 .WithInterFont();
                 //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
                 //.With(new Win32PlatformOptions { OverlayPopups = true })

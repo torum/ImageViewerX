@@ -11,6 +11,7 @@ using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -265,16 +266,21 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         var fromAnimTask = Task.CompletedTask;
         var toAnimTask = Task.CompletedTask;
 
-        // Animate the "from" page to fade out
-        if (from != null)
+        try
         {
-            var fromAnimation = new Avalonia.Animation.Animation
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Animate the "from" page to fade out
+            if (from != null)
             {
-                //Easing = new CubicEaseIn(),
-                //Easing = new CubicEaseInOut(),
-                Duration = _duration,
-                FillMode = FillMode.Forward,
-                Children =
+                var fromAnimation = new Avalonia.Animation.Animation
+                {
+                    //Easing = new CubicEaseIn(), // Starts slowly, then rapidly accelerates towards the end.
+                    //Easing = new CubicEaseOut(), // Starts very fast, then gently decelerates to a smooth stop at the end.
+                    //Easing = new CubicEaseInOut(), // Starts slowly, speeds up in the middle, and slows down at the end.
+                    Duration = _duration,
+                    FillMode = FillMode.Forward,
+                    Children =
                 {
                     new KeyFrame
                     {
@@ -287,60 +293,184 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
                         Setters = { new Setter { Property = Visual.OpacityProperty, Value = 0.0 } }
                     }
                 }
-            };
+                };
 
-            if (_crossFade)
-            {
-                fromAnimation.Easing = new CubicEaseInOut();
-            }
-            else
-            {
-                fromAnimation.Easing = new CubicEaseIn();
+                if (_crossFade)
+                {
+                    fromAnimation.Easing = new CubicEaseInOut();
+                }
+                else
+                {
+                    fromAnimation.Easing = new CubicEaseIn();
+                }
+
+                fromAnimTask = fromAnimation.RunAsync(from, cancellationToken);
             }
 
-            fromAnimTask = fromAnimation.RunAsync(from, cancellationToken);
+            // Animate the "to" page to fade in
+            if (to != null)
+            {
+                to.Opacity = 0.0;
+
+                // (!_crossFade) Do not await if _crossFade is true.
+                // (!_first) Do not await for the first time.
+                if ((!_crossFade) && (!_first))
+                {
+                    //await Task.Delay(_duration, cancellationToken);
+
+                    // Safely track completion using a Task.Delay matching the duration
+                    var tcs = new TaskCompletionSource<bool>();
+                    //await Task.Delay(_duration, cancellationToken).ContinueWith(_ => tcs.TrySetResult(true));
+                    await Task.Delay(_duration, cancellationToken)
+                            .ContinueWith(_ => tcs.TrySetResult(true), cancellationToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
+                }
+
+                var toAnimation = new Avalonia.Animation.Animation
+                {
+                    //Easing = new CubicEaseInOut(),
+                    //Easing = new CubicEaseOut(),
+                    //Easing = new CubicEaseIn(),
+                    Easing = new CubicEaseInOut(),
+                    Duration = _duration,
+                    FillMode = FillMode.Forward,
+                    Children =
+                {
+                    new KeyFrame
+                    {
+                        Cue = new Cue(0.0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 0.0 } }
+                    },
+                    new KeyFrame
+                    {
+                        Cue = new Cue(1.0),
+                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.0 } }
+                    }
+                }
+                };
+
+                toAnimTask = toAnimation.RunAsync(to, cancellationToken);
+            }
+
+            _first = false;
+
+            //await toAnimTask;
+            //await fromAnimTask;
+            await Task.WhenAll(fromAnimTask, toAnimTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // Re-throw so Avalonia knows this transition cycle was aborted
+            throw;
+        }
+        finally
+        {
+            // Reset elements back to standard UI thread states if required by your layout container
+            if (from != null) from.Opacity = 0.0;
+            if (to != null) to.Opacity = 1.0;
+
+
+            _first = false;
+
+        }
+
+    }
+}
+
+// Failed attempt to use Compositor for fade transition.
+// The fade in and fade out animations work, but the coordination between manual page transition and the Compositor animations is not working as expected.
+// The "to" page does not appear correctly after the transition.
+// Besides, the performance of the Compositor animations is not significantly better than the Avalonia.Animation animations for this use case.
+// Therefore, I reverted to using the previous CustomFadeTransition implementation above.
+public class CustomFadeTransition2(TimeSpan duration, bool crossFade) : IPageTransition
+{
+    private readonly TimeSpan _duration = duration;
+    private readonly bool _crossFade = crossFade;
+    private bool _first = true;
+
+    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
+    {
+        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
+        if (parent == null) return;
+
+        // This ensures the layout engine knows exactly how to render them initially,
+        // preventing a 1-frame visual layout spike.
+        if (to != null)
+        {
+            to.Opacity = 0.0;
+        }
+        
+        if (!_first)
+        {
+            // This allows Avalonia's layout system to process the page swap, attach the controls
+            // to the visual tree, and initialize properties before the animation handoff.
+            await Task.Delay(16, cancellationToken); // ~1 frame delay at 60Hz
+        }
+
+        var fromAnimTask = Task.CompletedTask;
+        var toAnimTask = Task.CompletedTask;
+
+        // Animate the "from" page to fade out
+        if (from != null)
+        {
+            var fromVisual = ElementComposition.GetElementVisual(from);
+            if (fromVisual != null)
+            {
+                var compositor = fromVisual.Compositor;
+                var animation = compositor.CreateScalarKeyFrameAnimation();
+                animation.Target = "Opacity";
+                animation.Duration = _duration;
+
+                // Keyframes use float values for Opacity in the composition engine
+                animation.InsertKeyFrame(0.0f, 1.0f);
+                animation.InsertKeyFrame(1.0f, 0.0f, new CubicEaseIn());
+
+                // Start the render-thread animation
+                fromVisual.StartAnimation("Opacity", animation);
+
+                // Safely track completion using a Task.Delay matching the duration
+                var tcs = new TaskCompletionSource<bool>();
+                _ = Task.Delay(_duration, cancellationToken).ContinueWith(_ => tcs.TrySetResult(true));
+                fromAnimTask = tcs.Task;
+            }
         }
 
         // Animate the "to" page to fade in
         if (to != null)
         {
-            to.Opacity = 0.0;
-
-            // (!_crossFade) Do not await if _crossFade is true.
-            // (!_first) Do not await for the first time.
-            if ((!_crossFade) && (!_first))
+            var toVisual = ElementComposition.GetElementVisual(to);
+            if (toVisual != null)
             {
-                await Task.Delay(_duration, cancellationToken);
-            }
+                // Explicitly set starting composition opacity instead of UI Thread Opacity
+                toVisual.Opacity = 0.0f;
 
-            var toAnimation = new Avalonia.Animation.Animation
-            {
-                //Easing = new CubicEaseInOut(),
-                //Easing = new CubicEaseOut(),
-                Easing = new CubicEaseIn(),
-                Duration = _duration,
-                FillMode = FillMode.Forward,
-                Children =
+                if ((!_crossFade) && (!_first))
                 {
-                    new KeyFrame
-                    {
-                        Cue = new Cue(0.0),
-                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 0.0 } }
-                    },
-                    new KeyFrame
-                    {
-                        Cue = new Cue(1.0),
-                        Setters = { new Setter { Property = Visual.OpacityProperty, Value = 1.0 } }
-                    }
+                    await Task.Delay(_duration, cancellationToken);
                 }
-            };
 
-            toAnimTask = toAnimation.RunAsync(to, cancellationToken);
+                var compositor = toVisual.Compositor;
+                var animation = compositor.CreateScalarKeyFrameAnimation();
+                animation.Target = "Opacity";
+                animation.Duration = _duration;
+
+                animation.InsertKeyFrame(0.0f, 0.0f);
+                animation.InsertKeyFrame(1.0f, 1.0f, new CubicEaseOut());
+
+                // Start the render-thread animation
+                toVisual.StartAnimation("Opacity", animation);
+
+                var tcs = new TaskCompletionSource<bool>();
+                _ = Task.Delay(_duration, cancellationToken).ContinueWith(_ => tcs.TrySetResult(true));
+                toAnimTask = tcs.Task;
+            }
         }
 
-        //await toAnimTask;
-        //await fromAnimTask;
+        // Await both tracking tasks to ensure the transition engine handles the lifecycle correctly
         await Task.WhenAll(fromAnimTask, toAnimTask);
+
+        // Reset elements back to standard UI thread states if required by your layout container
+        if (from != null) from.Opacity = 0.0;
+        if (to != null) to.Opacity = 1.0;
 
         _first = false;
     }

@@ -962,11 +962,18 @@ internal sealed partial class MainWindow : Window
 
     private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
     {
-        _mainViewModel.CleanUp();
-
-        SaveSettings();
-
-        StopSleepInhibitor();
+        try
+        {
+            SaveSettings();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in Window_Closing: {ex.Message}");
+        }
+        finally
+        {
+            StopSleepInhibitor();
+        }
     }
 
     private void SaveSettings()
@@ -1135,7 +1142,7 @@ internal sealed partial class MainWindow : Window
 
     private void Window_Closed(object? sender, System.EventArgs e)
     {
-        _mainViewModel.Destroy();
+        //Debug.WriteLine("Window_Closed()");
     }
 
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
@@ -1386,8 +1393,6 @@ internal sealed partial class MainWindow : Window
                 _mainViewModel.IsWorking = true;
             });
 
-            var validExt = _mainViewModel.ValidExtensions;
-
             try
             {
                 if (fileNames.Count > 0)
@@ -1488,7 +1493,7 @@ internal sealed partial class MainWindow : Window
                         {
                             //Debug.WriteLine($"[FILE]   Full Path: {item.FullName}, Name: {item.Name}");
 
-                            if (!MainViewModel.HasImageExtension(item.Name, validExt))
+                            if (!MainViewModel.HasImageExtension(item.Name, MainViewModel.ValidExtensions))
                             {
                                 continue;
                             }
@@ -1582,7 +1587,7 @@ internal sealed partial class MainWindow : Window
 
                     foreach (var fileFullPath in droppedFiles)
                     {
-                        if (!MainViewModel.HasImageExtension(fileFullPath, validExt))
+                        if (!MainViewModel.HasImageExtension(fileFullPath, MainViewModel.ValidExtensions))
                         {
                             continue;
                         }
@@ -1627,8 +1632,10 @@ internal sealed partial class MainWindow : Window
                 {
                     _mainViewModel.IsWorking = false;
                 });
-                // TODO: log error and show error message.
+
                 Debug.WriteLine(ex);
+                App.AppendErrorLog("DispatcherUnhandledException", ex.ToString());
+                App.SaveErrorLog();
             }
         });
     }
