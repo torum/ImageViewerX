@@ -265,7 +265,7 @@ internal sealed partial class MainWindow : Window
             {
                 // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
                 // This covers the window border and makes it look little sophisticated.
-                this.BackgroundLayerBorder.Margin = new Thickness(9, 9, 9, 9);
+                this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
                 this.ContentFrame.Margin = new Thickness(9, 9, 9, 9);
             }
         }
@@ -319,9 +319,10 @@ internal sealed partial class MainWindow : Window
             }
             else
             {
-                // It's actually 10px on all sides, but the window border is 1px, so the total is 10px.
+                // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
                 // This covers the window border and makes it look little sophisticated.
-                this.BackgroundLayerBorder.Margin = new Thickness(9, 9, 9, 9);
+                this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
+                // For the images, 
                 this.ContentFrame.Margin = new Thickness(9, 9, 9, 9);
             }
 
