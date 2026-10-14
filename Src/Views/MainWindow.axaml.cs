@@ -234,12 +234,37 @@ internal sealed partial class MainWindow : Window
             vm.IsFullscreen = true;
 
             SetWindowStateFullScreen();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
+                // This covers the window border and makes it look little sophisticated.
+                this.BackgroundLayerBorder.Margin = new Thickness(0, 0, 0, 0);
+            }
+        }
+        else if (e.NewValue is WindowState.Maximized)
+        {
+            vm.IsFullscreen = false;
+
+            SetWindowStateNormal();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                this.BackgroundLayerBorder.Margin = new Thickness(0, 0, 0, 0);
+            }
         }
         else
         {
             vm.IsFullscreen = false;
 
             SetWindowStateNormal();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
+                // This covers the window border and makes it look little sophisticated.
+                this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
+            }
         }
     }
 
@@ -283,6 +308,9 @@ internal sealed partial class MainWindow : Window
         {
             this.BackgroundLayerBorder.IsVisible = true;
             this.BackgroundLayerBorder.Opacity = 0.9;
+            // It's actually 10px on all sides, but the window border is 2px, so the total is 10px.
+            // This covers the window border and makes it look little sophisticated.
+            this.BackgroundLayerBorder.Margin = new Thickness(8, 8, 8, 8);
 
             if (theme == ThemeVariant.Dark)
             {

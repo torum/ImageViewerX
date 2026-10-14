@@ -2,6 +2,7 @@
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
 using Avalonia.Rendering.Composition.Animations;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -86,7 +88,7 @@ internal sealed partial class MainView : UserControl
             }
 
             //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical) //Horizontal
-            var pageSlide = new CustomPageSlideTransition(TimeSpan.FromSeconds(0.7), CustomPageSlideTransition.SlideAxis.Vertical)
+            var pageSlide = new CustomPageSlideTransitionOnComposition(TimeSpan.FromSeconds(0.7), CustomPageSlideTransitionOnComposition.SlideAxis.Horizontal)
             {
                 SlideInEasing = new CubicEaseIn(),
                 SlideOutEasing = new BounceEaseOut()
@@ -480,106 +482,7 @@ public class CustomFadeTransitionOnComposition(TimeSpan duration, bool crossFade
 
         return tcs.Task;
     }
-}
 
-// Failed attempt to use Compositor for fade transition.
-// The fade in and fade out animations work, but the coordination between manual page transition and the Compositor animations is not working as expected.
-// The "to" page does not appear correctly after the transition.
-// Besides, the performance of the Compositor animations is not significantly better than the Avalonia.Animation animations for this use case.
-// Therefore, I reverted to using the previous CustomFadeTransition implementation above.
-public class CustomFadeTransition2(TimeSpan duration, bool crossFade) : IPageTransition
-{
-    private readonly TimeSpan _duration = duration;
-    private readonly bool _crossFade = crossFade;
-    private bool _first = true;
-
-    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
-    {
-        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
-        if (parent == null) return;
-
-        // This ensures the layout engine knows exactly how to render them initially,
-        // preventing a 1-frame visual layout spike.
-        if (to != null)
-        {
-            to.Opacity = 0.0;
-        }
-        
-        if (!_first)
-        {
-            // This allows Avalonia's layout system to process the page swap, attach the controls
-            // to the visual tree, and initialize properties before the animation handoff.
-            await Task.Delay(16, cancellationToken); // ~1 frame delay at 60Hz
-        }
-
-        var fromAnimTask = Task.CompletedTask;
-        var toAnimTask = Task.CompletedTask;
-
-        // Animate the "from" page to fade out
-        if (from != null)
-        {
-            var fromVisual = ElementComposition.GetElementVisual(from);
-            if (fromVisual != null)
-            {
-                var compositor = fromVisual.Compositor;
-                var animation = compositor.CreateScalarKeyFrameAnimation();
-                animation.Target = "Opacity";
-                animation.Duration = _duration;
-
-                // Keyframes use float values for Opacity in the composition engine
-                animation.InsertKeyFrame(0.0f, 1.0f);
-                animation.InsertKeyFrame(1.0f, 0.0f, new CubicEaseIn());
-
-                // Start the render-thread animation
-                fromVisual.StartAnimation("Opacity", animation);
-
-                // Safely track completion using a Task.Delay matching the duration
-                var tcs = new TaskCompletionSource<bool>();
-                _ = Task.Delay(_duration, cancellationToken).ContinueWith(_ => tcs.TrySetResult(true));
-                fromAnimTask = tcs.Task;
-            }
-        }
-
-        // Animate the "to" page to fade in
-        if (to != null)
-        {
-            var toVisual = ElementComposition.GetElementVisual(to);
-            if (toVisual != null)
-            {
-                // Explicitly set starting composition opacity instead of UI Thread Opacity
-                toVisual.Opacity = 0.0f;
-
-                if ((!_crossFade) && (!_first))
-                {
-                    await Task.Delay(_duration, cancellationToken);
-                }
-
-                var compositor = toVisual.Compositor;
-                var animation = compositor.CreateScalarKeyFrameAnimation();
-                animation.Target = "Opacity";
-                animation.Duration = _duration;
-
-                animation.InsertKeyFrame(0.0f, 0.0f);
-                animation.InsertKeyFrame(1.0f, 1.0f, new CubicEaseOut());
-
-                // Start the render-thread animation
-                toVisual.StartAnimation("Opacity", animation);
-
-                var tcs = new TaskCompletionSource<bool>();
-                _ = Task.Delay(_duration, cancellationToken).ContinueWith(_ => tcs.TrySetResult(true));
-                toAnimTask = tcs.Task;
-            }
-        }
-
-        // Await both tracking tasks to ensure the transition engine handles the lifecycle correctly
-        await Task.WhenAll(fromAnimTask, toAnimTask);
-
-        // Reset elements back to standard UI thread states if required by your layout container
-        if (from != null) from.Opacity = 0.0;
-        if (to != null) to.Opacity = 1.0;
-
-        _first = false;
-    }
 }
 
 public class CustomNoTransition(TimeSpan duration) : IPageTransition
@@ -815,5 +718,132 @@ public class CustomPageSlideTransition : IPageTransition
         return p1 ?? throw new InvalidOperationException("Cannot determine visual parent.");
     }
     */
+}
+
+public class CustomPageSlideTransitionOnComposition : IPageTransition
+{
+    /// <summary>
+    /// The axis on which the PageSlide should occur
+    /// </summary>
+    public enum SlideAxis
+    {
+        Horizontal,
+        Vertical
+    }
+
+    public CustomPageSlideTransitionOnComposition()
+    {
+    }
+
+    public CustomPageSlideTransitionOnComposition(TimeSpan duration, SlideAxis orientation = SlideAxis.Horizontal)
+    {
+        Duration = duration;
+        Orientation = orientation;
+    }
+
+    public TimeSpan Duration { get; set; }
+
+    public SlideAxis Orientation { get; set; }
+
+    public Easing SlideInEasing { get; set; } = new LinearEasing();
+
+    public Easing SlideOutEasing { get; set; } = new LinearEasing();
+
+    /// <inheritdoc />
+    public async Task Start(Visual? from, Visual? to, bool forward, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        var parent = from?.GetVisualParent() ?? to?.GetVisualParent();
+        if (parent == null) return;
+
+        var tasks = new List<Task>();
+        var distance = Orientation == SlideAxis.Horizontal ? parent.Bounds.Width : parent.Bounds.Height;
+
+        if (from != null)
+        {
+            from.IsVisible = true;
+            from.Opacity = 1.0;
+            (from as Layoutable)?.UpdateLayout();
+            tasks.Add(RunSlideAnimation(from, 0d, forward ? -distance : distance, SlideOutEasing, cancellationToken));
+        }
+
+        if (to != null)
+        {
+            to.IsVisible = true;
+            to.Opacity = 1.0;
+            (to as Layoutable)?.UpdateLayout();
+            tasks.Add(RunSlideAnimation(to, forward ? distance : -distance, 0d, SlideInEasing, cancellationToken));
+        }
+
+        await Task.WhenAll(tasks);
+
+        if (from != null && !cancellationToken.IsCancellationRequested)
+        {
+            from.IsVisible = false;
+
+            from.Opacity = 0.0;
+        }
+    }
+
+    private static readonly ConditionalWeakTable<Visual, object> _activeSlides = new();
+
+    private async Task RunSlideAnimation(Visual visual, double startDelta, double endDelta, Easing easing, CancellationToken ct)
+    {
+        var compositionVisual = ElementComposition.GetElementVisual(visual);
+        if (compositionVisual == null)
+            return;
+
+        var compositor = compositionVisual.Compositor;
+
+        // Resting position comes from layout, never from the (possibly mid-animation) composition value.
+        Vector3D GetBase() => visual is Layoutable { IsArrangeValid: true } || visual.Bounds.Width > 0
+            ? new Vector3D(visual.Bounds.X, visual.Bounds.Y, 0)
+            : compositionVisual.Offset;
+
+        var baseOffset = GetBase();
+        var isHorizontal = Orientation == SlideAxis.Horizontal;
+        Vector3D ToOffset(double delta) => isHorizontal
+            ? new Vector3D(baseOffset.X + delta, baseOffset.Y, 0)
+            : new Vector3D(baseOffset.X, baseOffset.Y + delta, 0);
+
+        var animation = compositor.CreateVector3DKeyFrameAnimation();
+        animation.Target = "Offset";
+        animation.Duration = Duration;
+        animation.InsertKeyFrame(0f, ToOffset(startDelta), new LinearEasing());
+        animation.InsertKeyFrame(1f, ToOffset(endDelta), easing);
+        animation.IterationCount = 1;
+
+        // Token identifying this run; a newer run replaces it.
+        var token = new object();
+        _activeSlides.AddOrUpdate(visual, token);
+
+        try
+        {
+            compositionVisual.StartAnimation("Offset", animation);
+            await Task.Delay(Duration, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Re-throw so Avalonia knows this transition cycle was aborted
+            throw;
+        }
+        finally
+        {
+            // Only clean up if no newer slide has started on this visual.
+            if (_activeSlides.TryGetValue(visual, out var current) && ReferenceEquals(current, token))
+            {
+                compositionVisual.StopAnimation("Offset");
+
+                var rest = GetBase();
+                // Force a real change; the setter ignores writes equal to the UI-side value.
+                compositionVisual.Offset = new Vector3D(rest.X + 1, rest.Y + 1, 0);
+                compositionVisual.Offset = rest;
+            }
+        }
+    }
 }
 
