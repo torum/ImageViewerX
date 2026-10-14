@@ -1488,6 +1488,10 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     public static bool HasImageExtension(string fileName, HashSet<string> extensions)
     {
         var extension = System.IO.Path.GetExtension(fileName);
+        if (string.IsNullOrEmpty(extension))
+        {
+            return false;
+        }
         return extensions.Contains(extension);
         /*
         foreach (var validExt in extensions)

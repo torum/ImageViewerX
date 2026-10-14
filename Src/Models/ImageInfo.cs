@@ -6,9 +6,9 @@ namespace ImageViewer.Models;
 
 internal sealed partial class ImageInfo : ObservableObject
 {
-    public bool IsLoading { get; set; } = false;
+    public bool IsLoading { get; set; }
 
-    public bool IsAcquired { get; set; } = false;
+    public bool IsAcquired { get; set; }
 
     public string? ImageFilePath { get; set; } = string.Empty;
 

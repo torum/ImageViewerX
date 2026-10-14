@@ -96,6 +96,8 @@ internal sealed partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        base.OnClosed(e);
+
         this.PropertyChanged -= this.OnWindow_PropertyChanged;
         this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
         _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
@@ -105,8 +107,6 @@ internal sealed partial class MainWindow : Window
         _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged -= OnSlideshowIntervalChanged;
         _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
-
-        base.OnClosed(e);
     }
 
     private void OnWorkingStateChanged(object? sender, bool e)

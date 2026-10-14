@@ -32,14 +32,20 @@ internal sealed partial class MainView : UserControl
 
         InitializeComponent();
 
-        _viewModel.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
-
-        this.DetachedFromVisualTree += (s, e) =>
+        this.Loaded += (s, e) =>
         {
-            _viewModel.TransitionsHasBeenChanged -= OnTransitionsHasBeenChanged;
+            // Just in case the event was already subscribed, unsubscribe first to avoid multiple subscriptions.
+            _viewModel?.TransitionsHasBeenChanged -= OnTransitionsHasBeenChanged;
+
+            _viewModel?.TransitionsHasBeenChanged += OnTransitionsHasBeenChanged;
+
+            UpdatePageTransition();
         };
 
-        UpdatePageTransition();
+        this.Unloaded += (s, e) =>
+        {
+            _viewModel?.TransitionsHasBeenChanged -= OnTransitionsHasBeenChanged;
+        };
     }
 
     private void OnTransitionsHasBeenChanged(object? sender, EventArgs e)

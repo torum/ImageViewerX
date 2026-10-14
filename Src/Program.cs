@@ -18,7 +18,7 @@ namespace ImageViewer
                 .UsePlatformDetect()
                 .With(new SkiaOptions
                 {
-                    MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB
+                    MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB. Without this, there are issues with large images.
                 })
                 .WithInterFont();
                 //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })
