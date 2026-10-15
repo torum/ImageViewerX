@@ -6,7 +6,6 @@ using Avalonia.Threading;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -25,35 +24,22 @@ internal sealed partial class App : Application
     public static string AppDataFolder { get; } = System.IO.Path.Combine(System.IO.Path.Combine(_envDataFolder, AppDeveloper), AppName);
     public static string AppConfigFilePath { get; } = System.IO.Path.Combine(AppDataFolder, AppName + ".config");
 
-    private Task? _appHostStartTask;
-
-    public IHost AppHost { get; private set; }
-
     public App()
     {
-        AppHost = Microsoft.Extensions.Hosting.Host
-                .CreateDefaultBuilder()
-                .UseContentRoot(AppContext.BaseDirectory)
-                .ConfigureServices((context, services) =>
-                {
-                    services.AddSingleton<MainWindow>();
-                    services.AddSingleton<MainView>();
-                    services.AddSingleton<MainViewModel>();
-                })
-                .Build();
+        var services = new ServiceCollection();
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<MainView>();
+        services.AddSingleton<MainViewModel>();
+
+        // Build the provider
+        ServiceProvider = services.BuildServiceProvider();
     }
+
+    public IServiceProvider ServiceProvider { get; private set; } = null!;
 
     public static T GetService<T>() where T : class
     {
-        return ((App.Current as App)!.AppHost.Services.GetRequiredService<T>());
-        /*
-        if ((App.Current as App)!.AppHost!.Services.GetService(typeof(T)) is not T service)
-        {
-            throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
-        }
-
-        return service;
-        */
+        return (App.Current as App)!.ServiceProvider.GetRequiredService<T>();
     }
 
     public override void Initialize()
@@ -89,12 +75,12 @@ internal sealed partial class App : Application
             }
 
             desktop.MainWindow = mainWin;
-            desktop.MainWindow.ShowActivated = true;
-            desktop.MainWindow.Show();
+            // Don't do Show() in Avalonia UI. Let the framework handle it.
+            //desktop.MainWindow.ShowActivated = true;
+            //desktop.MainWindow.Show();
 
-            desktop.Exit += OnDesktopExit;
-            //AppHost.StartAsync().GetAwaiter().GetResult();
-            _appHostStartTask = StartAppHostAsync();
+            //desktop.Exit += OnDesktopExit;
+            //_appHostStartTask = StartAppHostAsync();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
@@ -116,6 +102,7 @@ internal sealed partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
+    /*
     private async Task StartAppHostAsync()
     {
         try
@@ -145,6 +132,7 @@ internal sealed partial class App : Application
             AppHost.Dispose();
         }
     }
+    */
 
     // Log file.
     private static readonly StringBuilder Errortxt = new();

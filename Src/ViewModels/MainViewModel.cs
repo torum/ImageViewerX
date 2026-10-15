@@ -720,7 +720,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task GetPicturesAsync(IEnumerable<object>? imageInfoItems)
     {
-        if (imageInfoItems is null)
+        if (imageInfoItems is null)     
         {
             Debug.WriteLine("imageInfoItems is null @GetPicturesAsync");
             return;
@@ -739,7 +739,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 Debug.WriteLine("@GetPicturesAsync() in foreach IsCancellationRequested");
                 return;
-            }
+            }   
 
             if (item is not ImageInfo img)
             {
@@ -1545,15 +1545,30 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 Debug.WriteLine($"Exception @Dispose() ReleaseImage() - {ex}");
             }
 
-            _cts.Cancel();
+            _cts?.Cancel();
+        }
+        catch (OperationCanceledException)
+        {
+            //
+        }
+        catch (ObjectDisposedException) when (_cts.IsCancellationRequested)
+        {
+            //
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception @Dispose() _cts.Cancel() {_cts} - {ex}");
+            Debug.WriteLine($"Exception @Dispose() _cts.Cancel() - {ex}");
         }
         finally
         {
-            _cts.Dispose();
+            try
+            {
+                //_cts?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception @Dispose() _cts.Dispose() - {ex}");
+            }
         }
     }
 

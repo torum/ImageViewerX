@@ -31,6 +31,7 @@
 		KeyDown="Window_KeyDown"
 		KeyUp="Window_KeyUp"
 		Resized="Window_Resized"
+		SizeChanged="Window_SizeChanged"
 		PointerMoved="Window_PointerMoved"
 		Activated="Window_Activated"
 		Deactivated="Window_Deactivated"

@@ -16,6 +16,11 @@ namespace ImageViewer
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .With(new Win32PlatformOptions
+            {
+                // Tries GPU rendering options first, automatically falls back to Software if they fail
+                RenderingMode = [Win32RenderingMode.AngleEgl, Win32RenderingMode.Software]
+            })
             .UseWaylandWithFallback()
             .With(new WaylandPlatformOptions()
             {

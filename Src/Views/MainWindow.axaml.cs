@@ -43,7 +43,7 @@ internal sealed partial class MainWindow : Window
     private Process? _LinuxSleepInhibitorProcess;
 
 #pragma warning disable CS8618 
-    // Optional parameterless constructor for XAML Previewer
+    // parameterless constructor for XAML Previewer
     public MainWindow() { InitializeComponent(); }
 #pragma warning restore CS8618
 
@@ -85,6 +85,7 @@ internal sealed partial class MainWindow : Window
 
         this.PropertyChanged += this.OnWindow_PropertyChanged;
         this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
+        this.PositionChanged += Window_PositionChanged;
         _mainViewModel.QueueHasBeenChanged += OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged += OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded += OnQueueLoaded;
@@ -100,6 +101,7 @@ internal sealed partial class MainWindow : Window
 
         this.PropertyChanged -= this.OnWindow_PropertyChanged;
         this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
+        this.PositionChanged -= Window_PositionChanged;
         _mainViewModel.QueueHasBeenChanged -= OnQueueHasBeenChanged;
         _mainViewModel.SlideshowStatusChanged -= OnSlideshowStatusChanged;
         _mainViewModel.QueueLoaded -= OnQueueLoaded;
@@ -107,6 +109,8 @@ internal sealed partial class MainWindow : Window
         _mainViewModel.HideMenuFlyout -= OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged -= OnSlideshowIntervalChanged;
         _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
+
+        _mainViewModel?.Dispose();
     }
 
     private void OnWorkingStateChanged(object? sender, bool e)
@@ -310,7 +314,8 @@ internal sealed partial class MainWindow : Window
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             this.BackgroundLayerBorder.IsVisible = true;
-            this.BackgroundLayerBorder.Opacity = 0.9;
+            this.BackgroundLayerBorder.Opacity = 1;
+            this.ListBoxBackgroundLayerBorder.Opacity = 0;
 
             if ((this.WindowState == WindowState.FullScreen) || (this.WindowState == WindowState.Maximized))
             {
@@ -341,14 +346,6 @@ internal sealed partial class MainWindow : Window
                 //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
                 this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
-
-            /*
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                this.YoImageHereTextBlock.Text = "Sorry, Drag & Drop is not currently supported on this platform.";
-                this.DragDropTextBlock.TextDecorations = TextDecorations.Strikethrough;
-            }
-            */
         }
         else
         {
@@ -383,7 +380,7 @@ internal sealed partial class MainWindow : Window
         ToggleFullScreen();
     }
 
-    public void OnSlideshowIntervalChanged(object? sender,long interval)
+    public void OnSlideshowIntervalChanged(object? sender, long interval)
     {
         this.Interval1SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
         this.Interval2SecIconData.Data = MainViewModel.DataUnCheckedCircleIcon;
@@ -914,7 +911,7 @@ internal sealed partial class MainWindow : Window
         }
 
         // Update Slideshow Interval menu 
-        OnSlideshowIntervalChanged(this,_mainViewModel.SlideshowTimerInterval);
+        OnSlideshowIntervalChanged(this, _mainViewModel.SlideshowTimerInterval);
 
         // SystemDpiScalingFactor - Set default.
         /*
@@ -930,9 +927,6 @@ internal sealed partial class MainWindow : Window
 
         //Debug.WriteLine($"Initial Screen: {_currentScreen?.DisplayName}");
 
-        // Subscribe to position changes
-        this.PositionChanged += MainWindow_PositionChanged;
-
         // Optional: Subscribe to global screen configuration changes (e.g., resolution change, monitor added/removed)
         if (this.Screens is { } screens)
         {
@@ -942,9 +936,17 @@ internal sealed partial class MainWindow : Window
         UpdateSystemDPIScalingFactor();
     }
 
-    private void MainWindow_PositionChanged(object? sender, PixelPointEventArgs e)
+    private void Window_PositionChanged(object? sender, PixelPointEventArgs e)
     {
         CheckAndNotifyDisplayChange();
+
+        if (this.WindowState == WindowState.Normal)
+        {
+            _winRestoreHeight = (int)this.Height;
+            _winRestoreWidth = (int)this.Width;
+            _winRestoreTop = this.Position.Y;
+            _winRestoreLeft = this.Position.X;
+        }
     }
 
     private void Screens_Changed(object? sender, EventArgs e)
@@ -1195,7 +1197,7 @@ internal sealed partial class MainWindow : Window
         {
             _winRestoreHeight = (int)this.Height;
             _winRestoreWidth = (int)this.Width;
-            _winRestoreTop = this.Position.X;
+            _winRestoreTop = this.Position.Y;
             _winRestoreLeft = this.Position.X;
         }
 
@@ -2680,6 +2682,17 @@ internal sealed partial class MainWindow : Window
         flyout?.IsOpen = false;
 
         Close();
+    }
+
+    private void Window_SizeChanged(object? sender, SizeChangedEventArgs e)
+    {
+        if (this.WindowState == WindowState.Normal)
+        {
+            _winRestoreHeight = (int)this.Height;
+            _winRestoreWidth = (int)this.Width;
+            _winRestoreTop = this.Position.Y;
+            _winRestoreLeft = this.Position.X;
+        }
     }
 
 
