@@ -27,6 +27,7 @@ internal sealed partial class App : Application
     public App()
     {
         var services = new ServiceCollection();
+
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainView>();
         services.AddSingleton<MainViewModel>();
@@ -90,15 +91,6 @@ internal sealed partial class App : Application
             };
         }
 
-        /*
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
-        }
-        */
         base.OnFrameworkInitializationCompleted();
     }
 

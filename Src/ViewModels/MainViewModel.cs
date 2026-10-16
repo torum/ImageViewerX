@@ -1563,7 +1563,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             try
             {
-                //_cts?.Dispose();
+                _cts?.Dispose();
             }
             catch (Exception ex)
             {

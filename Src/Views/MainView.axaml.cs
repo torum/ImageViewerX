@@ -24,14 +24,10 @@ internal sealed partial class MainView : UserControl
 {
     readonly MainViewModel _viewModel;
 
-#pragma warning disable CS8618
     // parameterless constructor for XAML Previewer
-    public MainView() { InitializeComponent(); }
-#pragma warning restore CS8618
-    public MainView(MainViewModel vm)
+    public MainView()
     {
-        //_viewModel = App.GetService<MainViewModel>();
-        _viewModel = vm;
+        _viewModel = App.GetService<MainViewModel>(); ;
 
         InitializeComponent();
 

@@ -42,15 +42,11 @@ internal sealed partial class MainWindow : Window
 
     private Process? _LinuxSleepInhibitorProcess;
 
-#pragma warning disable CS8618 
     // parameterless constructor for XAML Previewer
-    public MainWindow() { InitializeComponent(); }
-#pragma warning restore CS8618
-
-    public MainWindow(MainViewModel vm) : base()
+    public MainWindow() 
     {
-        _mainViewModel = vm;
-        this.DataContext = vm;
+        _mainViewModel = App.GetService<MainViewModel>();
+        this.DataContext = _mainViewModel;
 
         LoadSettings();
 
