@@ -70,7 +70,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         IsOverrideSystemDpiScalingFactorOn = config.IsOverrideSystemDpiScalingFactorOn;
         IsViewImageListOn = config.IsViewImageListOn;
         IsViewFilePathPopupOn = config.IsViewFilePathPopupOn;
-        SlideshowTimerInterval = config.SlideshowTimerInterval;
+        _slideshowTimerInterval = config.SlideshowTimerInterval; // _timerSlideshow isn't initialized yet, so set the backing field directly.
         IsStretchInOn = config.IsStretchInOn;
         IsStretchOutOn = config.IsStretchOutOn;
         IsEffectFadeInAndOutOn = config.IsEffectFadeInAndOutOn;
@@ -84,6 +84,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromSeconds(config.SlideshowTimerInterval)
         };
         _timerSlideshow.Tick += OnSlideshowTimerTick;
+        SlideshowTimerInterval = config.SlideshowTimerInterval; // Fire OnSlideshowIntervalChanged.
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -290,9 +291,11 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             _slideshowTimerInterval = value;
             OnPropertyChanged();
 
-            _timerSlideshow.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
-
-            SlideshowIntervalChanged?.Invoke(this, _slideshowTimerInterval);
+            if (_timerSlideshow.Interval is { })
+            {
+                _timerSlideshow.Interval = TimeSpan.FromSeconds(_slideshowTimerInterval);
+                SlideshowIntervalChanged?.Invoke(this, _slideshowTimerInterval);
+            }
         }
     }
 
