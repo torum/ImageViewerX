@@ -12,21 +12,18 @@ namespace ImageViewer
         public static void Main(string[] args) => BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
 
-        // Avalonia configuration, don't remove; also used by visual designer.
+        // Suppress the experimental warning required for ForceDrawnDecorations
+#pragma warning disable AVALONIA_WAYLAND_FORCE_CSD
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
             .UsePlatformDetect()
-            .With(new Win32PlatformOptions
-            {
-                // Tries GPU rendering options first, automatically falls back to Software if they fail
-                RenderingMode = [Win32RenderingMode.AngleEgl, Win32RenderingMode.Software]
-            })
             .UseWaylandWithFallback()
             .With(new WaylandPlatformOptions()
             {
                 AppId = "ImageViewerX",  // Matches your .desktop launcher file
-                UseDmabufSwapchain = true,     // Enables high-performance rendering
-                UseGLibMainLoop = true         // Integrates with Linux desktop loops
+                UseDmabufSwapchain = null,     // Enables high-performance rendering
+                UseGLibMainLoop = false,         // Integrates with Linux desktop loops
+                ForceDrawnDecorations = true    // Enables custom window decorations especially for KDE environments where they prefer server-side decorations.
             })
             .With(new SkiaOptions
             {
@@ -37,5 +34,6 @@ namespace ImageViewer
             //.With(new Win32PlatformOptions { OverlayPopups = true })
             //.With(new X11PlatformOptions { OverlayPopups = true })
             //.LogToTrace();
+#pragma warning restore AVALONIA_WAYLAND_FORCE_CSD
     }
 }
