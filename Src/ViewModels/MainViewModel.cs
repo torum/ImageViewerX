@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,7 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using ImageViewer.Helpers;
 using ImageViewer.Models;
 using ImageViewer.Views;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,6 +19,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageViewer.Services.Contracts;
 
 #pragma warning disable IDE0028,IDE0001
 
@@ -44,6 +43,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     private FontWeight TextFontWeight { get; } = FontWeight.Regular;
     private FontStyle TextFontStyle { get; } = FontStyle.Normal;
 
+    private readonly IConfigurationService _configurationService;
     #endregion
 
     #region == Events ==
@@ -59,12 +59,29 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
     #endregion
 
-    public MainViewModel()
+    public MainViewModel(IConfigurationService configurationService)
     {
+        _configurationService = configurationService;
+
+        var config = _configurationService.CurrentConfiguration;
+
+        IsShuffleOn = config.IsShuffleOn;
+        IsRepeatOn = config.IsRepeatOn;
+        IsOverrideSystemDpiScalingFactorOn = config.IsOverrideSystemDpiScalingFactorOn;
+        IsViewImageListOn = config.IsViewImageListOn;
+        IsViewFilePathPopupOn = config.IsViewFilePathPopupOn;
+        SlideshowTimerInterval = config.SlideshowTimerInterval;
+        IsStretchInOn = config.IsStretchInOn;
+        IsStretchOutOn = config.IsStretchOutOn;
+        IsEffectFadeInAndOutOn = config.IsEffectFadeInAndOutOn;
+        IsEffectPageSlideOn = config.IsEffectPageSlideOn;
+        IsNoEffectsOn = config.IsNoEffectsOn;
+        IsEffectCrossfadeOn = config.IsEffectCrossfadeOn;
+
         // Init Timer.
         _timerSlideshow = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(_slideshowTimerInterval)
+            Interval = TimeSpan.FromSeconds(config.SlideshowTimerInterval)
         };
         _timerSlideshow.Tick += OnSlideshowTimerTick;
 
@@ -74,7 +91,6 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             double scaling = screen?.Scaling ?? 1.0;
             _displayDpi = new Vector(96.0 * scaling, 96.0 * scaling);
         }
-
 
 #if DEBUG
         IsSaveLog = true;
@@ -138,7 +154,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             }
 
             // Don't await here. Fire and forget. No _ = either.
-            _ = Task.Run(() => GetPicturesAsync(field), _cts.Token);
+            _ = Task.Run(() => GetPicturesAsync(field), _cts?.Token ?? CancellationToken.None);
         }
     }
 
@@ -735,6 +751,11 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
         foreach (var item in imageInfoItems)
         {
+            if (_cts is null)
+            {
+                Debug.WriteLine("@GetPicturesAsync() in foreach _cts is null");
+                return;
+            }
             if (_cts.IsCancellationRequested)
             {
                 Debug.WriteLine("@GetPicturesAsync() in foreach IsCancellationRequested");
@@ -783,6 +804,11 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 {
                     var bitmap = await Task.Run(() =>
                     {
+                        if (_cts is null)
+                        {
+                            Debug.WriteLine("@GetPictures() before new Bitmap _cts is null");
+                            return null;
+                        }
                         if (_cts.IsCancellationRequested)
                         {
                             Debug.WriteLine("@GetPictures() before new Bitmap IsCancellationRequested");
@@ -817,7 +843,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
                         return null;
 
-                    }, _cts.Token);
+                    }, _cts?.Token ?? CancellationToken.None);
                     //Bitmap? bitmap = new(img.ImageFilePath);
 
                     if (bitmap is null)
@@ -926,7 +952,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             await Task.Delay(300);
         }
 
-        if (_cts.IsCancellationRequested)
+        if (_cts is null || _cts.IsCancellationRequested)
         {
             Debug.WriteLine("@Show() IsCancellationRequested");
             return;
@@ -978,8 +1004,13 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 IsWorking = true;
 
                 // Never ever await(whatever they say) here: Don't await Task.Run(async () => await ShowImageAsync(img))
-                if (await Task.Run(() => ShowImageAsync(img), _cts.Token)) 
+                if (await Task.Run(() => ShowImageAsync(img), _cts?.Token ?? CancellationToken.None)) 
                 {
+                    if (_cts is null)
+                    {
+                        Debug.WriteLine("@Show() after ShowImageAsync() _cts is null");
+                        return;
+                    }
                     if (_cts.IsCancellationRequested)
                     {
                         Debug.WriteLine("@Show() after ShowImageAsync() IsCancellationRequested");
@@ -1001,7 +1032,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 }
             }, DispatcherPriority.Background);
 
-        }, _cts.Token);
+        }, _cts?.Token ?? CancellationToken.None);
 
     }
 
@@ -1010,7 +1041,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         // Never ever await this (whatever they say).
         // Don't await Task.Run(async () => await ShowImageAsync(img)) either.
         
-        if (_cts.IsCancellationRequested)
+        if (_cts is null || _cts.IsCancellationRequested)
         {
             Debug.WriteLine("@ShowImage: IsCancellationRequested");
             return false;
@@ -1052,13 +1083,13 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             Debug.WriteLine($"@ShowImage: Waiting for preload: {img.ImageFilePath}");
 
-            while (img.IsLoading && !_cts.IsCancellationRequested)
+            while (img.IsLoading && !(_cts is null || _cts.IsCancellationRequested))
             {
                 await Task.Delay(10);
             }
         }
 
-        if (_cts.IsCancellationRequested)
+        if (_cts is null || _cts.IsCancellationRequested)
         {
             return false;
         }
@@ -1069,9 +1100,9 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
             try
             {
-                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi),_cts.Token);
+                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi),_cts?.Token ?? CancellationToken.None);
 
-                if (_cts.IsCancellationRequested)
+                if (_cts is null || _cts.IsCancellationRequested)
                 {
                     bitmap?.Dispose();
                     return false;
@@ -1102,7 +1133,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 AdjustStretchProperty(img);
                 img.IsAcquired = true;
             }
-            catch (OperationCanceledException) when (_cts.IsCancellationRequested)
+            catch (OperationCanceledException) when (_cts is not null && _cts.IsCancellationRequested)
             {
                 return false;
             }
@@ -1511,6 +1542,26 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         UpdateDisplayImageMaxSizeAndStretchProperty();
     }
 
+    public void UpdateSettings()
+    {
+        var config = _configurationService.CurrentConfiguration;
+
+        config.IsSaveLog = IsSaveLog;
+        config.IsShuffleOn = IsShuffleOn;
+        config.IsRepeatOn = IsRepeatOn;
+        config.IsOverrideSystemDpiScalingFactorOn = IsOverrideSystemDpiScalingFactorOn;
+        config.IsViewImageListOn = IsViewImageListOn;
+        config.IsViewFilePathPopupOn = IsViewFilePathPopupOn;
+        config.SlideshowTimerInterval = SlideshowTimerInterval;
+        config.IsStretchInOn = IsStretchInOn;
+        config.IsStretchOutOn = IsStretchOutOn;
+        config.IsEffectFadeInAndOutOn = IsEffectFadeInAndOutOn;
+        config.IsEffectPageSlideOn = IsEffectPageSlideOn;
+        config.IsNoEffectsOn = IsNoEffectsOn;
+        config.IsEffectCrossfadeOn = IsEffectCrossfadeOn;
+
+    }
+
     public void Dispose()
     {
         try
@@ -1549,11 +1600,13 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException)
         {
-            //
+            // Expected exception when cancellation is requested.
+            Debug.WriteLine("@Dispose() _cts.Cancel() - OperationCanceledException");
         }
-        catch (ObjectDisposedException) when (_cts.IsCancellationRequested)
+        catch (ObjectDisposedException) when (_cts is not null && _cts.IsCancellationRequested)
         {
-            //
+            // Expected exception when cancellation token source is already disposed.
+            Debug.WriteLine("@Dispose() _cts.Cancel() - ObjectDisposedException");
         }
         catch (Exception ex)
         {
@@ -1564,6 +1617,8 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             try
             {
                 _cts?.Dispose();
+                //_cts = null;
+                Debug.WriteLine("@Dispose() _cts.Dispose()");
             }
             catch (Exception ex)
             {

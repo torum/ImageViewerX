@@ -370,9 +370,8 @@ public class CustomFadeTransition(TimeSpan duration, bool crossFade) : IPageTran
         finally
         {
             // Reset elements back to standard UI thread states if required by your layout container
-            if (from != null) from.Opacity = 0.0;
-            if (to != null) to.Opacity = 1.0;
-
+            from?.Opacity = 0.0;
+            to?.Opacity = 1.0;
 
             _first = false;
 
@@ -428,12 +427,13 @@ public class CustomFadeTransitionOnComposition(TimeSpan duration, bool crossFade
         catch (OperationCanceledException)
         {
             // Re-throw so Avalonia knows this transition cycle was aborted
-            throw;
+            // Well, it's just too noisy, so let's not throw it. Avalonia will handle it.
+            //throw;
         }
         finally
         {
-            if (from != null) from.Opacity = 0.0;
-            if (to != null) to.Opacity = 1.0;
+            from?.Opacity = 0.0;
+            to?.Opacity = 1.0;
 
             _first = false;
         }
@@ -785,7 +785,7 @@ public class CustomPageSlideTransitionOnComposition : IPageTransition
         }
     }
 
-    private static readonly ConditionalWeakTable<Visual, object> _activeSlides = new();
+    private static readonly ConditionalWeakTable<Visual, object> _activeSlides = [];
 
     private async Task RunSlideAnimation(Visual visual, double startDelta, double endDelta, Easing easing, CancellationToken ct)
     {
@@ -825,7 +825,8 @@ public class CustomPageSlideTransitionOnComposition : IPageTransition
         catch (OperationCanceledException)
         {
             // Re-throw so Avalonia knows this transition cycle was aborted
-            throw;
+            // Well, it's just too noisy, so let's not throw it. Avalonia will handle it.
+            //throw;
         }
         finally
         {

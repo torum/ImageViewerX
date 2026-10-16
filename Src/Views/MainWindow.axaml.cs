@@ -9,6 +9,8 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageViewer.Models;
+using ImageViewer.Services;
+using ImageViewer.Services.Contracts;
 using ImageViewer.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -29,9 +31,7 @@ internal sealed partial class MainWindow : Window
     private Avalonia.Point _mousePosition;
     private readonly MainViewModel _mainViewModel;
     private string _lastOpenedDirectory = string.Empty;
-    private bool _isFullyLoaded;
 
-    // Currently _winRestore** are't used for much. It's a TODO;
     private int _winRestoreWidth = 1024;
     private int _winRestoreHeight = 768;
     private int _winRestoreTop = 100;
@@ -42,11 +42,14 @@ internal sealed partial class MainWindow : Window
 
     private Process? _LinuxSleepInhibitorProcess;
 
+    private IConfigurationService _configurationService;
+
     // parameterless constructor for XAML Previewer
     public MainWindow() 
     {
         _mainViewModel = App.GetService<MainViewModel>();
         this.DataContext = _mainViewModel;
+        _configurationService = App.GetService<IConfigurationService>();
 
         LoadSettings();
 
@@ -77,8 +80,6 @@ internal sealed partial class MainWindow : Window
 
     protected override void OnOpened(EventArgs e)
     {
-        base.OnOpened(e);
-
         this.PropertyChanged += this.OnWindow_PropertyChanged;
         this.ActualThemeVariantChanged += OnActualThemeVariantChanged;
         this.PositionChanged += Window_PositionChanged;
@@ -89,12 +90,12 @@ internal sealed partial class MainWindow : Window
         _mainViewModel.HideMenuFlyout += OnHideMenuFlyout;
         _mainViewModel.SlideshowIntervalChanged += OnSlideshowIntervalChanged;
         _mainViewModel.WorkingStateChanged += OnWorkingStateChanged;
+
+        base.OnOpened(e);
     }
 
     protected override void OnClosed(EventArgs e)
     {
-        base.OnClosed(e);
-
         this.PropertyChanged -= this.OnWindow_PropertyChanged;
         this.ActualThemeVariantChanged -= OnActualThemeVariantChanged;
         this.PositionChanged -= Window_PositionChanged;
@@ -106,6 +107,14 @@ internal sealed partial class MainWindow : Window
         _mainViewModel.SlideshowIntervalChanged -= OnSlideshowIntervalChanged;
         _mainViewModel.WorkingStateChanged -= OnWorkingStateChanged;
 
+        if (this.Screens is { } screens)
+        {
+            screens.Changed -= Screens_Changed;
+        }
+
+        base.OnClosed(e);
+
+        // Since we no longer use IHost, we need to manually dispose of the MainViewModel to ensure proper cleanup of resources.
         _mainViewModel?.Dispose();
     }
 
@@ -483,353 +492,41 @@ internal sealed partial class MainWindow : Window
 
     private void LoadSettings()
     {
-        var windowTop = 0;
-        var windowLeft = 0;
-        double windowHeight = 300;
-        double windowWidth = 300;
-        var windowState = WindowState.Normal;
+        var mw = _configurationService.CurrentConfiguration.MainWindow;
 
-        if (!System.IO.File.Exists(App.AppConfigFilePath))
+        // TODO: multi-monitor support. If the saved position is outside of the current monitor, move it to the monitor.
+        if ((mw.Left >= 0) && (mw.Top >= 0))
         {
-            _isFullyLoaded = true; // needs this to save lator.
-            Debug.WriteLine("(!System.IO.File.Exists(App.AppConfigFilePath)");
-            return;
-        }
-
-        var xdoc = XDocument.Load(App.AppConfigFilePath);
-
-        if (xdoc.Root is null)
-        {
-            Debug.WriteLine("Oops. xdoc.Root is null.");
-            return;
-        }
-
-        #region == Window setting ==
-
-        // Main Window element
-        var mainWindow = xdoc.Root.Element("MainWindow");
-        if (mainWindow is not null)
-        {
-            var hoge = mainWindow.Attribute("top");
-            if (hoge is not null)
-            {
-                if (Int32.TryParse(hoge.Value, out var wY))
-                {
-                    windowTop = wY;
-                }
-            }
-
-            hoge = mainWindow.Attribute("left");
-            if (hoge is not null)
-            {
-                if (int.TryParse(hoge.Value, out var wX))
-                {
-                    windowLeft = wX;
-                }
-            }
-            //w.Position = new PixelPoint(wX, wY);
-
-            hoge = mainWindow.Attribute("height");
-            if (hoge is not null)
-            {
-                if (!string.IsNullOrEmpty(hoge.Value))
-                {
-                    windowHeight = double.Parse(hoge.Value);
-                }
-            }
-
-            hoge = mainWindow.Attribute("width");
-            if (hoge is not null)
-            {
-                if (!string.IsNullOrEmpty(hoge.Value))
-                {
-                    windowWidth = double.Parse(hoge.Value);
-                }
-            }
-
-            hoge = mainWindow.Attribute("state");
-            if (hoge is not null)
-            {
-                switch (hoge.Value)
-                {
-                    case "FullScreen":
-                        windowState = WindowState.FullScreen;
-                        break;
-                    case "Maximized":
-                        // Since there is no restorebounds in AvaloniaUI, .....
-                        windowState = WindowState.Maximized;
-                        break;
-                    case "Normal":
-                    // Ignore minimized.
-                    case "Minimized":
-                        windowState = WindowState.Normal;
-                        break;
-                }
-            }
-        }
-
-        if ((windowState == WindowState.FullScreen) || (windowState == WindowState.Maximized))
-        {
-            // When FullScreen or Maximized, don't set size and pos.
-            // Currently _winRestore** are't used for much. It's a TODO;
-
-            if (windowWidth >= 300)
-            {
-                _winRestoreWidth = (int)windowWidth;
-            }
-            if (windowHeight >= 300)
-            {
-                _winRestoreHeight = (int)windowHeight;
-            }
-
-            if ((windowLeft >= -9) && (windowTop >= 0))
-            {
-                _winRestoreLeft = windowLeft;
-                _winRestoreTop = windowTop;
-            }
-
-            this.WindowState = windowState;
+            this.Position = new PixelPoint(mw.Left, mw.Top);
         }
         else
         {
-            //Debug.WriteLine($"windowTop = {windowTop}, windowLeft = {windowLeft}, windowWidth = {windowWidth}, windowHeight = {windowHeight}");
-
-            this.WindowState = windowState;
-
-            if (windowWidth >= 300)
-            {
-                this.Width = windowWidth;
-            }
-            if (windowHeight >= 300)
-            {
-                this.Height = windowHeight;
-            }
-
-            // TODO: Consider multi-monitor setups. Validate if the position is actually visible on any of the screens.
-            // Needed negative number (-9 for now) for some reason.
-            // https://github.com/AvaloniaUI/Avalonia/discussions/21103
-            if ((windowLeft >= -9) && (windowTop >= 0))
-            {
-                this.Position = new PixelPoint(windowLeft, windowTop);
-            }
-            else
-            {
-                Debug.WriteLine("Oops. !(windowLeft >= -9) && (windowTop >= 0)");
-                this.Position = new PixelPoint(0, 0);
-            }
+            this.Position = new PixelPoint(100, 100);
         }
 
-        #endregion
-
-        #region == Options ==
-
-        var opts = xdoc.Root.Element("Options");
-        if (opts is not null)
+        if (mw.Height >= 120)
         {
-            var attrs = opts.Attribute("lastOpenedDirectory");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    _lastOpenedDirectory = attrs.Value;
-                }
-            }
-
-            attrs = opts.Attribute("isShuffleOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsShuffleOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsShuffleOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isRepeatOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsRepeatOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsRepeatOn = false;
-                    }
-                }
-            }
-
-            //#IsStayOnTop
-            //#IsSlideshowOn
-            //#IsFullscreenOn
-
-            attrs = opts.Attribute("isOverrideSystemDpiScalingFactorOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsOverrideSystemDpiScalingFactorOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isViewImageListOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsViewImageListOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsViewImageListOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isViewFilePathPopupOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsViewFilePathPopupOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsViewFilePathPopupOn = false;
-                    }
-                }
-            }
-
-            //SlideshowTimerInterval
-            attrs = opts.Attribute("slideshowTimerInterval");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    _mainViewModel.SetSlideshowInterval(attrs.Value);
-                }
-            }
-
-            attrs = opts.Attribute("isStretchInOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsStretchInOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsStretchInOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isStretchOutOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsStretchOutOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsStretchOutOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isEffectFadeInAndOutOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsEffectFadeInAndOutOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsEffectFadeInAndOutOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isEffectPageSlideOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsEffectPageSlideOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsEffectPageSlideOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isNoEffectsOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsNoEffectsOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsNoEffectsOn = false;
-                    }
-                }
-            }
-
-            attrs = opts.Attribute("isEffectCrossfadeOn");
-            if (attrs is not null)
-            {
-                if (!string.IsNullOrEmpty(attrs.Value))
-                {
-                    if (attrs.Value == "True")
-                    {
-                        _mainViewModel.IsEffectCrossfadeOn = true;
-                    }
-                    else
-                    {
-                        _mainViewModel.IsEffectCrossfadeOn = false;
-                    }
-                }
-            }
-
+            this.Height = mw.Height;
         }
 
-        #endregion
+        if (mw.Width >= 480)
+        {
+            this.Width = mw.Width;
+        }
 
-        _isFullyLoaded = true;
+        _winRestoreWidth = (int)mw.RestoreWidth;
+        _winRestoreHeight = (int)mw.RestoreHeight;
+        _winRestoreLeft = mw.RestoreLeft;
+        _winRestoreTop = mw.RestoreTop;
+
+        if (mw.WindowState == WindowState.Maximized)
+        {
+            this.WindowState = WindowState.Maximized;
+        }
+        else
+        {
+            this.WindowState = WindowState.Normal;
+        }
     }
 
     private void InitKeyBindigs()
@@ -1000,11 +697,13 @@ internal sealed partial class MainWindow : Window
         UpdateSystemDPIScalingFactor();
     }
 
-    private void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
+    private async void Window_Closing(object? sender, Avalonia.Controls.WindowClosingEventArgs e)
     {
+        Debug.WriteLine("Window_Closing()");
+
         try
         {
-            SaveSettings();
+            await SaveSettings();
         }
         catch (Exception ex)
         {
@@ -1016,173 +715,39 @@ internal sealed partial class MainWindow : Window
         }
     }
 
-    private void SaveSettings()
+    private async Task SaveSettings()
     {
-        // Make sure Window and settings have been fully loaded and not overriding with empty data.
-        if (!_isFullyLoaded)
-            return;
+        _mainViewModel.UpdateSettings();
 
-        if (this.DataContext is not MainViewModel vm)
-        {
-            return;
-        }
+        var config = _configurationService.CurrentConfiguration;
 
-        // Config xml file
-        XmlDocument doc = new();
-        var xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
-        doc.InsertBefore(xmlDeclaration, doc.DocumentElement);
+        config.LastOpenedDirectory = _lastOpenedDirectory;
 
-        // Root Document Element
-        var root = doc.CreateElement(string.Empty, "App", string.Empty);
-        doc.AppendChild(root);
+        // Window Position must be saved before the window is closed, otherwise the position will be lost.
+        #region == Save Configuration ==
 
-        XmlAttribute attrs;
+        config.MainWindow.Width = this.Width;
+        config.MainWindow.Height = this.Height;
+        config.MainWindow.Left = this.Position.X;
+        config.MainWindow.Top = this.Position.Y;
+        config.MainWindow.WindowState = this.WindowState;
+        config.MainWindow.RestoreWidth = _winRestoreWidth;
+        config.MainWindow.RestoreHeight = _winRestoreHeight;
+        config.MainWindow.RestoreLeft = _winRestoreLeft;
+        config.MainWindow.RestoreTop = _winRestoreTop;
 
-        #region == Window settings ==
-
-        // Main Window element
-        var mainWindow = doc.CreateElement(string.Empty, "MainWindow", string.Empty);
-
-        //Window w = (sender as Window);
-        // Main Window attributes
-        attrs = doc.CreateAttribute("height");
-        attrs.Value = this.WindowState == WindowState.Normal ? this.Height.ToString() : _winRestoreHeight.ToString();
-        mainWindow.SetAttributeNode(attrs);
-
-        attrs = doc.CreateAttribute("width");
-        attrs.Value = this.WindowState == WindowState.Normal ? this.Width.ToString() : _winRestoreWidth.ToString();
-        mainWindow.SetAttributeNode(attrs);
-
-        attrs = doc.CreateAttribute("top");
-        attrs.Value = this.WindowState == WindowState.Normal ? this.Position.Y.ToString() : _winRestoreTop.ToString();
-        mainWindow.SetAttributeNode(attrs);
-
-        attrs = doc.CreateAttribute("left");
-        attrs.Value = this.WindowState == WindowState.Normal ? this.Position.X.ToString() : _winRestoreLeft.ToString();
-        mainWindow.SetAttributeNode(attrs);
-
-        attrs = doc.CreateAttribute("state");
-        attrs.Value = this.WindowState switch
-        {
-            WindowState.FullScreen => "FullScreen",
-            WindowState.Maximized => "Maximized",
-            WindowState.Normal => "Normal",
-            WindowState.Minimized => "Minimized",
-            _ => attrs.Value
-        };
-        mainWindow.SetAttributeNode(attrs);
-
-        // set MainWindow element to root.
-        root.AppendChild(mainWindow);
+        await _configurationService.SaveConfigurationAsync();
 
         #endregion
 
-        #region == Options ==
-
-        var opts = doc.CreateElement(string.Empty, "Options", string.Empty);
-
-        // LastOpenedDirectory
-        attrs = doc.CreateAttribute("lastOpenedDirectory");
-        attrs.Value = !string.IsNullOrEmpty(_lastOpenedDirectory) ? _lastOpenedDirectory : string.Empty;
-        opts.SetAttributeNode(attrs);
-
-        //IsShuffleOn
-        attrs = doc.CreateAttribute("isShuffleOn");
-        attrs.Value = vm.IsShuffleOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsRepeatOn
-        attrs = doc.CreateAttribute("isRepeatOn");
-        attrs.Value = vm.IsRepeatOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //#IsStayOnTop
-        //#IsSlideshowOn
-        //#IsFullscreenOn
-
-        attrs = doc.CreateAttribute("isOverrideSystemDpiScalingFactorOn");
-        attrs.Value = vm.IsOverrideSystemDpiScalingFactorOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsViewImageListOn
-        attrs = doc.CreateAttribute("isViewImageListOn");
-        attrs.Value = vm.IsViewImageListOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsViewFilePathPopupOn
-        attrs = doc.CreateAttribute("isViewFilePathPopupOn");
-        attrs.Value = vm.IsViewFilePathPopupOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //SlideshowTimerInterval
-        attrs = doc.CreateAttribute("slideshowTimerInterval");
-        attrs.Value = vm.SlideshowTimerInterval.ToString();
-        opts.SetAttributeNode(attrs);
-
-        //IsStretchInOn
-        attrs = doc.CreateAttribute("isStretchInOn");
-        attrs.Value = vm.IsStretchInOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsStretchOutOn
-        attrs = doc.CreateAttribute("isStretchOutOn");
-        attrs.Value = vm.IsStretchOutOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsEffectFadeInAndOutOn
-        attrs = doc.CreateAttribute("isEffectFadeInAndOutOn");
-        attrs.Value = vm.IsEffectFadeInAndOutOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsEffectPageSlideOn
-        attrs = doc.CreateAttribute("isEffectPageSlideOn");
-        attrs.Value = vm.IsEffectPageSlideOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsNoEffectsOn
-        attrs = doc.CreateAttribute("isNoEffectsOn");
-        attrs.Value = vm.IsNoEffectsOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-        //IsEffectCrossfadeOn
-        attrs = doc.CreateAttribute("isEffectCrossfadeOn");
-        attrs.Value = vm.IsEffectCrossfadeOn ? "True" : "False";
-        opts.SetAttributeNode(attrs);
-
-
-        /// 
-        root.AppendChild(opts);
-
-        #endregion
-
-        try
-        {
-            if (!Directory.Exists(App.AppDataFolder))
-            {
-                Directory.CreateDirectory(App.AppDataFolder);
-            }
-
-            //doc.Save(App.AppConfigFilePath);
-            var temporaryPath = App.AppConfigFilePath + ".tmp";
-            doc.Save(temporaryPath);
-            File.Move(temporaryPath, App.AppConfigFilePath, overwrite: true);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("Exception @OnWindowClosing: " + ex);
-
-            App.AppendErrorLog("Exception @OnWindowClosing", ex.Message);
-        }
-
-        if (vm.IsSaveLog)
-        {
-            App.SaveErrorLog();
-        }
     }
 
     private void Window_Closed(object? sender, System.EventArgs e)
     {
-        //Debug.WriteLine("Window_Closed()");
+        Debug.WriteLine("Window_Closed()");
+
+        // Do not use this.Close() in the MainWindow. 
+        // Use overrided OnClosed() instead.
     }
 
     private void Window_Resized(object? sender, Avalonia.Controls.WindowResizedEventArgs e)
@@ -2607,6 +2172,15 @@ internal sealed partial class MainWindow : Window
                     this.PopupFilePath.IsOpen = true;
                 }
             }
+        }
+
+        // Save the current window size and position when activated.
+        if (this.WindowState == WindowState.Normal)
+        {
+            _winRestoreHeight = (int)this.Height;
+            _winRestoreWidth = (int)this.Width;
+            _winRestoreTop = this.Position.Y;
+            _winRestoreLeft = this.Position.X;
         }
     }
 

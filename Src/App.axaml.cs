@@ -3,6 +3,8 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
+using ImageViewer.Services;
+using ImageViewer.Services.Contracts;
 using ImageViewer.ViewModels;
 using ImageViewer.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,7 @@ internal sealed partial class App : Application
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainView>();
         services.AddSingleton<MainViewModel>();
+        services.AddSingleton<IConfigurationService, ConfigurationService>();
 
         // Build the provider
         ServiceProvider = services.BuildServiceProvider();
@@ -48,7 +51,7 @@ internal sealed partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override void OnFrameworkInitializationCompleted()
+    public async override void OnFrameworkInitializationCompleted()
     {
         // Testing only
         //Assets.Resources.Culture = new CultureInfo("ja-JP");
@@ -65,6 +68,10 @@ internal sealed partial class App : Application
                     Application.Current.Resources["ContentControlThemeFontFamily"] = new FontFamily("fonts:Inter#Inter");
                 }
             }
+
+            var config = ServiceProvider.GetRequiredService<IConfigurationService>();
+            config.Initialize(AppConfigFilePath);
+            await config.LoadConfigurationAsync();
 
             var mainWin = App.GetService<MainWindow>();
 
@@ -87,7 +94,7 @@ internal sealed partial class App : Application
         {
             singleViewPlatform.MainView = new MainView
             {
-                DataContext = new MainViewModel()
+                DataContext = App.GetService<MainViewModel>()
             };
         }
 
