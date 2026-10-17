@@ -22,7 +22,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4.2.2
+      uses: actions/checkout@v6
 
     - name: Install NativeAOT Compile Dependencies
       run: |
@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install -y clang zlib1g-dev libkrb5-dev
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v4.3.0
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -89,18 +89,17 @@ jobs:
         # Configure variables to bypass the FUSE mount restriction inside CI containers
         export APPIMAGE_EXTRACT_AND_RUN=1
         ./appimagetool-x86_64.AppImage ${{ env.APP_NAME }}.AppDir
+        # Create a dedicated directory and move the file there
+        mkdir -p ./local_binaries
+        mv "${{ env.DISPLAY_NAME }}-x86_64.AppImage" "./local_binaries/${{ env.APP_NAME }}-x86_64.AppImage"
 
-    - name: Rename Output AppImage
-      run: |
-        # mv *.AppImage ${{ env.APP_NAME }}-x86_64.AppImage
-        mv "${{ env.DISPLAY_NAME }}-x86_64.AppImage" "${{ env.APP_NAME }}-x86_64.AppImage"
-
-    - name: Upload AppImage artifact
+    - name: Save AppImage as Action Artifact
       uses: actions/upload-artifact@v7
-      with: 
-        name: ${{ env.APP_NAME }}-linux-x64
-        path: publish/${{ env.APP_NAME }}-x86_64.AppImage
-        if-no-files-found: error
+      with:
+        name: Compiled-Linux-AppImage
+        path: ./local_binaries/${{ env.APP_NAME }}-x86_64.AppImage
+
+
           
 
 
