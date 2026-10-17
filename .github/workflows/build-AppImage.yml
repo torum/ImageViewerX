@@ -80,7 +80,7 @@ jobs:
 
     - name: Download AppImageTool
       run: |
-        wget -q https://github.com
+        wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
         chmod +x appimagetool-x86_64.AppImage
 
     - name: Build AppImage
