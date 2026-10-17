@@ -86,6 +86,8 @@ jobs:
     - name: Build AppImage
       run: |
         export ARCH=x86_64
+        # Configure variables to bypass the FUSE mount restriction inside CI containers
+        export APPIMAGE_EXTRACT_AND_RUN=1
         ./appimagetool-x86_64.AppImage ${{ env.APP_NAME }}.AppDir
 
     - name: Rename Output AppImage
