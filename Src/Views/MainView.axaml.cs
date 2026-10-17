@@ -83,8 +83,10 @@ internal sealed partial class MainView : UserControl
                 compositeTransition.PageTransitions.Add(crossFade);
             }
 
-            //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical) //Horizontal
-            var pageSlide = new CustomPageSlideTransitionOnComposition(TimeSpan.FromSeconds(0.7), CustomPageSlideTransitionOnComposition.SlideAxis.Horizontal)
+            //var pageSlide = new PageSlide(TimeSpan.FromSeconds(0.5), PageSlide.SlideAxis.Vertical) 
+
+            // Horizontal or Vertical (and its direction) Make this user option. For now, let's use Vertical.
+            var pageSlide = new CustomPageSlideTransitionOnComposition(TimeSpan.FromSeconds(0.7), CustomPageSlideTransitionOnComposition.SlideAxis.Vertical)
             {
                 SlideInEasing = new CubicEaseIn(),
                 SlideOutEasing = new BounceEaseOut()
@@ -764,7 +766,8 @@ public class CustomPageSlideTransitionOnComposition : IPageTransition
             from.IsVisible = true;
             from.Opacity = 1.0;
             (from as Layoutable)?.UpdateLayout();
-            tasks.Add(RunSlideAnimation(from, 0d, forward ? -distance : distance, SlideOutEasing, cancellationToken));
+            //tasks.Add(RunSlideAnimation(from, 0d, forward ? -distance : distance, SlideOutEasing, cancellationToken));
+            tasks.Add(RunSlideAnimation(from, 0d, forward ? distance : -distance, SlideOutEasing, cancellationToken)); // This is the correct direction for the "from" visual to slide out.
         }
 
         if (to != null)
@@ -772,7 +775,8 @@ public class CustomPageSlideTransitionOnComposition : IPageTransition
             to.IsVisible = true;
             to.Opacity = 1.0;
             (to as Layoutable)?.UpdateLayout();
-            tasks.Add(RunSlideAnimation(to, forward ? distance : -distance, 0d, SlideInEasing, cancellationToken));
+            //tasks.Add(RunSlideAnimation(to, forward ? distance : -distance, 0d, SlideInEasing, cancellationToken));
+            tasks.Add(RunSlideAnimation(to, forward ? -distance : distance, 0d, SlideInEasing, cancellationToken)); // This is the correct direction for the "to" visual to slide in.
         }
 
         await Task.WhenAll(tasks);
