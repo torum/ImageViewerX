@@ -20,7 +20,7 @@ namespace ImageViewer
             .UseWaylandWithFallback()
             .With(new WaylandPlatformOptions()
             {
-                AppId = "ImageViewerX",  // Matches your .desktop launcher file
+                AppId = "ImageViewerX",  // Matches .desktop launcher file
                 UseDmabufSwapchain = null,     // Enables high-performance rendering
                 UseGLibMainLoop = false,         // Integrates with Linux desktop loops
                 ForceDrawnDecorations = true    // Enables custom window decorations especially for KDE environments where they prefer server-side decorations.

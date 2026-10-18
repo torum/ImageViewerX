@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -28,8 +29,9 @@ namespace ImageViewer.Views;
 internal sealed partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timerPointerCursorHide;
-    private Avalonia.Point _mousePosition;
     private readonly MainViewModel _mainViewModel;
+    private CancellationTokenSource? _cts = new();
+    private Avalonia.Point _mousePosition;
     private string _lastOpenedDirectory = string.Empty;
     private bool _isClosing;
 
@@ -117,6 +119,33 @@ internal sealed partial class MainWindow : Window
 
         // Since we no longer use IHost, we need to manually dispose of the MainViewModel to ensure proper cleanup of resources.
         _mainViewModel?.Dispose();
+
+        try
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
+            Debug.WriteLine("MainWindow CancellationTokenSource disposed successfully.");
+        }
+        catch (ObjectDisposedException)
+        {
+            // The CancellationTokenSource has already been disposed, so we can safely ignore this exception.
+        }
+        catch (OperationCanceledException)
+        {
+            // The CancellationTokenSource has already been canceled, so we can safely ignore this exception.
+        }
+        catch (AggregateException ae)
+        {
+            foreach (var ex in ae.InnerExceptions)
+            {
+                Debug.WriteLine($"Error disposing CancellationTokenSource: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error disposing CancellationTokenSource: {ex.Message}");
+        }
     }
 
     private void OnWorkingStateChanged(object? sender, bool e)
@@ -895,6 +924,7 @@ internal sealed partial class MainWindow : Window
         if (_mainViewModel.IsWorking)
         {
             // Already processing. 
+            Debug.WriteLine("Already processing.");
             return;
         }
 
@@ -916,6 +946,11 @@ internal sealed partial class MainWindow : Window
             return;
         }
 
+        if (_cts == null || _cts.IsCancellationRequested)
+        {
+            return;
+        }
+
         _mainViewModel.IsWorking = true;
 
         var fileNames = e.DataTransfer.GetItems(DataFormat.File)?.ToList();
@@ -928,6 +963,11 @@ internal sealed partial class MainWindow : Window
         var droppedFiles = new List<string>();
         foreach (var file in fileNames)
         {
+            if (_cts == null || _cts.IsCancellationRequested)
+            {
+                return;
+            }
+
             var filePath = file.TryGetFile()?.TryGetLocalPath(); //file.TryGetLocalPath(); Deprecated.
             if (string.IsNullOrEmpty(filePath))
             {
@@ -937,6 +977,11 @@ internal sealed partial class MainWindow : Window
             droppedFiles.Add(filePath);
 
             Debug.WriteLine(filePath);
+        }
+
+        if (_cts == null || _cts.IsCancellationRequested)
+        {
+            return;
         }
 
         if (droppedFiles.Count > 0)
@@ -954,8 +999,13 @@ internal sealed partial class MainWindow : Window
         }
     }
 
-    private static void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
+    private void RecursivelyProcessFiles(List<string> fileNames, List<FileSystemInfo> allItems)
     {
+        if (_cts == null || _cts.IsCancellationRequested)
+        {
+            return;
+        }
+
         // On Linux.
         //Sort
         IComparer<string> naturalSortComparer = new ImageViewer.Helpers.NaturalSortComparer();
@@ -973,9 +1023,19 @@ internal sealed partial class MainWindow : Window
 
         allItems.AddRange(files);
 
+        if (_cts == null || _cts.IsCancellationRequested)
+        {
+            return;
+        }
+
         // Dir next.
         foreach (var path in fileNames)
         {
+            if (_cts == null || _cts.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (!Directory.Exists(path)) continue;
 
             DirectoryInfo directory = new(path);
@@ -987,6 +1047,10 @@ internal sealed partial class MainWindow : Window
 
             if (folderFileNames.Count > 0)
             {
+                if (_cts == null || _cts.IsCancellationRequested)
+                {
+                    return;
+                }
                 RecursivelyProcessFiles(folderFileNames, allItems);
             }
         }
@@ -1001,6 +1065,11 @@ internal sealed partial class MainWindow : Window
         // Don't await. FIRE and FORGET! Otherwise GUI would freeze or be 100x slower (try sleeping HDD).
         _ = Task.Run(async () =>
         {
+            if (_cts == null || _cts.IsCancellationRequested)
+            {
+                return;
+            }
+
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 _mainViewModel.IsWorking = true;
@@ -1090,12 +1159,23 @@ internal sealed partial class MainWindow : Window
                         IncludeSiblingsFileNames.AddRange(fileNames);
                     }
 
+                    if (_cts == null || _cts.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     List<FileSystemInfo> allItems = [];
 
                     RecursivelyProcessFiles(IncludeSiblingsFileNames, allItems);
 
                     foreach (var item in allItems)
                     {
+                        if (_cts == null || _cts.IsCancellationRequested)
+                        {
+                            return;
+
+                        }
+
                         //Debug.WriteLine(item.FullName);
 
                         if (item is DirectoryInfo)
@@ -1143,6 +1223,11 @@ internal sealed partial class MainWindow : Window
                     // Get all files recursively.
                     foreach (var item in fileNames)
                     {
+                        if (_cts == null || _cts.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         if (System.IO.File.Exists(item))//.Path.LocalPath
                         {
                             // Add single files
@@ -1159,6 +1244,11 @@ internal sealed partial class MainWindow : Window
 
                             droppedFiles.AddRange(filesInFolder);
                         }
+                    }
+
+                    if (_cts == null || _cts.IsCancellationRequested)
+                    {
+                        return;
                     }
 
                     // Single file dropped, in that case, get all siblings.
@@ -1200,6 +1290,11 @@ internal sealed partial class MainWindow : Window
 
                     foreach (var fileFullPath in droppedFiles)
                     {
+                        if (_cts == null || _cts.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         if (!MainViewModel.HasImageExtension(fileFullPath, MainViewModel.ValidExtensions))
                         {
                             continue;
@@ -1222,12 +1317,22 @@ internal sealed partial class MainWindow : Window
                     }
                 }
 
+                if (_cts == null || _cts.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 if (droppedImages.Count < 1)
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
                         _mainViewModel.IsWorking = false;
                     });
+                    return;
+                }
+
+                if (_cts == null || _cts.IsCancellationRequested)
+                {
                     return;
                 }
 
@@ -1238,6 +1343,14 @@ internal sealed partial class MainWindow : Window
 
                     await _mainViewModel.DroppedFilesAsync(droppedImages, singleSelectedOriginalFile);
                 });
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("OperationCanceledException @ProcessFiles()");
+            }
+            catch (ObjectDisposedException)
+            {
+                Debug.WriteLine("ObjectDisposedException @ProcessFiles()");
             }
             catch (Exception ex)
             {
@@ -1250,7 +1363,7 @@ internal sealed partial class MainWindow : Window
                 App.AppendErrorLog("DispatcherUnhandledException", ex.ToString());
                 App.SaveErrorLog();
             }
-        });
+        },_cts?.Token ?? CancellationToken.None);
     }
 
     private void Window_DoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
