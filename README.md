@@ -2,7 +2,7 @@
 
 <img src="https://github.com/torum/ImageViewerX/blob/main/Src/Assets/ImageViewerX-AppIcon.png?raw=true" width="48" height="48"/>
 
-A new cross-platform Image Viewer. (work in progress)
+A simple cross-platform Image Viewer. (work in progress)
 
 This is a spiritual successor to the [Image-viewer](https://github.com/torum/Image-viewer) developed with [ObjectPascal/Lazarus](https://www.lazarus-ide.org/) back in 2018. This time, the app is built with C#/.NET using [Avalonia UI](https://github.com/AvaloniaUI/Avalonia). 
 
