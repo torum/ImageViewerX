@@ -2,9 +2,14 @@
 
 <img src="https://github.com/torum/ImageViewerX/blob/main/Src/Assets/ImageViewerX-AppIcon.png?raw=true" width="48" height="48"/>
 
-A new cross-platform Image Viewer. This is supposed to be a spiritual successor to the [Image-viewer](https://github.com/torum/Image-viewer) developed with ObjectPascal/Lazarus back in 2018. This time, the app is built with C#/.NET using [Avalonia UI](https://github.com/AvaloniaUI/Avalonia). For better or worse, no AI is being used in this project.
+A new cross-platform Image Viewer. (work in progress)
+
+This is a spiritual successor to the [Image-viewer](https://github.com/torum/Image-viewer) developed with [ObjectPascal/Lazarus](https://www.lazarus-ide.org/) back in 2018. This time, the app is built with C#/.NET using [Avalonia UI](https://github.com/AvaloniaUI/Avalonia). 
 
 ![ImageViewerX](https://github.com/torum/ImageViewerX/blob/main/Images/ImageViewerX.png) 
+
+## Download  
+For Linux and Windows, you can download the executables or installation packages directly from the [releases page](https://github.com/torum/MPDCtrlX/releases). These binaries are compiled natively utilizing Native AOT compilation for faster performance and memory efficiency.
 
 ## Current Status
 **Work in Progress**  
