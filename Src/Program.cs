@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Rendering.Composition;
 using System;
 
 namespace ImageViewer
@@ -28,6 +29,10 @@ namespace ImageViewer
             .With(new SkiaOptions
             {
                 MaxGpuResourceSizeBytes = 256 * 1024 * 1024 // Set cache to 256MB. Without this, there are issues with large images.
+            })
+            .With(new CompositionOptions
+            {
+                UseRegionDirtyRectClipping = true
             })
             .WithInterFont();
             //.With(new AvaloniaNativePlatformOptions { OverlayPopups = true })

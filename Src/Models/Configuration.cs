@@ -11,14 +11,14 @@ public class Configuration
     {
         public double Width { get; set; } = 780;
         public double Height { get; set; } = 600;
-        public int Left { get; set; } = 100;
-        public int Top { get; set; } = 100;
+        public int Left { get; set; } = 0;
+        public int Top { get; set; } = 0;
         public WindowState WindowState { get; set; } = WindowState.Normal;
 
         public double RestoreWidth { get; set; } = 780;
         public double RestoreHeight { get; set; } = 600;
-        public int RestoreLeft { get; set; } = 100;
-        public int RestoreTop { get; set; } = 100;
+        public int RestoreLeft { get; set; } = 0;
+        public int RestoreTop { get; set; } = 0;
     }
 
     public WindowSettings MainWindow { get; set; } = new WindowSettings();

@@ -4,26 +4,37 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:ImageViewer.ViewModels"
              xmlns:mod="clr-namespace:ImageViewer.Models"
-             xmlns:helper="clr-namespace:ImageViewer.Helpers"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ImageViewer.Views.MainView"
              x:DataType="vm:MainViewModel">
 	<TransitioningContentControl
 		x:Name="ImageTransitioningContentControl"
 		Content="{Binding DisplayImage, Mode=OneWay}"
-		IsTransitionReversed="{Binding IsTransitionReversed}"
+		IsTransitionReversed="{Binding IsTransitionReversed, Mode=OneWay}"
 		HorizontalAlignment="Stretch"
 		VerticalAlignment="Stretch">
 		<TransitioningContentControl.ContentTemplate>
 			<DataTemplate DataType="mod:ImageInfo">
-				<Image Margin="0" Source="{Binding ImageSource}" Stretch="{Binding ImageStretch}" StretchDirection="{Binding ImageStretchDirection}" VerticalAlignment="Center" HorizontalAlignment="Center"
+				
+				<Image Source="{Binding ImageSource, Mode=OneWay}" Stretch="{Binding ImageStretch, Mode=OneWay}" StretchDirection="{Binding ImageStretchDirection, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Center"
 						MaxWidth="{Binding ImageMaxWidth, Mode=OneWay}" MaxHeight="{Binding ImageMaxHeight, Mode=OneWay}"/>
+				
+                <!--
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+				    <Image Source="{Binding ImageSource, Mode=OneWay}" 
+                            Stretch="{Binding ImageStretch, Mode=OneWay}" 
+                            StretchDirection="{Binding ImageStretchDirection, Mode=OneWay}" 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Image.RenderTransform>
+                            <ScaleTransform ScaleX="{Binding ZoomScale, Mode=OneWay}" 
+                                            ScaleY="{Binding ZoomScale, Mode=OneWay}"/>
+                        </Image.RenderTransform>
+                    </Image>
+                </Grid>
+                -->
 			</DataTemplate>
 		</TransitioningContentControl.ContentTemplate>
-		<!-- 
-		<TransitioningContentControl.PageTransition>
-			<CrossFade Duration="0:0:1.0" />
-		</TransitioningContentControl.PageTransition>
-		-->
 	</TransitioningContentControl>
 </UserControl>

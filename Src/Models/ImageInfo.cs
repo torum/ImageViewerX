@@ -32,6 +32,9 @@ internal sealed partial class ImageInfo : ObservableObject
 
     [ObservableProperty]
     public partial Avalonia.Media.StretchDirection ImageStretchDirection { get; set; } = StretchDirection.DownOnly;
+
+    [ObservableProperty]
+    public partial double ZoomScale { get; set; } = 1.0;
 }
 
 

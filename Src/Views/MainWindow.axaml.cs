@@ -45,7 +45,7 @@ internal sealed partial class MainWindow : Window
 
     private Process? _LinuxSleepInhibitorProcess;
 
-    private IConfigurationService _configurationService;
+    private readonly IConfigurationService _configurationService;
 
     // parameterless constructor for XAML Previewer
     public MainWindow() 
@@ -54,9 +54,9 @@ internal sealed partial class MainWindow : Window
         this.DataContext = _mainViewModel;
         _configurationService = App.GetService<IConfigurationService>();
 
-        LoadSettings();
-
         InitializeComponent();
+
+        LoadSettings();
 
         UpdateThemeBackground(ActualThemeVariant);
 
@@ -317,7 +317,7 @@ internal sealed partial class MainWindow : Window
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            this.BackgroundLayerBorder.IsVisible = false;
+            this.BackgroundLayerBorder.IsVisible = true;
             this.BackgroundLayerBorder.Opacity = 0.9;
 
             if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 1803))
@@ -531,7 +531,7 @@ internal sealed partial class MainWindow : Window
         }
         else
         {
-            this.Position = new PixelPoint(100, 100);
+            this.Position = new PixelPoint(0, 0);
         }
 
         if (mw.Height >= 120)
@@ -611,7 +611,9 @@ internal sealed partial class MainWindow : Window
 
         if (_mainViewModel.SystemDpiScalingFactor != _systemDpiScalingFactor)
         {
-            _mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+            //_mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
+            var hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
+            _mainViewModel.UpdateScreenInfo(_systemDpiScalingFactor, hardwareDisplayWidth);
 
             this.MenuItemSystemDpiScalingFactor.IsVisible = true;
             this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;

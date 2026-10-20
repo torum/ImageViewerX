@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ImageViewer.Helpers;
 using ImageViewer.Models;
+using ImageViewer.Services.Contracts;
 using ImageViewer.Views;
 using System;
 using System.Collections.Generic;
@@ -19,7 +21,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using ImageViewer.Services.Contracts;
 
 #pragma warning disable IDE0028,IDE0001
 
@@ -35,7 +36,8 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     private string _currentFile = string.Empty;
     private List<ImageInfo> _originalQueue = [];
 
-    private readonly Vector _displayDpi = new(96.0, 96.0);
+    private Vector _displayDpi = new(96.0, 96.0);
+    private int _hardwareDisplayWidth;
 
     // Font info used for culculating displaying text width.
     private FontFamily TextFontFamily { get; } = FontFamily.Default;
@@ -44,6 +46,15 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     private FontStyle TextFontStyle { get; } = FontStyle.Normal;
 
     private readonly IConfigurationService _configurationService;
+    #endregion
+
+    #region == Public ==
+
+    // TODO: Make user editable.
+    // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
+    //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif", ".jxl"]; //
+    public static readonly HashSet<string> ValidExtensions = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp" };//, ".avif"
+
     #endregion
 
     #region == Events ==
@@ -89,8 +100,9 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var screen = desktop.MainWindow?.Screens.ScreenFromWindow(desktop.MainWindow);
-            double scaling = screen?.Scaling ?? 1.0;
-            _displayDpi = new Vector(96.0 * scaling, 96.0 * scaling);
+            SystemDpiScalingFactor = screen?.Scaling ?? 1.0;
+            _displayDpi = new Vector(96.0 * SystemDpiScalingFactor, 96.0 * SystemDpiScalingFactor);
+            _hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
         }
 
 #if DEBUG
@@ -102,11 +114,6 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     #region == Public Properties ==
-
-    // TODO: Make user editable.
-    // Other exts that Skia supports. Ico,Wbmp,Pkm,Ktx,Astc,Dng,Heif, ".avif"
-    //private readonly string[] _validExtensions = [".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp", ".avif", ".jxl"]; //
-    public static readonly HashSet<string> ValidExtensions = new(StringComparer.OrdinalIgnoreCase) {".jpg", ".jpeg", ".gif", ".png", ".webp", ".bmp"};//, ".avif"
 
     public double ClientAreaWidth
     {
@@ -822,7 +829,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                         try
                         {
                             //return new Bitmap(img.ImageFilePath);
-                            return UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi);
+                            return UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth);
                             /*
                             string extension = Path.GetExtension(img.ImageFilePath).ToLowerInvariant();
                             // AVIF
@@ -1103,7 +1110,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
             try
             {
-                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi),_cts?.Token ?? CancellationToken.None);
+                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth),_cts?.Token ?? CancellationToken.None);
 
                 if (_cts is null || _cts.IsCancellationRequested)
                 {
@@ -1542,6 +1549,17 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         ClientAreaWidth = width;
         ClientAreaHeight = height;
+        UpdateDisplayImageMaxSizeAndStretchProperty();
+    }
+
+    public void UpdateScreenInfo(double dpiScalingFactor, int hardwareDisplayWidth)
+    {
+        SystemDpiScalingFactor = dpiScalingFactor;
+        _hardwareDisplayWidth = hardwareDisplayWidth;
+
+        _displayDpi = new Vector(96.0 * SystemDpiScalingFactor, 96.0 * SystemDpiScalingFactor);
+        
+
         UpdateDisplayImageMaxSizeAndStretchProperty();
     }
 
