@@ -13,12 +13,19 @@ public static class UniversalBitmapLoader
     {
         if (!File.Exists(filePath)) throw new FileNotFoundException("Image file not found.", filePath);
 
-        string extension = Path.GetExtension(filePath).ToLowerInvariant();
+        string extension = Path.GetExtension(filePath);
 
-        // 1. Native Avalonia Route (JPEG, PNG, WebP, GIF, BMP)
-        if (extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif" || extension == ".bmp" || extension == ".webp")
+        // Native Avalonia Route (JPEG, PNG, WebP, GIF, BMP)
+        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase) 
+            || extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) 
+            || extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) 
+            || extension.Equals(".gif", StringComparison.OrdinalIgnoreCase) 
+            || extension.Equals(".bmp", StringComparison.OrdinalIgnoreCase) 
+            || extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
         {
             //return new Bitmap(filePath);
+
+            // We will use a more memory-efficient, performance-oriented approach for large images
 
             Bitmap finalBitmap;
 
@@ -52,7 +59,7 @@ public static class UniversalBitmapLoader
         }
 
         // SkiaSharp Route (AVIF)
-        if (extension == ".avif")
+        if (extension.Equals(".avif", StringComparison.OrdinalIgnoreCase))
         {
             using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
             return AvifImageDecoder.DecodeAvifToAvalonia(fileStream, displayDpi);
@@ -60,7 +67,7 @@ public static class UniversalBitmapLoader
         }
         /*
         //  (JPEG XL / .jxl)
-        if (extension == ".jxl")
+        if (extension.Equals(".jxl", StringComparison.OrdinalIgnoreCase))
         {
             return DecodeJxlToAvalonia(filePath);
         }

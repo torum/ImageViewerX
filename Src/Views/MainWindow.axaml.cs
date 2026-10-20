@@ -598,7 +598,10 @@ internal sealed partial class MainWindow : Window
         _systemDpiScalingFactor = screen?.Scaling ?? 1.0;
         //_systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
-        //Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}");
+        var hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
+        _mainViewModel.UpdateScreenInfo(_systemDpiScalingFactor, hardwareDisplayWidth);
+
+        Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}, HardwareDisplayWidth = {hardwareDisplayWidth}");
 
         if (_systemDpiScalingFactor == 1.0)
         {
@@ -606,14 +609,12 @@ internal sealed partial class MainWindow : Window
             this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = false;
             this.MenuItemSystemDpiScalingFactor.IsEnabled = false;
             this.MenuItemSystemDpiScalingFactor.Header = ImageViewer.Properties.Resources.String_OverrideDPIScaling_Default;//$"Override DPI Scaling (100%)"; //Override System DPI Scaling Factor 
-            return;
+            //return;
         }
-
-        if (_mainViewModel.SystemDpiScalingFactor != _systemDpiScalingFactor)
+        else
+        //if (_mainViewModel.SystemDpiScalingFactor != _systemDpiScalingFactor)
         {
             //_mainViewModel.SystemDpiScalingFactor = _systemDpiScalingFactor;
-            var hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
-            _mainViewModel.UpdateScreenInfo(_systemDpiScalingFactor, hardwareDisplayWidth);
 
             this.MenuItemSystemDpiScalingFactor.IsVisible = true;
             this.MenuItemSystemDpiScalingFactorSeparator.IsVisible = true;
@@ -723,7 +724,6 @@ internal sealed partial class MainWindow : Window
 
     private void OnDisplayChanged(Avalonia.Platform.Screen newScreen)
     {
-        // Add your custom logic here (e.g., adjust DPI specific settings, reload data, etc.)
         Debug.WriteLine($"Window has crossed to a new display: {newScreen.DisplayName}");
 
         UpdateSystemDPIScalingFactor();
