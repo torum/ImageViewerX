@@ -318,7 +318,8 @@ internal sealed partial class MainWindow : Window
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             this.BackgroundLayerBorder.IsVisible = true;
-            this.BackgroundLayerBorder.Opacity = 0.9;
+            this.BackgroundLayerBorder.Opacity = 0.5;
+            this.ListBoxBackgroundLayerBorder.Opacity = 0;
 
             if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 1803))
             {
@@ -344,6 +345,22 @@ internal sealed partial class MainWindow : Window
                 this.Background = Brushes.Transparent;
                 this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
                 //this.TransparencyLevelHint = [WindowTransparencyLevel.Mica];
+            }
+
+            if (theme == ThemeVariant.Dark)
+            {
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
+            }
+            else if (theme == ThemeVariant.Light)
+            {
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.Blur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#EEEEEE"));
+            }
+            else if (theme == ThemeVariant.Default)
+            {
+                //this.TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur];
+                this.BackgroundLayerBorder.Background = new SolidColorBrush(Color.Parse("#121212"));
             }
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
