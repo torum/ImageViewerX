@@ -37,7 +37,8 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
     private List<ImageInfo> _originalQueue = [];
 
     private Vector _displayDpi = new(96.0, 96.0);
-    private int _hardwareDisplayWidth;
+    private int _hardwareDisplayWidth = 3840;
+    private int _hardwareDisplayHeight = 2160;
 
     // Font info used for culculating displaying text width.
     private FontFamily TextFontFamily { get; } = FontFamily.Default;
@@ -103,6 +104,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
             SystemDpiScalingFactor = screen?.Scaling ?? 1.0;
             _displayDpi = new Vector(96.0 * SystemDpiScalingFactor, 96.0 * SystemDpiScalingFactor);
             _hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
+            _hardwareDisplayHeight = screen?.Bounds.Height ?? 2160;
         }
 
 #if DEBUG
@@ -811,7 +813,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                 // Don't await. Fire and Forget.
                 //Dispatcher.UIThread.Post(async () =>
                 await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
+                {   
                     var bitmap = await Task.Run(() =>
                     {
                         if (_cts is null)
@@ -829,7 +831,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
                         try
                         {
                             //return new Bitmap(img.ImageFilePath);
-                            return UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth);
+                            return UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth, _hardwareDisplayHeight);
                             /*
                             string extension = Path.GetExtension(img.ImageFilePath).ToLowerInvariant();
                             // AVIF
@@ -1110,7 +1112,7 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
 
             try
             {
-                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth),_cts?.Token ?? CancellationToken.None);
+                var bitmap = await Task.Run(() => UniversalBitmapLoader.LoadAnyImage(img.ImageFilePath, _displayDpi, _hardwareDisplayWidth, _hardwareDisplayHeight),_cts?.Token ?? CancellationToken.None);
 
                 if (_cts is null || _cts.IsCancellationRequested)
                 {
@@ -1552,10 +1554,11 @@ internal sealed partial class MainViewModel : ObservableObject, IDisposable
         UpdateDisplayImageMaxSizeAndStretchProperty();
     }
 
-    public void UpdateScreenInfo(double dpiScalingFactor, int hardwareDisplayWidth)
+    public void UpdateScreenInfo(double dpiScalingFactor, int hardwareDisplayWidth, int hardwareDisplayHeight)
     {
         SystemDpiScalingFactor = dpiScalingFactor;
         _hardwareDisplayWidth = hardwareDisplayWidth;
+        _hardwareDisplayHeight = hardwareDisplayHeight;
 
         _displayDpi = new Vector(96.0 * SystemDpiScalingFactor, 96.0 * SystemDpiScalingFactor);
         

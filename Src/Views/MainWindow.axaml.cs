@@ -616,7 +616,8 @@ internal sealed partial class MainWindow : Window
         //_systemDpiScalingFactor = DpiHelper.GetWindowScalingFactor(platformHandle.Handle);
 
         var hardwareDisplayWidth = screen?.Bounds.Width ?? 3840;
-        _mainViewModel.UpdateScreenInfo(_systemDpiScalingFactor, hardwareDisplayWidth);
+        var hardwareDisplayHeight = screen?.Bounds.Height ?? 2160;
+        _mainViewModel.UpdateScreenInfo(_systemDpiScalingFactor, hardwareDisplayWidth, hardwareDisplayHeight);
 
         Debug.WriteLine($"SystemDPIScalingFactor = {_systemDpiScalingFactor}, HardwareDisplayWidth = {hardwareDisplayWidth}");
 
