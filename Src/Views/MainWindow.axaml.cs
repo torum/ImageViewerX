@@ -34,6 +34,7 @@ internal sealed partial class MainWindow : Window
     private Avalonia.Point _mousePosition;
     private string _lastOpenedDirectory = string.Empty;
     private bool _isClosing;
+    private bool _isAllowClose;
 
     private int _winRestoreWidth = 1024;
     private int _winRestoreHeight = 768;
@@ -751,10 +752,14 @@ internal sealed partial class MainWindow : Window
     {
         Debug.WriteLine("OnClosing");
 
+        if (_isAllowClose) return;
+
+        e.Cancel = true; // Cancel the default close behavior to allow for async operations
+
         if (_isClosing) return;
         _isClosing = true;
-        
-        e.Cancel = true; // Cancel the default close behavior to allow for async operations
+
+        this.Hide();
 
         try
         {
@@ -768,6 +773,8 @@ internal sealed partial class MainWindow : Window
         {
             StopSleepInhibitor();
         }
+
+        _isAllowClose = true;
 
         this.Close();
     }
